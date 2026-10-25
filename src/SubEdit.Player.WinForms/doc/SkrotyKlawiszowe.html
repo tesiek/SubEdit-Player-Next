@@ -1,0 +1,212 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SubEdit-Player Next — skróty klawiszowe</title>
+  <style>
+    :root { color-scheme: dark; --page: #0b0d10; --panel: #15191f; --panel-2: #1b2129; --line: #2d3744; --text: #e7edf4; --muted: #aeb9c5; --accent: #58b7eb; --key: #202b37; }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: radial-gradient(circle at top, #18212c 0, var(--page) 46rem); color: var(--text); font: 16px/1.5 "Segoe UI", Arial, sans-serif; }
+    main { width: min(1180px, calc(100% - 32px)); margin: 0 auto; padding: 42px 0 64px; }
+    header { margin: 0 0 28px; padding: 30px 34px; border: 1px solid var(--line); border-radius: 14px; background: linear-gradient(135deg, #18222d, #11151a); box-shadow: 0 18px 50px #0008; }
+    h1 { margin: 0; font-size: clamp(28px, 4vw, 42px); letter-spacing: -.02em; }
+    h1 span { color: var(--accent); font-weight: 400; }
+    header p { max-width: 900px; margin: 12px 0 0; color: var(--muted); }
+    .legend { display: flex; flex-wrap: wrap; gap: 10px 18px; margin-top: 20px; color: var(--muted); font-size: .93rem; }
+    .badge { display: inline-block; padding: 3px 10px; border: 1px solid #3b5266; border-radius: 999px; background: #152431; color: #c6eaff; font-size: .85rem; }
+    section { margin-top: 22px; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; background: var(--panel); box-shadow: 0 10px 32px #0003; }
+    h2 { margin: 0; padding: 15px 20px; border-bottom: 1px solid var(--line); background: var(--panel-2); color: #d7f1ff; font-size: 1.04rem; letter-spacing: .045em; }
+    .section-note { margin: 14px 20px 0; color: var(--muted); font-size: .92rem; }
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+    th:nth-child(1), td:nth-child(1) { width: 28%; }
+    th:nth-child(2), td:nth-child(2) { width: 47%; }
+    th:nth-child(3), td:nth-child(3) { width: 25%; }
+    th, td { padding: 11px 16px; border-bottom: 1px solid #25303c; text-align: left; vertical-align: top; }
+    th { color: #b9c8d5; background: #12171d; font-size: .78rem; letter-spacing: .07em; text-transform: uppercase; }
+    tr:last-child td { border-bottom: 0; }
+    tr:hover td { background: #1a212a; }
+    td.key { white-space: normal; }
+    kbd { display: inline-block; padding: 1px 8px 2px; border: 1px solid #4d5e70; border-bottom-color: #2a3541; border-radius: 5px; background: var(--key); color: #f7fbff; font: 600 .88rem/1.55 Consolas, "Cascadia Mono", monospace; box-shadow: inset 0 1px #ffffff12; }
+    td.mode { color: #b8c4d0; font-size: .92rem; }
+    .footnote { margin: 16px 20px 20px; color: var(--muted); font-size: .9rem; }
+    .mode-list { margin: 10px 0 0; padding-left: 20px; }
+    .mode-list li { margin: 5px 0; }
+    footer { margin-top: 26px; color: #93a1af; font-size: .86rem; }
+    @media (max-width: 680px) { main { width: min(100% - 20px, 1180px); padding-top: 18px; } header { padding: 22px; } th, td { padding: 10px 12px; } }
+  </style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>SubEdit-Player <span>Next</span></h1>
+    <p>Aktualne skróty klawiszowe.</p>
+    <div class="legend">
+      <span class="badge">130 różnych kombinacji</span>
+      <span class="badge">136 zastosowań opisanych w tabelach</span>
+      <span>„Główne okno” oznacza pracę poza modalnym oknem dialogowym.</span>
+    </div>
+    <ul class="mode-list">
+      <li><strong>Tryb z edytorem</strong> — panel edytora jest widoczny, a tam gdzie wskazano: ma fokus.</li>
+      <li><strong>Tryb bez edytora</strong> — panel edytora jest ukryty; fullscreen zawsze należy do tego trybu.</li>
+      <li>Pojedyncze litery są skrótami wyłącznie bez edytora/w fullscreenie. Przy widocznym edytorze pozostają wpisywanym tekstem.</li>
+      <li>Liczby przy nagłówkach oznaczają kombinacje, nie liczbę wierszy tabeli; zbiorczy wiersz Scintilli obejmuje 16 standardowych kombinacji.</li>
+    </ul>
+  </header>
+
+  <section><div class="table-wrap"><table><thead><tr><th>Skrót</th><th>Funkcja</th><th>Tryb działania</th></tr></thead><tbody>
+    <tr><td class="key"><kbd>F1</kbd></td><td>Otwiera tematy pomocy.</td><td class="mode">Główne okno</td></tr>
+  </tbody></table></div></section>
+
+  <section><h2>1. OBSŁUGA PLIKÓW <span class="badge">8</span></h2><div class="table-wrap"><table><thead><tr><th>Skrót</th><th>Funkcja</th><th>Tryb działania</th></tr></thead><tbody>
+    <tr><td class="key"><kbd>Ctrl</kbd> + <kbd>O</kbd></td><td>Otwiera plik wideo.</td><td class="mode">Główne okno</td></tr>
+    <tr><td class="key"><kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>O</kbd></td><td>Otwiera plik napisów.</td><td class="mode">Główne okno</td></tr>
+    <tr><td class="key"><kbd>Ctrl</kbd> + <kbd>N</kbd></td><td>Tworzy nowe napisy.</td><td class="mode">Główne okno</td></tr>
+    <tr><td class="key"><kbd>Ctrl</kbd> + <kbd>S</kbd></td><td>Zapisuje napisy.</td><td class="mode">Główne okno</td></tr>
+    <tr><td class="key"><kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>S</kbd></td><td>Otwiera „Zapisz napisy jako”.</td><td class="mode">Główne okno</td></tr>
+    <tr><td class="key"><kbd>Ctrl</kbd> + <kbd>F4</kbd></td><td>Zamyka bieżący dokument napisów z edytora (Zamknij plik napisów).</td><td class="mode">Główne okno</td></tr>
+    <tr><td class="key"><kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>F4</kbd></td><td>Zamyka bieżący plik wideo (Zamknij plik wideo).</td><td class="mode">Główne okno</td></tr>
+    <tr><td class="key"><kbd>Alt</kbd> + <kbd>F4</kbd></td><td>Zamyka program.</td><td class="mode">Główne okno</td></tr>
+  </tbody></table></div></section>
+
+  <section><h2>2. WIDOK <span class="badge">19</span></h2><div class="table-wrap"><table><thead><tr><th>Skrót</th><th>Funkcja</th><th>Tryb działania</th></tr></thead><tbody>
+    <tr><td class="key"><kbd>Ctrl</kbd> + <kbd>E</kbd></td><td>Pokazuje albo ukrywa edytor napisów.</td><td class="mode">Tryb okienkowy</td></tr>
+    <tr><td class="key"><kbd>Ctrl</kbd> + <kbd>\</kbd></td><td>Minimalizuje okno programu albo je przywraca.</td><td class="mode">Główne okno</td></tr>
+    <tr><td class="key"><kbd>F6</kbd></td><td>Włącza lub wyłącza „Zawsze na wierzchu”.</td><td class="mode">Główne okno</td></tr>
+    <tr><td class="key"><kbd>F11</kbd></td><td>Przełącza tryb pełnoekranowy.</td><td class="mode">Główne okno i fullscreen</td></tr>
+    <tr><td class="key"><kbd>Alt</kbd> + <kbd>Enter</kbd></td><td>Przełącza tryb pełnoekranowy.</td><td class="mode">Główne okno i fullscreen</td></tr>
+    <tr><td class="key"><kbd>F8</kbd></td><td>Wyświetla menu kontekstowe powierzchni wideo.</td><td class="mode">Główne okno; znaczenie praktyczne po otwarciu filmu</td></tr>
+    <tr><td class="key"><kbd>F9</kbd></td><td>Otwiera właściwości pliku wideo.</td><td class="mode">Główne okno; wymaga filmu</td></tr>
+    <tr><td class="key"><kbd>F12</kbd></td><td>Otwiera Opcje. Działa również, gdy fokus ma powierzchnia obrazu.</td><td class="mode">W każdym głównym trybie, także fullscreen</td></tr>
+    <tr><td class="key"><kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>N</kbd></td><td>Włącza lub wyłącza wyświetlanie napisów.</td><td class="mode">Główne okno</td></tr>
+    <tr><td class="key"><kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>Up</kbd></td><td>Przesuwa obraz filmu w górę o 5 px.</td><td class="mode">Główne okno i fullscreen</td></tr>
+    <tr><td class="key"><kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>Down</kbd></td><td>Przesuwa obraz filmu w dół o 5 px.</td><td class="mode">Główne okno i fullscreen</td></tr>
+    <tr><td class="key"><kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>Left</kbd></td><td>Przesuwa obraz filmu w lewo o 5 px.</td><td class="mode">Główne okno i fullscreen</td></tr>
+    <tr><td class="key"><kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>Right</kbd></td><td>Przesuwa obraz filmu w prawo o 5 px.</td><td class="mode">Główne okno i fullscreen</td></tr>
+    <tr><td class="key"><kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>=</kbd></td><td>Powiększa obraz filmu o 10%.</td><td class="mode">Główne okno i fullscreen</td></tr>
+    <tr><td class="key"><kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>Num +</kbd></td><td>Alias: powiększa obraz filmu o 10%.</td><td class="mode">Główne okno i fullscreen</td></tr>
+    <tr><td class="key"><kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>-</kbd></td><td>Pomniejsza obraz filmu o 10%.</td><td class="mode">Główne okno i fullscreen</td></tr>
+    <tr><td class="key"><kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>Num -</kbd></td><td>Alias: pomniejsza obraz filmu o 10%.</td><td class="mode">Główne okno i fullscreen</td></tr>
+    <tr><td class="key"><kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>0</kbd></td><td>Resetuje przesunięcie i powiększenie obrazu do wartości domyślnych.</td><td class="mode">Główne okno i fullscreen</td></tr>
+    <tr><td class="key"><kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>Num 0</kbd></td><td>Alias: resetuje transformacje obrazu.</td><td class="mode">Główne okno i fullscreen</td></tr>
+  </tbody></table></div></section>
+
+  <section><h2>3. EDYCJA TEKSTU <span class="badge">35</span></h2><p class="section-note">Poniższe funkcje dotyczą edytora, gdy ma fokus. Znaczniki formatowania są zmieniane jako tekst; sam edytor zawsze renderuje tekst czcionką Regular.</p><div class="table-wrap"><table><thead><tr><th>Skrót</th><th>Funkcja</th><th>Tryb działania</th></tr></thead><tbody>
+    <tr><td class="key"><kbd>Ctrl</kbd> + <kbd>A</kbd></td><td>Zaznacza cały tekst.</td><td class="mode">Edytor z fokusem</td></tr>
+    <tr><td class="key"><kbd>Ctrl</kbd> + <kbd>Z</kbd></td><td>Cofa zmianę w edytorze.</td><td class="mode">Edytor z fokusem</td></tr>
+    <tr><td class="key"><kbd>Ctrl</kbd> + <kbd>Y</kbd></td><td>Przywraca cofniętą zmianę.</td><td class="mode">Edytor z fokusem</td></tr>
+    <tr><td class="key"><kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>Z</kbd></td><td>Alias: przywraca cofniętą zmianę.</td><td class="mode">Edytor z fokusem</td></tr>
+    <tr><td class="key"><kbd>Ctrl</kbd> + <kbd>X</kbd></td><td>Wycina zaznaczony tekst.</td><td class="mode">Edytor z fokusem</td></tr>
+    <tr><td class="key"><kbd>Ctrl</kbd> + <kbd>C</kbd></td><td>Kopiuje zaznaczony tekst.</td><td class="mode">Edytor z fokusem</td></tr>
+    <tr><td class="key"><kbd>Ctrl</kbd> + <kbd>V</kbd></td><td>Wkleja tekst ze schowka.</td><td class="mode">Edytor z fokusem</td></tr>
+    <tr><td class="key"><kbd>Ctrl</kbd> + <kbd>I</kbd></td><td>Wstawia albo usuwa znaczniki kursywy w bieżącym napisie.</td><td class="mode">Edytor z fokusem</td></tr>
+    <tr><td class="key"><kbd>Ctrl</kbd> + <kbd>U</kbd></td><td>Wstawia albo usuwa znaczniki podkreślenia w bieżącym napisie.</td><td class="mode">Edytor z fokusem</td></tr>
+    <tr><td class="key"><kbd>Ctrl</kbd> + <kbd>B</kbd></td><td>Wstawia albo usuwa znaczniki pogrubienia w bieżącym napisie.</td><td class="mode">Edytor z fokusem</td></tr>
+    <tr><td class="key"><kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>I</kbd></td><td>Otwiera konwersję znaków kursywy <code>/</code>, <code>*</code> lub <code>#</code> na <code>&lt;i&gt;…&lt;/i&gt;</code>.</td><td class="mode">Edytor z fokusem</td></tr>
+    <tr><td class="key"><kbd>Home</kbd></td><td>Przenosi kursor do początku tekstu napisu; drugie użycie przechodzi na początek całej linii z czasówką.</td><td class="mode">Edytor z fokusem</td></tr>
+    <tr><td class="key"><kbd>End</kbd></td><td>Przenosi kursor na koniec bieżącej linii.</td><td class="mode">Edytor z fokusem</td></tr>
+    <tr><td class="key"><kbd>Ctrl</kbd> + <kbd>Home</kbd></td><td>Przechodzi na początek dokumentu.</td><td class="mode">Edytor z fokusem</td></tr>
+    <tr><td class="key"><kbd>Ctrl</kbd> + <kbd>End</kbd></td><td>Przechodzi na koniec dokumentu.</td><td class="mode">Edytor z fokusem</td></tr>
+    <tr><td class="key"><kbd>Ctrl</kbd> + <kbd>Page Up</kbd></td><td>Przewija edytor o stronę w górę (Scintilla: stuttered page up).</td><td class="mode">Edytor z fokusem; inaczej bez edytora — patrz sekcja 8</td></tr>
+    <tr><td class="key"><kbd>Ctrl</kbd> + <kbd>Page Down</kbd></td><td>Przewija edytor o stronę w dół (Scintilla: stuttered page down).</td><td class="mode">Edytor z fokusem; inaczej bez edytora — patrz sekcja 8</td></tr>
+    <tr><td class="key"><kbd>Ctrl</kbd> + <kbd>Left</kbd></td><td>Standardowy ruch kursora edytora o wyraz w lewo.</td><td class="mode">Edytor z fokusem; inaczej bez edytora — patrz sekcja 8</td></tr>
+    <tr><td class="key"><kbd>Ctrl</kbd> + <kbd>Right</kbd></td><td>Standardowy ruch kursora edytora o wyraz w prawo.</td><td class="mode">Edytor z fokusem; inaczej bez edytora — patrz sekcja 8</td></tr>
+    <tr><td class="key"><small><kbd>Ctrl</kbd> + <kbd>Backspace</kbd>, <kbd>Delete</kbd>, <kbd>Insert</kbd>, <kbd>Up</kbd>, <kbd>Down</kbd><br><kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>Backspace</kbd>, <kbd>Delete</kbd>, <kbd>Insert</kbd>, <kbd>Left</kbd>, <kbd>Right</kbd>, <kbd>Up</kbd>, <kbd>Down</kbd>, <kbd>Home</kbd>, <kbd>End</kbd>, <kbd>Page Up</kbd>, <kbd>Page Down</kbd></small></td><td>16 standardowych kombinacji edytora. Kod przekazuje je bez zmiany do Scintilli; biblioteka wykonuje ich standardowe operacje edycji, ruchu kursora i rozszerzania zaznaczenia.</td><td class="mode">Edytor z fokusem, o ile kombinacja nie jest opisana wyżej jako funkcja SubEdita</td></tr>
+  </tbody></table></div></section>
+
+  <section><h2>4. EDYCJA NAPISÓW <span class="badge">13</span></h2><div class="table-wrap"><table><thead><tr><th>Skrót</th><th>Funkcja</th><th>Tryb działania</th></tr></thead><tbody>
+    <tr><td class="key"><kbd>Ctrl</kbd> + <kbd>`</kbd></td><td>Otwiera wybór domyślnego formatu napisów.</td><td class="mode">Główne okno</td></tr>
+    <tr><td class="key"><kbd>Ctrl</kbd> + <kbd>T</kbd></td><td>Otwiera konwersję formatu napisów.</td><td class="mode">Dokument napisów</td></tr>
+    <tr><td class="key"><kbd>Ctrl</kbd> + <kbd>D</kbd></td><td>Otwiera przesuwanie czasu napisów.</td><td class="mode">Dokument napisów</td></tr>
+    <tr><td class="key"><kbd>Ctrl</kbd> + <kbd>W</kbd></td><td>Otwiera zmianę czasu wyświetlania napisów.</td><td class="mode">Dokument napisów</td></tr>
+    <tr><td class="key"><kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>G</kbd></td><td>Otwiera łączenie szybko znikających napisów.</td><td class="mode">Dokument napisów</td></tr>
+    <tr><td class="key"><kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>Y</kbd></td><td>Otwiera dzielenie długich wierszy.</td><td class="mode">Dokument napisów</td></tr>
+    <tr><td class="key"><kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>G</kbd></td><td>Otwiera ograniczanie liczby wierszy w napisie.</td><td class="mode">Dokument napisów</td></tr>
+    <tr><td class="key"><kbd>Ctrl</kbd> + <kbd>Q</kbd></td><td>Otwiera zmianę współczynnika FPS napisów.</td><td class="mode">Wyłącznie dokument mDVD</td></tr>
+    <tr><td class="key"><kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>Q</kbd></td><td>Otwiera ustawienie domyślnej wartości FPS dla sesji.</td><td class="mode">Główne okno</td></tr>
+    <tr><td class="key"><kbd>Ctrl</kbd> + <kbd>R</kbd></td><td>Otwiera poprawianie napisów.</td><td class="mode">Dokument napisów</td></tr>
+    <tr><td class="key"><kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>R</kbd></td><td>Sortuje napisy rosnąco według czasu.</td><td class="mode">Dokument napisów</td></tr>
+    <tr><td class="key"><kbd>Ctrl</kbd> + <kbd>.</kbd></td><td>Dodaje 0,5 s do czasu bieżącego napisu.</td><td class="mode">Dokument napisów</td></tr>
+    <tr><td class="key"><kbd>Ctrl</kbd> + <kbd>,</kbd></td><td>Odejmuje 0,5 s od czasu bieżącego napisu.</td><td class="mode">Dokument napisów</td></tr>
+  </tbody></table></div></section>
+
+  <section><h2>5. WYSZUKIWANIE NAPISÓW <span class="badge">9</span></h2><div class="table-wrap"><table><thead><tr><th>Skrót</th><th>Funkcja</th><th>Tryb działania</th></tr></thead><tbody>
+    <tr><td class="key"><kbd>Ctrl</kbd> + <kbd>F</kbd></td><td>Otwiera wyszukiwanie tekstu.</td><td class="mode">Główne okno</td></tr>
+    <tr><td class="key"><kbd>Ctrl</kbd> + <kbd>H</kbd></td><td>Otwiera „Znajdź i zamień”.</td><td class="mode">Główne okno</td></tr>
+    <tr><td class="key"><kbd>F3</kbd></td><td>Wyszukuje następne wystąpienie lub następny wynik aktywnego wyszukiwania; w otwartym oknie wyszukiwania wykonuje „Znajdź następny”.</td><td class="mode">Główne okno lub okno „Znajdź tekst”</td></tr>
+    <tr><td class="key"><kbd>Shift</kbd> + <kbd>F3</kbd></td><td>Wyszukuje poprzednie wystąpienie lub poprzedni wynik aktywnego wyszukiwania; w otwartym oknie wyszukiwania wykonuje „Znajdź poprzedni”.</td><td class="mode">Główne okno lub okno „Znajdź tekst”</td></tr>
+    <tr><td class="key"><kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>D</kbd></td><td>Otwiera wyszukiwanie krótko wyświetlanego napisu.</td><td class="mode">Dokument napisów</td></tr>
+    <tr><td class="key"><kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>D</kbd></td><td>Otwiera wyszukiwanie długiego wiersza.</td><td class="mode">Dokument napisów</td></tr>
+    <tr><td class="key"><kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>F</kbd></td><td>Otwiera wyszukiwanie przerwy w wyświetlaniu napisów.</td><td class="mode">Dokument napisów</td></tr>
+    <tr><td class="key"><kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>F</kbd></td><td>Przechodzi do pierwszego nieposortowanego napisu.</td><td class="mode">Dokument napisów</td></tr>
+    <tr><td class="key"><kbd>Ctrl</kbd> + <kbd>G</kbd></td><td>Otwiera „Przejdź do napisu”.</td><td class="mode">Dokument napisów</td></tr>
+  </tbody></table></div></section>
+
+  <section><h2>6. OBSŁUGA ODTWARZANIA FILMU <span class="badge">14</span></h2><div class="table-wrap"><table><thead><tr><th>Skrót</th><th>Funkcja</th><th>Tryb działania</th></tr></thead><tbody>
+    <tr><td class="key"><kbd>Ctrl</kbd> + <kbd>L</kbd></td><td>Pauza albo odtwarzanie.</td><td class="mode">Główne okno; wymaga filmu</td></tr>
+    <tr><td class="key"><kbd>Ctrl</kbd> + <kbd>M</kbd></td><td>Zatrzymuje odtwarzanie.</td><td class="mode">Główne okno; wymaga filmu</td></tr>
+    <tr><td class="key"><kbd>Ctrl</kbd> + <kbd>K</kbd></td><td>Otwiera skok do podanej pozycji filmu.</td><td class="mode">Główne okno; wymaga filmu</td></tr>
+    <tr><td class="key"><kbd>Ctrl</kbd> + <kbd>[</kbd></td><td>Przewija o 5 sekund wstecz.</td><td class="mode">Główne okno; wymaga filmu</td></tr>
+    <tr><td class="key"><kbd>Ctrl</kbd> + <kbd>]</kbd></td><td>Przewija o 5 sekund w przód.</td><td class="mode">Główne okno; wymaga filmu</td></tr>
+    <tr><td class="key"><kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>[</kbd></td><td>Przechodzi na początek filmu.</td><td class="mode">Główne okno; wymaga filmu</td></tr>
+    <tr><td class="key"><kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>]</kbd></td><td>Przechodzi do ostatniej klatki filmu.</td><td class="mode">Główne okno; wymaga filmu</td></tr>
+    <tr><td class="key"><kbd>Alt</kbd> + <kbd>Left</kbd></td><td>Przewija wstecz o wartość „Przewinięcie użytkownika do tyłu [sek.]”.</td><td class="mode">Główne okno; wymaga filmu</td></tr>
+    <tr><td class="key"><kbd>Alt</kbd> + <kbd>Right</kbd></td><td>Przewija w przód o wartość „Przewinięcie użytkownika do przodu [sek.]”.</td><td class="mode">Główne okno; wymaga filmu</td></tr>
+    <tr><td class="key"><kbd>Alt</kbd> + <kbd>,</kbd></td><td>Otwiera poprzedni film z aktualnego katalogu.</td><td class="mode">Główne okno</td></tr>
+    <tr><td class="key"><kbd>Alt</kbd> + <kbd>.</kbd></td><td>Otwiera następny film z aktualnego katalogu.</td><td class="mode">Główne okno</td></tr>
+    <tr><td class="key"><kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>.</kbd></td><td>Włącza albo wyłącza odtwarzanie wszystkich filmów w aktualnym katalogu.</td><td class="mode">Główne okno</td></tr>
+    <tr><td class="key"><kbd>Alt</kbd> + <kbd>Down</kbd></td><td>Zmniejsza prędkość odtwarzania o 0,25×.</td><td class="mode">Główne okno; wymaga filmu</td></tr>
+    <tr><td class="key"><kbd>Alt</kbd> + <kbd>Up</kbd></td><td>Zwiększa prędkość odtwarzania o 0,25×.</td><td class="mode">Główne okno; wymaga filmu</td></tr>
+  </tbody></table></div></section>
+
+  <section><h2>7. TRYB Z EDYTOREM <span class="badge">10</span></h2><p class="section-note">Funkcje łączące pozycję filmu z wierszem edytora wymagają wczytanego filmu i napisów; klawisze wstawiania oraz <kbd>Ctrl</kbd> + <kbd>P</kbd> wymagają dodatkowo fokusu w edytorze.</p><div class="table-wrap"><table><thead><tr><th>Skrót</th><th>Funkcja</th><th>Tryb działania</th></tr></thead><tbody>
+    <tr><td class="key"><kbd>Insert</kbd></td><td>Wstawia bieżącą pozycję filmu jako klatkę początkową napisu.</td><td class="mode">Edytor widoczny i z fokusem</td></tr>
+    <tr><td class="key"><kbd>Alt</kbd> + <kbd>Insert</kbd></td><td>Wstawia bieżącą pozycję filmu jako klatkę końcową napisu.</td><td class="mode">Edytor widoczny i z fokusem</td></tr>
+    <tr><td class="key"><kbd>Ctrl</kbd> + <kbd>P</kbd></td><td>Odtwarza film od czasówki bieżącej linii napisów.</td><td class="mode">Edytor widoczny i z fokusem</td></tr>
+    <tr><td class="key"><kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>L</kbd></td><td>Przenosi kursor edytora do napisu aktualnego dla czasu filmu.</td><td class="mode">Edytor i film</td></tr>
+    <tr><td class="key"><kbd>Ctrl</kbd> + <kbd>J</kbd></td><td>Włącza albo wyłącza śledzenie napisów w edytorze podczas odtwarzania.</td><td class="mode">Edytor i film</td></tr>
+    <tr><td class="key"><kbd>Ctrl</kbd> + <kbd>/</kbd></td><td>Mierzy opóźnienie bieżącego napisu względem pozycji filmu i otwiera przesuwanie czasu z wyliczoną wartością.</td><td class="mode">Edytor, film i bieżący napis</td></tr>
+    <tr><td class="key"><kbd>Ctrl</kbd> + <kbd>Num /</kbd></td><td>Alias funkcji pomiaru opóźnienia napisu względem filmu.</td><td class="mode">Edytor, film i bieżący napis</td></tr>
+    <tr><td class="key"><kbd>Ctrl</kbd> + <kbd>F1</kbd></td><td>Ustawia początkowy punkt do geometrycznego przesunięcia napisów.</td><td class="mode">Edytor i film</td></tr>
+    <tr><td class="key"><kbd>Ctrl</kbd> + <kbd>F2</kbd></td><td>Ustawia końcowy punkt do geometrycznego przesunięcia napisów.</td><td class="mode">Edytor i film</td></tr>
+    <tr><td class="key"><kbd>Ctrl</kbd> + <kbd>F3</kbd></td><td>Otwiera geometryczne przesunięcie napisów.</td><td class="mode">Edytor i film</td></tr>
+  </tbody></table></div></section>
+
+  <section><h2>8. TRYB BEZ EDYTORA ORAZ FULLSCREEN <span class="badge">21</span></h2><p class="section-note">Działają tylko wtedy, gdy edytor jest ukryty albo w fullscreenie. W trybie z edytorem pojedyncze litery, cyfry i znaki są przeznaczone do wpisywania tekstu.</p><div class="table-wrap"><table><thead><tr><th>Skrót</th><th>Funkcja</th><th>Tryb działania</th></tr></thead><tbody>
+    <tr><td class="key"><kbd>M</kbd></td><td>Włącza albo wyłącza całkowitą przezroczystość tła napisów.</td><td class="mode">Bez edytora lub fullscreen</td></tr>
+    <tr><td class="key"><kbd>T</kbd></td><td>Włącza albo wyłącza licznik czasu OSD w lewym górnym rogu.</td><td class="mode">Bez edytora lub fullscreen</td></tr>
+    <tr><td class="key"><kbd>Space</kbd></td><td>Pauza albo odtwarzanie.</td><td class="mode">Bez edytora lub fullscreen</td></tr>
+    <tr><td class="key"><kbd>Left</kbd></td><td>Przewija o 5 sekund wstecz.</td><td class="mode">Bez edytora lub fullscreen</td></tr>
+    <tr><td class="key"><kbd>Right</kbd></td><td>Przewija o 5 sekund w przód.</td><td class="mode">Bez edytora lub fullscreen</td></tr>
+    <tr><td class="key"><kbd>Up</kbd></td><td>Przewija o minutę w przód.</td><td class="mode">Bez edytora lub fullscreen</td></tr>
+    <tr><td class="key"><kbd>Down</kbd></td><td>Przewija o minutę wstecz.</td><td class="mode">Bez edytora lub fullscreen</td></tr>
+    <tr><td class="key"><kbd>Home</kbd></td><td>Przechodzi na początek filmu.</td><td class="mode">Bez edytora lub fullscreen; inaczej w edytorze — patrz sekcja 3</td></tr>
+    <tr><td class="key"><kbd>End</kbd></td><td>Przechodzi do ostatniej klatki filmu.</td><td class="mode">Bez edytora lub fullscreen; inaczej w edytorze — patrz sekcja 3</td></tr>
+    <tr><td class="key"><kbd>Shift</kbd> + <kbd>,</kbd> <small>(&lt;)</small></td><td>Przesuwa o jedną klatkę wstecz.</td><td class="mode">Bez edytora lub fullscreen</td></tr>
+    <tr><td class="key"><kbd>Shift</kbd> + <kbd>.</kbd> <small>(&gt;)</small></td><td>Przesuwa o jedną klatkę w przód.</td><td class="mode">Bez edytora lub fullscreen</td></tr>
+    <tr><td class="key"><kbd>Ctrl</kbd> + <kbd>Left</kbd></td><td>Przesuwa o jedną klatkę wstecz.</td><td class="mode">Bez edytora lub fullscreen; inaczej w edytorze — patrz sekcja 3</td></tr>
+    <tr><td class="key"><kbd>Ctrl</kbd> + <kbd>Right</kbd></td><td>Przesuwa o jedną klatkę w przód.</td><td class="mode">Bez edytora lub fullscreen; inaczej w edytorze — patrz sekcja 3</td></tr>
+    <tr><td class="key"><kbd>R</kbd></td><td>Włącza albo wyłącza zapętlenie filmu.</td><td class="mode">Bez edytora lub fullscreen</td></tr>
+    <tr><td class="key"><kbd>D</kbd></td><td>Włącza albo wyłącza odtwarzanie wszystkich filmów z aktualnego katalogu.</td><td class="mode">Bez edytora lub fullscreen</td></tr>
+    <tr><td class="key"><kbd>Page Up</kbd></td><td>Zwiększa głośność.</td><td class="mode">Bez edytora lub fullscreen</td></tr>
+    <tr><td class="key"><kbd>Page Down</kbd></td><td>Zmniejsza głośność.</td><td class="mode">Bez edytora lub fullscreen</td></tr>
+    <tr><td class="key"><kbd>Ctrl</kbd> + <kbd>Page Up</kbd></td><td>Zwiększa wielkość czcionki napisów o 1 pkt.</td><td class="mode">Bez edytora lub fullscreen; inaczej w edytorze — patrz sekcja 3</td></tr>
+    <tr><td class="key"><kbd>Ctrl</kbd> + <kbd>Page Down</kbd></td><td>Zmniejsza wielkość czcionki napisów o 1 pkt.</td><td class="mode">Bez edytora lub fullscreen; inaczej w edytorze — patrz sekcja 3</td></tr>
+    <tr><td class="key"><kbd>Backspace</kbd></td><td>Włącza albo wyłącza wyciszenie.</td><td class="mode">Bez edytora lub fullscreen</td></tr>
+    <tr><td class="key"><kbd>Esc</kbd></td><td>Wychodzi z trybu pełnoekranowego.</td><td class="mode">Wyłącznie fullscreen</td></tr>
+  </tbody></table></div></section>
+
+  <section><h2>9. KLAWIATURA NUMERYCZNA <span class="badge">6</span></h2><p class="section-note">Klawisze są obsługiwane bez edytora/w fullscreenie; Num Lock powinien być włączony.</p><div class="table-wrap"><table><thead><tr><th>Skrót</th><th>Funkcja</th><th>Tryb działania</th></tr></thead><tbody>
+    <tr><td class="key"><kbd>Num 1</kbd></td><td>Przewija o 5 sekund wstecz.</td><td class="mode">Bez edytora lub fullscreen</td></tr>
+    <tr><td class="key"><kbd>Num 2</kbd></td><td>Pauza albo odtwarzanie.</td><td class="mode">Bez edytora lub fullscreen</td></tr>
+    <tr><td class="key"><kbd>Num 3</kbd></td><td>Przewija o 5 sekund w przód.</td><td class="mode">Bez edytora lub fullscreen</td></tr>
+    <tr><td class="key"><kbd>Num 4</kbd></td><td>Przesuwa o jedną klatkę wstecz.</td><td class="mode">Bez edytora lub fullscreen</td></tr>
+    <tr><td class="key"><kbd>Num 6</kbd></td><td>Przesuwa o jedną klatkę w przód.</td><td class="mode">Bez edytora lub fullscreen</td></tr>
+    <tr><td class="key"><kbd>Num +</kbd></td><td>Odtwarza film od czasówki bieżącej linii napisów.</td><td class="mode">Bez edytora lub fullscreen</td></tr>
+  </tbody></table></div></section>
+
+  <footer>Źródło aktualności: pełne wyszukanie skrótów w kodzie SubEdit-Player Next, w tym menu, <code>ProcessCmdKey</code>, filtr wejścia wideo, dialog wyszukiwania oraz editor Scintilla. Stan dokumentu: bieżąca wersja kodu.</footer>
+</main>
+</body>
+</html>

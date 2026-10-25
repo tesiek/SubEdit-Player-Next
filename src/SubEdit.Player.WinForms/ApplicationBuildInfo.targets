@@ -1,0 +1,33 @@
+<Project>
+  <!-- Run for each build before the SDK hashes and generates the assembly attributes. -->
+  <Target Name="GetApplicationBuildInfo"
+          BeforeTargets="GetAssemblyAttributes"
+          DependsOnTargets="InitializeSourceControlInformation">
+    <PropertyGroup>
+      <_ApplicationBuildCommit>unknown</_ApplicationBuildCommit>
+      <_ApplicationBuildDirtyState>UNKNOWN</_ApplicationBuildDirtyState>
+      <_ApplicationBuildCommit Condition="$([System.Text.RegularExpressions.Regex]::IsMatch('$(SourceRevisionId)', '^[0-9a-fA-F]{40}([0-9a-fA-F]{24})?$'))">$(SourceRevisionId)</_ApplicationBuildCommit>
+    </PropertyGroup>
+
+    <!-- Ignored build/local files do not count. Include staged, unstaged and untracked changes. -->
+    <Exec Condition="'$(_ApplicationBuildCommit)' != 'unknown'"
+          Command="git --no-optional-locks status --porcelain=v1 --untracked-files=all --ignore-submodules=none"
+          WorkingDirectory="$(MSBuildProjectDirectory)"
+          ConsoleToMSBuild="true" IgnoreExitCode="true" IgnoreStandardErrorWarningFormat="true"
+          StandardOutputImportance="Low" StandardErrorImportance="Low" Timeout="15000">
+      <Output TaskParameter="ConsoleOutput" ItemName="_ApplicationGitStatus" />
+      <Output TaskParameter="ExitCode" PropertyName="_ApplicationGitStatusExitCode" />
+    </Exec>
+
+    <PropertyGroup>
+      <_ApplicationBuildDirtyState Condition="'$(_ApplicationGitStatusExitCode)' == '0'">CLEAN</_ApplicationBuildDirtyState>
+      <_ApplicationBuildDirtyState Condition="'$(_ApplicationGitStatusExitCode)' == '0' and '@(_ApplicationGitStatus)' != ''">DIRTY</_ApplicationBuildDirtyState>
+      <InformationalVersion>$(Version)+unknown</InformationalVersion>
+      <InformationalVersion Condition="'$(_ApplicationBuildCommit)' != 'unknown'">$(Version)+$(_ApplicationBuildCommit).$(_ApplicationBuildDirtyState.ToLowerInvariant())</InformationalVersion>
+    </PropertyGroup>
+    <ItemGroup>
+      <AssemblyMetadata Include="BuildCommit" Value="$(_ApplicationBuildCommit)" />
+      <AssemblyMetadata Include="BuildDirtyState" Value="$(_ApplicationBuildDirtyState)" />
+    </ItemGroup>
+  </Target>
+</Project>

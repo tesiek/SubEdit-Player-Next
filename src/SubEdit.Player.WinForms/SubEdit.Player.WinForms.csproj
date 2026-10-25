@@ -1,0 +1,88 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\SubEdit.Player.Core\SubEdit.Player.Core.csproj" />
+    <ProjectReference Include="..\..\third_party\FlyleafLib\FlyleafLib.csproj" />
+    <ProjectReference Include="..\..\third_party\Scintilla.NET\Scintilla.NET\Scintilla.NET.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Assets\about-logo.png" LogicalName="SubEdit.Player.WinForms.Assets.AboutLogo" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Native FFmpeg v9 x64 libraries for Flyleaf (LoadProfile.Filters). -->
+    <Content Include="Assets\FFmpeg\x64\*.dll">
+      <Link>FFmpeg\%(Filename)%(Extension)</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- User-facing offline documentation, preserved for Debug, Release and publish. -->
+    <Content Include="doc\**\*" Exclude="doc\SubEditHelp-Editor.html">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
+  </ItemGroup>
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <AssemblyName>SubEdit.Player.Next</AssemblyName>
+    <AssemblyTitle>SubEdit-Player Next</AssemblyTitle>
+    <Product>SubEdit-Player Next</Product>
+    <Version>1.0.0</Version>
+    <!-- ApplicationBuildInfo.targets supplies a revision with an explicit working-tree state. -->
+    <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
+    <NeutralLanguage>pl</NeutralLanguage>
+    <Copyright>TSS</Copyright>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <PlatformTarget>x64</PlatformTarget>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <UseWindowsForms>true</UseWindowsForms>
+    <ApplicationHighDpiMode>PerMonitorV2</ApplicationHighDpiMode>
+    <ApplicationIcon>Assets\subedit-player-next.ico</ApplicationIcon>
+    <AllowedReferenceRelatedFileExtensions>.xml;.pri;.dll.config;.exe.config</AllowedReferenceRelatedFileExtensions>
+  </PropertyGroup>
+
+  <!-- Exclude non-x64 native Scintilla runtimes from being copied to the application output -->
+  <Target Name="FilterNonX64RuntimeAssets"
+          BeforeTargets="_CopyOutOfDateSourceItemsToOutputDirectory;_CopyOutOfDateSourceItemsToOutputDirectoryAlways;_CopyOutOfDateSourceItemsToPublishDirectory;_CopyOutOfDateSourceItemsToPublishDirectoryAlways">
+    <ItemGroup>
+      <_SourceItemsToCopyToOutputDirectory
+          Remove="@(_SourceItemsToCopyToOutputDirectory)"
+          Condition="'%(TargetPath)' != '' and ($([System.String]::Copy('%(TargetPath)').StartsWith('runtimes\win-x86\')) or $([System.String]::Copy('%(TargetPath)').StartsWith('runtimes\win-arm64\')) or $([System.String]::Copy('%(TargetPath)').StartsWith('runtimes/win-x86/')) or $([System.String]::Copy('%(TargetPath)').StartsWith('runtimes/win-arm64/')))" />
+      <_SourceItemsToCopyToOutputDirectoryAlways
+          Remove="@(_SourceItemsToCopyToOutputDirectoryAlways)"
+          Condition="'%(TargetPath)' != '' and ($([System.String]::Copy('%(TargetPath)').StartsWith('runtimes\win-x86\')) or $([System.String]::Copy('%(TargetPath)').StartsWith('runtimes\win-arm64\')) or $([System.String]::Copy('%(TargetPath)').StartsWith('runtimes/win-x86/')) or $([System.String]::Copy('%(TargetPath)').StartsWith('runtimes/win-arm64/')))" />
+      <_SourceItemsToCopyToPublishDirectory
+          Remove="@(_SourceItemsToCopyToPublishDirectory)"
+          Condition="'%(TargetPath)' != '' and ($([System.String]::Copy('%(TargetPath)').StartsWith('runtimes\win-x86\')) or $([System.String]::Copy('%(TargetPath)').StartsWith('runtimes\win-arm64\')) or $([System.String]::Copy('%(TargetPath)').StartsWith('runtimes/win-x86/')) or $([System.String]::Copy('%(TargetPath)').StartsWith('runtimes/win-arm64/')))" />
+      <_SourceItemsToCopyToPublishDirectoryAlways
+          Remove="@(_SourceItemsToCopyToPublishDirectoryAlways)"
+          Condition="'%(TargetPath)' != '' and ($([System.String]::Copy('%(TargetPath)').StartsWith('runtimes\win-x86\')) or $([System.String]::Copy('%(TargetPath)').StartsWith('runtimes\win-arm64\')) or $([System.String]::Copy('%(TargetPath)').StartsWith('runtimes/win-x86/')) or $([System.String]::Copy('%(TargetPath)').StartsWith('runtimes/win-arm64/')))" />
+    </ItemGroup>
+  </Target>
+
+  <!-- Scintilla5.NET loads its native DLLs from runtimes\win-x64\native; root copies are redundant. -->
+  <Target Name="RemoveRedundantScintillaRootCopies" AfterTargets="CopyFilesToOutputDirectory">
+    <Delete Files="$(OutputPath)Lexilla.dll;$(OutputPath)Scintilla.dll" />
+  </Target>
+
+  <ItemGroup>
+    <AssemblyMetadata Include="BuildDate" Value="$([System.DateTime]::Now.ToString('yyMMdd'))" />
+    <AssemblyMetadata Include="ProductVersion" Value="$(Version)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="SubEdit.Player.Tests" />
+  </ItemGroup>
+
+  <Import Project="ApplicationBuildInfo.targets" />
+
+</Project>

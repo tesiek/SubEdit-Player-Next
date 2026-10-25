@@ -1,0 +1,14 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/SubEdit.Player.Core/SubEdit.Player.Core.csproj" />
+    <Project Path="src/SubEdit.Player.WinForms/SubEdit.Player.WinForms.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/SubEdit.Player.Tests/SubEdit.Player.Tests.csproj" />
+  </Folder>
+  <Folder Name="/third_party/">
+    <Project Path="third_party/FlyleafLib/FlyleafLib.csproj" />
+    <Project Path="third_party/Scintilla.NET/ApiToolkit/ApiToolkit.csproj" />
+    <Project Path="third_party/Scintilla.NET/Scintilla.NET/Scintilla.NET.csproj" />
+  </Folder>
+</Solution>

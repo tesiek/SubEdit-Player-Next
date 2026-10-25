@@ -1,0 +1,51 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0-windows</TargetFramework>
+	<UseWindowsForms>true</UseWindowsForms>
+	<UseWPF>true</UseWPF>
+	<RepositoryUrl>https://github.com/SuRGeoNix/Flyleaf</RepositoryUrl>
+	<Description>Media Player .NET Library for WinUI 3/WPF/WinForms (based on FFmpeg/DirectX) - SubEdit candidate fork</Description>
+	<Version>3.11.8</Version>
+	<AssemblyVersion>3.11.8.0</AssemblyVersion>
+	<FileVersion>3.11.8.0</FileVersion>
+	<InformationalVersion>3.11.8-subedit.e11+commit.ffa8c630b64c5449586be911d52ad9ae9551e1c8</InformationalVersion>
+	<Authors>SuRGeoNix, TSS</Authors>
+	<Copyright>SuRGeoNix © 2026</Copyright>
+	<PackageLicenseExpression>LGPL-3.0-or-later</PackageLicenseExpression>
+	<PackageProjectUrl>https://github.com/SuRGeoNix/Flyleaf</PackageProjectUrl>
+	<PackageTags>flyleaf flyleaflib video audio media player engine framework download extract ffmpeg vortice directx</PackageTags>
+	<IncludeSymbols>false</IncludeSymbols>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net10.0-windows|AnyCPU'">
+    <NoWarn>1701;1702;WFO1000;649</NoWarn>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net10.0-windows|AnyCPU'">
+    <NoWarn>1701;1702;WFO1000;649</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+	<PackageReference Include="Flyleaf.FFmpeg.Bindings" Version="9.0.0" />
+	<PackageReference Include="Vortice.D3DCompiler" Version="3.8.3" />
+	<PackageReference Include="Vortice.Direct3D11" Version="3.8.3" />
+	<PackageReference Include="Vortice.DirectComposition" Version="3.8.3" />
+	<PackageReference Include="Vortice.Mathematics" Version="2.1.1" />
+	<PackageReference Include="Vortice.MediaFoundation" Version="3.8.3" />
+	<PackageReference Include="Vortice.XAudio2" Version="3.8.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="SubEdit.Player.Tests" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,454 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SubEdit-Player Next — FAQ — edycja napisów</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --page: #0b0d10;
+      --panel: #15191f;
+      --panel-2: #1b2129;
+      --line: #2d3744;
+      --text: #e7edf4;
+      --muted: #aeb9c5;
+      --accent: #58b7eb;
+      --key: #202b37;
+    }
+
+    * { box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      margin: 0;
+      background: radial-gradient(circle at top, #18212c 0, var(--page) 46rem);
+      color: var(--text);
+      font: 16px/1.58 "Segoe UI", Arial, sans-serif;
+    }
+
+    main {
+      width: min(1180px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 42px 0 64px;
+    }
+
+    header {
+      margin: 0 0 28px;
+      padding: 30px 34px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: linear-gradient(135deg, #18222d, #11151a);
+      box-shadow: 0 18px 50px #0008;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(28px, 4vw, 42px);
+      line-height: 1.15;
+      letter-spacing: -.02em;
+    }
+
+    h1 .next {
+      color: var(--accent);
+      font-weight: 400;
+    }
+
+    h1 .subtitle {
+      color: var(--accent);
+      font-weight: 400;
+      font-size: .68em;
+      letter-spacing: 0;
+    }
+
+    header p {
+      max-width: 900px;
+      margin: 14px 0 0;
+      color: var(--muted);
+    }
+
+    section {
+      margin-top: 22px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      overflow: hidden;
+      background: var(--panel);
+      box-shadow: 0 10px 32px #0003;
+      scroll-margin-top: 18px;
+    }
+
+    h2 {
+      margin: 0;
+      padding: 15px 20px;
+      border-bottom: 1px solid var(--line);
+      background: var(--panel-2);
+      color: #d7f1ff;
+      font-size: 1.04rem;
+      letter-spacing: .025em;
+    }
+
+    .toc {
+      padding-bottom: 6px;
+    }
+
+    .toc-list {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 0;
+    }
+
+    .toc-link {
+      display: grid;
+      grid-template-columns: 42px 1fr;
+      align-items: start;
+      gap: 10px;
+      padding: 12px 18px;
+      border-bottom: 1px solid #25303c;
+      color: var(--text);
+      text-decoration: none;
+      transition: background-color .12s ease, color .12s ease;
+    }
+
+    .toc-link:last-child { border-bottom: 0; }
+
+    .toc-link:hover {
+      background: #1a212a;
+      color: #d7f1ff;
+    }
+
+    .toc-number {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 30px;
+      height: 26px;
+      padding: 0 8px;
+      border: 1px solid #3b5266;
+      border-radius: 999px;
+      background: #152431;
+      color: #c6eaff;
+      font-size: .82rem;
+      font-weight: 600;
+    }
+
+    .answer-body {
+      padding: 18px 20px 20px;
+      color: var(--text);
+    }
+
+    .answer-body br {
+      line-height: 1.8;
+    }
+
+    .answer-body ul {
+      margin: 10px 0 12px;
+      padding-left: 26px;
+    }
+
+    .answer-body li {
+      margin: 6px 0;
+    }
+
+    .answer-body a {
+      color: var(--accent);
+    }
+
+    .answer-body b,
+    .answer-body strong {
+      color: #f3f7fb;
+    }
+
+    .answer-footer {
+      padding: 0 20px 16px;
+      text-align: right;
+      font-size: .88rem;
+    }
+
+    .answer-footer a,
+    footer a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    .answer-footer a:hover,
+    footer a:hover {
+      text-decoration: underline;
+    }
+
+    code, kbd {
+      display: inline-block;
+      padding: 1px 7px 2px;
+      border: 1px solid #4d5e70;
+      border-bottom-color: #2a3541;
+      border-radius: 5px;
+      background: var(--key);
+      color: #f7fbff;
+      font: 600 .88rem/1.45 Consolas, "Cascadia Mono", monospace;
+      box-shadow: inset 0 1px #ffffff12;
+    }
+
+    footer {
+      margin-top: 26px;
+      padding: 0 4px;
+      color: #93a1af;
+      font-size: .86rem;
+    }
+
+    @media (max-width: 680px) {
+      main {
+        width: min(100% - 20px, 1180px);
+        padding-top: 18px;
+      }
+
+      header {
+        padding: 22px;
+      }
+
+      h2 {
+        padding: 14px 16px;
+      }
+
+      .answer-body {
+        padding: 16px;
+      }
+
+      .toc-link {
+        padding: 11px 14px;
+      }
+    }
+  </style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>SubEdit-Player <span class="next">Next</span><br><span class="subtitle">FAQ — edycja napisów</span></h1>
+    <p>Najczęstsze pytania i odpowiedzi dotyczące tworzenia, konwersji, synchronizacji i edycji napisów.</p>
+  </header>
+
+  <section class="toc" id="zagadnienia">
+    <h2>ZAGADNIENIA</h2>
+    <div class="toc-list">
+      <a class="toc-link" href="#odp001"><span class="toc-number">1</span><span>1. Jak stworzyć własne napisy?</span></a>
+<a class="toc-link" href="#odp002"><span class="toc-number">2</span><span>2. Mam napisy w formacie ... i chcę je skonwertować na format ...?</span></a>
+<a class="toc-link" href="#odp003"><span class="toc-number">3</span><span>3. Napisy zbyt szybko znikają i nie nadążam ich czytać.</span></a>
+<a class="toc-link" href="#odp004"><span class="toc-number">4</span><span>4. Zrobiłem to co było w odpowiedzi na pytanie 3 a napisy dalej znikają zbyt szybko.</span></a>
+<a class="toc-link" href="#odp005"><span class="toc-number">5</span><span>5. W niektórych miejscach filmu nie ma napisów a czasem wyskakuje ich cała chmara i szybko znikają.</span></a>
+<a class="toc-link" href="#odp006"><span class="toc-number">6</span><span>6. Napisy wyświetlają się zbyt wcześnie/późno.</span></a>
+<a class="toc-link" href="#odp007"><span class="toc-number">7</span><span>7. Napisy wyświetlają się coraz wcześniej/później wraz z postępem oglądania filmu.</span></a>
+<a class="toc-link" href="#odp008"><span class="toc-number">8</span><span>8. Dlaczego program tak często prosi o wpisanie domyślnej wartości współczynnika FPS jeżeli nie jest wczytany film?</span></a>
+<a class="toc-link" href="#odp009"><span class="toc-number">9</span><span>9. Jak mogę sprawdzić czy w moich napisach istnieje błędna (o nierozpoznanym formacie) linia?</span></a>
+<a class="toc-link" href="#odp010"><span class="toc-number">10</span><span>10. Jak podzielić długą linię, żeby zachować formatowanie (np. kursywę) w nowoutworzonym wierszu?</span></a>
+    </div>
+  </section>
+
+  <section class="faq-answer" id="odp001">
+      <h2>Ad.1. Jak stworzyć własne napisy?</h2>
+      <div class="answer-body">
+        <br/>
+Ustalanie czasu wyświetlenia napisów odbywa się przy
+wczytanym filmie. Do samego pisania tekstu napisów nie jest to konieczne.<br/>
+Jeżeli film jest wczytany i włączone jest okno edytora (Ctrl+E)
+to w menu Film uaktywnią się opcje "Wstaw klatkę początkową" oraz
+"Wstaw klatkę końcową". Służą one do wpisywania do linii na której
+znajduje się kursor wartości czasu/klatki określającej aktualną
+pozycję filmu.<br/>
+Zalecam wstawianie tylko klatek początkowych. Klatki końcowe można
+przypisać automatycznie (patrz pytanie nr 3).<br/>
+Jeżeli napisy były napisane wcześniej i trzeba tylko powstawiać
+klatki początkowe do ich wartości można w Opcjach (menu Narzędzia) na
+karcie "Edycja" zaznaczyć opcję "Po wstawieniu klatki napisu
+przenieś kursor do następnego wiersza" (domyślnie nie jest wybrana).
+Przyspieszy to wpisywanie.<br/>
+Na tej samej karcie można też wybrać opóźnienie dla czasu reakcji.
+Wartość ta jest odejmowana od czasu klatki początkowej po jej wpisaniu.<br/>
+W menu Narzędzia można też określić domyślny format tworzonych napisów.
+Ze względu na dokładność zalecam używanie formatu mDVD albo MPL2.<br/>
+<br/>
+      </div>
+      <div class="answer-footer"><a href="#zagadnienia">↑ Wróć do zagadnień</a></div>
+    </section>
+<section class="faq-answer" id="odp002">
+      <h2>Ad.2. Mam napisy w formacie ... i chcę je skonwertować na format ...?</h2>
+      <div class="answer-body">
+        <br/>
+W celu skonwertowania napisów z jednego formatu na inny
+należy:
+<ul>
+<li>otworzyć plik z napisami,
+<li>jeżeli nie jest włączony "Edytor napisów" należy go włączyć (menu Widok),
+<li>w menu "Napisy" wybierz "Konwertuj format napisów",
+<li>wybierz interesujący cię format i potwierdź wybór.
+</li></li></li></li></ul>
+Konwertując do formatu SRT należy posłużyć się funkcją "Zapisz napisy jako SRT" w menu "Plik".<br/>
+<br/>
+      </div>
+      <div class="answer-footer"><a href="#zagadnienia">↑ Wróć do zagadnień</a></div>
+    </section>
+<section class="faq-answer" id="odp003">
+      <h2>Ad.3. Napisy zbyt szybko znikają i nie nadążam ich czytać.</h2>
+      <div class="answer-body">
+        <ul>
+<li>włącz "Edytor napisów" (menu Widok),
+<li>w menu "Napisy" wybierz opcję "Zmień czas wyświetlania napisów",
+<li>potwierdź zmianę, używając standardowych ustawień, bądź też zmień ustawienia wedle uznania,
+<li>jeżeli dalej napisy pojawiają się zbyt szybko oznacza to, że
+  dłuższy czas pokazywania napisu blokowany jest przez napis następny (patrz pytanie 4.).
+</li></li></li></li></ul>
+      </div>
+      <div class="answer-footer"><a href="#zagadnienia">↑ Wróć do zagadnień</a></div>
+    </section>
+<section class="faq-answer" id="odp004">
+      <h2>Ad.4. Zrobiłem to co było w odpowiedzi na pytanie 3, a napisy dalej znikają zbyt szybko.</h2>
+      <div class="answer-body">
+        <br/>
+  Jeżeli zawiodą porady z punktu nr 3 oznacza to, że kolejne napisy
+  blokują możliwość długiego wyświetlania napisu.<br/>
+<ul>
+<li>włącz "Edytor napisów" (menu Widok),
+<li>w menu "Napisy" wybierz opcję "Połącz szybko znikające napisy",
+<li>potwierdź zmianę, używając standardowych ustawień, ewentualnie 
+    wpisz swoje wartości.
+</li></li></li></ul>    
+Po tych operacjach napisy powinny być wyświetlane dłużej.<br/>
+Jeżeli tak nie jest, można zwiększyć (błądź wyłączyć) ograniczenie
+długości nowo powstałego napisu.<br/>
+<br/>
+      </div>
+      <div class="answer-footer"><a href="#zagadnienia">↑ Wróć do zagadnień</a></div>
+    </section>
+<section class="faq-answer" id="odp005">
+      <h2>Ad.5. W niektórych miejscach filmu nie ma napisów a czasem wyskakuje ich cała chmara i szybko znikają.</h2>
+      <div class="answer-body">
+        <br/>
+Czasem napisy po prostu są tak zrobione, ale bywa też, że są
+nieposortowane.<br/>
+<ul>
+<li>włącz "Edytor napisów" (menu Widok),
+<li>w menu "Napisy" wybierz "Sortuj napisy",
+<li>potwierdź sortowanie.
+</li></li></li></ul>
+W niektorych wypadkach posortowanie napisów może tylko je popsuć. Dzieje się tak w sytuacji,
+w której kolejność napisów jest prawidłowa lecz ich czasy wyświetlania są nieprawidłowo wpisane.<br/>
+<br/>
+      </div>
+      <div class="answer-footer"><a href="#zagadnienia">↑ Wróć do zagadnień</a></div>
+    </section>
+<section class="faq-answer" id="odp006">
+      <h2>Ad.6. Napisy wyświetlają się zbyt wcześnie/późno.</h2>
+      <div class="answer-body">
+        <br/>
+Najpierw należy dokonać pomiaru opóźnienia napisów:
+<ul>
+<li>włącz "Edytor napisów" (menu Widok),<br/>
+<li>ustaw kursor na linii, względem której będziesz mierzył
+  opóźnienie,<br/>
+<li>przewiń film parę sekund przed miejsce, w którym będzie wypowiedziana
+  kwestia z wybranej linii,<br/>
+<li>włącz Play i w momencie, kiedy owa kwestia będzie wypowiadana wciśnij Ctrl+/.<br/>
+</li></li></li></li></ul>
+Wyświetli się okno dialogowe z wpisanym pomiarem opóźnienia.<br/>
+Po zatwierdzeniu pomiaru napisy zostaną przesunięte.<br/><br/>
+Okno dialogowe przesunięcia napisów można też wywołać bezpośrednio z menu
+"Napisy" > "Przesuń czas napisów".<br/><br/>
+
+Jeżeli powyższe operacje sprawiły, że napisy są prawidłowo wyświetlane tylko
+w pobliżu miejsca pomiaru opóźnienia filmu a im dalej od niego tym błąd 
+czasu wyświetlania większy,
+to należy posłużyć się przesunięciem geometrycznym napisów (punktu nr 7).<br/>
+<br/>
+      </div>
+      <div class="answer-footer"><a href="#zagadnienia">↑ Wróć do zagadnień</a></div>
+    </section>
+<section class="faq-answer" id="odp007">
+      <h2>Ad.7. Napisy wyświetlają się coraz wcześniej/później wraz z postępem oglądania filmu.</h2>
+      <div class="answer-body">
+        <br/>
+Oznacza to, że napisy były robione dla filmu o innym współczynniku FPS.<br/>
+<br/>Jeżeli znasz współczynnik FPS filmu, dla którego były robione napisy to:<br/>
+<ul>
+<li>włącz "Edytor napisów" (menu Widok),<br/>
+<li>w menu "Napisy" wybierz "Zmień współczynnik FPS napisów",<br/>
+<li>w miejsce "Aktualna" wpisz współczynnik FPS filmu, dla którego napisy
+  były robione,<br/>
+<li>w miejsce "Docelowa" wpisz wartość współczynnika FPS filmu, dla którego
+  napisy są przeznaczone.<br/>
+  Jeżeli aktualnie jest otwarty film, do którego przerabiamy napisy, bądź też
+  wartość FPS była wcześniej określona przez użytkownika to
+  pole "Docelowa" zostanie wypełnione automatycznie,<br/>
+<li>zatwierdź chęć konwersji.<br/>
+</li></li></li></li></li></ul>  
+  Jeżeli zachodzi taka konieczność to napisy można przesunąć o stałą wartość 
+  czasową na całej długości (pytanie nr 6).<br/>
+<br/>Jeżeli NIE znasz współczynnika FPS filmu, dla którego były robione napisy to:<br/>
+<ul>
+<li>włącz "Edytor napisów" (menu Widok),<br/>
+<li>otwórz film, do którego należy dopasować napisy i wczytaj napisy,<br/>
+<li>przejdź na początek napisów i ustaw kursor w linii, względem której
+  będzie dokonywany pomiar,<br/>
+<li>przewiń film parę sekund przed miejsce, w którym wypowiedziana jest
+  kwestia z wybranej linii,<br/>
+<li>włącz Play i w momencie, kiedy owa kwestia będzie wypowiadana wciśnij Ctrl+F1.<br/>
+<li>teraz przejdź na koniec napisów i w wyżej opisany sposób dokonaj pomiaru opóźnienia,
+    używając klawiszy Ctrl+F2.<br/>
+<li>jeżeli pomiary zostały prawidłowo wykonane to pojawi się okno dialogowe
+  geometrycznego przesunięcia napisów
+  (Ctrl+F3) (patrz menu "Napisy" &gt; "Opóźnienie napisów"),<br/>
+<li>potwierdź chęć geometrycznego przesunięcia napisów.<br/>
+</li></li></li></li></li></li></li></li></ul>
+Powyższego sposobu można używać również w sytuacji opisanej w punkcie nr 6.<br/>
+Uwaga: dokładność przesunięcia zależy od dokładności pomiarów.<br/><br/>
+Jeżeli zmiana współczynnika FPS albo geometryczne przesunięcie zostały wykonane dla całego dokumentu, SubEdit-Player Next może zapamiętać wynikającą z nich korektę na czas bieżącej sesji. Przy późniejszym użyciu funkcji <b>„Dołącz plik napisów (film w jednej części)”</b> program może zastosować tę samą korektę do dołączanego pliku. Opcja <b>„Ignoruj”</b> pozwala dołączyć plik bez zastosowania zapamiętanej korekty.<br/>
+<br/>
+      </div>
+      <div class="answer-footer"><a href="#zagadnienia">↑ Wróć do zagadnień</a></div>
+    </section>
+<section class="faq-answer" id="odp008">
+      <h2>Ad.8. Dlaczego program tak często prosi o wpisanie domyślnej wartości współczynnika FPS jeżeli nie jest wczytany film?</h2>
+      <div class="answer-body">
+        <br/>
+Wartość tego współczynnika potrzebna jest do przeliczania wartości
+klatkowych na czasowe i w drugą stronę.<br/>
+Konieczność jej podawania bierze się stąd, że napisy nie są sprawdzane
+pod kątem użytego formatu i każda linia traktowana jest z osobna.
+Dlatego jeżeli będą wymieszane napisy we wszystkich obsługiwanych
+formatach program je dobrze posortuje.<br/>
+Jeżeli jesteś pewny, że nie ma w napisach używanego formatu klatkowego, a program zapyta cię o współczynnik FPS możesz podać dowolną liczbę
+większą od zera.<br/>
+<br/>
+      </div>
+      <div class="answer-footer"><a href="#zagadnienia">↑ Wróć do zagadnień</a></div>
+    </section>
+<section class="faq-answer" id="odp009">
+      <h2>9. Jak mogę sprawdzić czy w moich napisach istnieje błędna (o nierozpoznanym formacie) linia?</h2>
+      <div class="answer-body">
+        <br/>
+SubEdit przed wykonaniem jakiejkolwiek automatycznej zmiany napisów
+(czy to konwersja, czy zmiana czasu wyświetlania napisu)
+sprawdza wszystkie linie napisów czy są wolne od błędów.<br/>
+Jest to sygnalizowane paskiem w kolorze czerwonym.<br/>
+Jeżeli błąd nie wystąpi zostanie otwarte okno wybranej funkcji.
+Jeżeli natomiast zostanie znaleziona linia z błędem to
+zostanie wyświetlone ostrzeżenie. W tym momencie należy nacisnąć
+klawisz Esc a kursor przejdzie w miejsce nierozpoznanego
+napisu.<br/>
+<br/>
+      </div>
+      <div class="answer-footer"><a href="#zagadnienia">↑ Wróć do zagadnień</a></div>
+    </section>
+<section class="faq-answer" id="odp010">
+      <h2>10. Jak podzielić długą linię, żeby zachować formatowanie (np. kursywę) w nowoutworzonym wierszu?</h2>
+      <div class="answer-body">
+        <br/>
+Przy wstawianiu znaku "|" linia dzielona jest na dwa wiersze. Żeby dodać formatowanie w nowoutworzonym wierszu należy ustawić kursor w tekście wiersza oraz wciśnąć Ctrl+I dla kursywy, Ctrl+B dla pogrubienia, Ctrl+U dla podkreślenia. Tekst całej linii zostanie ujęty w odpowiednie tagi formatowania tekstu.<br/>
+<br/><br/>
+      </div>
+      <div class="answer-footer"><a href="#zagadnienia">↑ Wróć do zagadnień</a></div>
+    </section>
+
+  <footer>
+    <a href="https://subedit.com.pl">https://subedit.com.pl</a>
+  </footer>
+</main>
+</body>
+</html>

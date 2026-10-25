@@ -1,0 +1,535 @@
+<!doctype html>
+<html lang="pl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>SubEdit-Player Next — Pomoc</title><style>:root {
+  color-scheme: dark;
+  --page:#0b0d10;
+  --panel:#15191f;
+  --panel2:#1b2129;
+  --line:#2d3744;
+  --text:#e7edf4;
+  --muted:#aeb9c5;
+  --accent:#58b7eb;
+  --key:#202b37;
+  --hover:#1a212a;
+  --sidebar:360px;
+}
+* { box-sizing:border-box; }
+html,body { width:100%; height:100%; }
+body {
+  margin:0;
+  overflow:hidden;
+  background:var(--page);
+  color:var(--text);
+  font:15px/1.58 "Segoe UI",Arial,sans-serif;
+}
+.help-shell {
+  height:100vh;
+  display:grid;
+  grid-template-columns:var(--sidebar) 7px minmax(0,1fr);
+}
+.sidebar {
+  display:flex;
+  flex-direction:column;
+  min-width:0;
+  height:100vh;
+  overflow:hidden;
+  border-right:1px solid var(--line);
+  background:linear-gradient(180deg,#11171e,#0d1116);
+  box-shadow:10px 0 30px #0004;
+}
+.brand {
+  padding:22px 20px 17px;
+  border-bottom:1px solid var(--line);
+  background:linear-gradient(135deg,#18222d,#11151a);
+}
+.brand h1 {
+  margin:0;
+  font-size:24px;
+  line-height:1.12;
+  letter-spacing:-.02em;
+}
+.brand h1 .next {
+  color:var(--accent);
+  font-weight:400;
+}
+.brand h1 .subtitle {
+  display:block;
+  margin-top:3px;
+  color:var(--accent);
+  font-size:16px;
+  font-weight:400;
+  letter-spacing:0;
+}
+.search-box {
+  padding:13px 14px 12px;
+  border-bottom:1px solid var(--line);
+  background:#12171d;
+}
+.search-box label {
+  display:block;
+  margin:0 0 6px 2px;
+  color:#aeb9c5;
+  font-size:.72rem;
+  font-weight:700;
+  letter-spacing:.075em;
+  text-transform:uppercase;
+}
+.search-wrap { position:relative; }
+.search-wrap input {
+  width:100%;
+  padding:9px 34px 9px 10px;
+  border:1px solid #3b4652;
+  border-radius:6px;
+  outline:none;
+  background:#0b1015;
+  color:var(--text);
+  font:inherit;
+}
+.search-wrap input:focus {
+  border-color:#4f8db0;
+  box-shadow:0 0 0 2px #58b7eb22;
+}
+.clear-search {
+  position:absolute;
+  right:5px;
+  top:50%;
+  transform:translateY(-50%);
+  width:27px;
+  height:27px;
+  border:0;
+  border-radius:4px;
+  background:transparent;
+  color:#8795a4;
+  cursor:pointer;
+  font-size:18px;
+}
+.clear-search:hover { background:#1c2630; color:#d7f1ff; }
+.search-status {
+  min-height:18px;
+  margin:6px 2px 0;
+  color:#8795a4;
+  font-size:.74rem;
+}
+.tree-caption {
+  padding:9px 15px;
+  border-bottom:1px solid var(--line);
+  background:#151b22;
+  color:#8fa4b7;
+  font-size:.72rem;
+  font-weight:700;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+}
+.tree {
+  flex:1 1 auto;
+  min-height:0;
+  overflow-y:scroll;
+  overflow-x:hidden;
+  scrollbar-width:auto;
+  scrollbar-color:#465463 #0d1116;
+}
+.tree::-webkit-scrollbar { width:12px; }
+.tree::-webkit-scrollbar-track {
+  background:#0d1116;
+  border-left:1px solid #202a34;
+}
+.tree::-webkit-scrollbar-thumb {
+  background:#465463;
+  border:2px solid #0d1116;
+  border-radius:7px;
+}
+.tree::-webkit-scrollbar-thumb:hover { background:#5a6b7d; }
+.tree-group { border-bottom:1px solid #202a34; }
+.tree-group > summary {
+  list-style:none;
+  display:flex;
+  align-items:center;
+  gap:8px;
+  padding:9px 12px;
+  cursor:pointer;
+  user-select:none;
+  background:#151b22;
+  color:#cbd6e0;
+  font-weight:600;
+  font-size:.88rem;
+}
+.tree-group > summary::-webkit-details-marker { display:none; }
+.tree-group > summary:hover { background:#1a222b; }
+.tree-marker {
+  position:relative;
+  flex:0 0 16px;
+  width:16px;
+  height:16px;
+  border:1px solid #526274;
+  border-radius:3px;
+  background:#111820;
+}
+.tree-marker::before,
+.tree-marker::after {
+  content:"";
+  position:absolute;
+  background:#b8dff4;
+}
+.tree-marker::before { left:3px; right:3px; top:7px; height:1px; }
+.tree-marker::after { top:3px; bottom:3px; left:7px; width:1px; }
+details[open] > summary .tree-marker::after { display:none; }
+.tree-items { padding:4px 0 6px; background:#10151b; }
+.topic-link {
+  width:100%;
+  display:block;
+  padding:6px 11px 6px 24px;
+  border:0;
+  border-left:3px solid transparent;
+  background:transparent;
+  color:#c2ccd6;
+  text-align:left;
+  cursor:pointer;
+  font:inherit;
+}
+.topic-link:hover { background:var(--hover); color:#edf7fc; }
+.topic-link.active {
+  border-left-color:var(--accent);
+  background:#172632;
+  color:#eaf8ff;
+}
+.topic-link.search-hidden,
+.tree-group.search-hidden { display:none !important; }
+
+.splitter {
+  position:relative;
+  width:7px;
+  height:100vh;
+  cursor:col-resize;
+  background:#0d1116;
+  border-right:1px solid #202a34;
+  border-left:1px solid #202a34;
+  user-select:none;
+  touch-action:none;
+  z-index:20;
+}
+.splitter::before {
+  content:"";
+  position:absolute;
+  top:50%;
+  left:2px;
+  width:2px;
+  height:54px;
+  transform:translateY(-50%);
+  border-radius:2px;
+  background:#465463;
+  box-shadow:0 0 0 1px #0003;
+}
+.splitter:hover,.splitter.dragging { background:#16212b; }
+.splitter:hover::before,.splitter.dragging::before { background:var(--accent); }
+body.resizing { cursor:col-resize; user-select:none; }
+body.resizing * { cursor:col-resize !important; }
+
+.content-pane {
+  min-width:0;
+  height:100vh;
+  overflow:auto;
+  background:radial-gradient(circle at top,#18212c 0,var(--page) 47rem);
+  scrollbar-color:#3b4652 #0b0d10;
+}
+.content-inner {
+  width:min(1200px,calc(100% - 48px));
+  margin:0 auto;
+  padding:34px 0 64px;
+}
+.help-topic {
+  display:none;
+  border:1px solid var(--line);
+  border-radius:12px;
+  overflow:hidden;
+  background:var(--panel);
+  box-shadow:0 16px 46px #0005;
+}
+.help-topic.active { display:block; }
+.topic-header {
+  margin:0;
+  padding:22px 26px 20px;
+  border-bottom:1px solid var(--line);
+  background:linear-gradient(135deg,#1b2632,#12171d);
+}
+.topic-header h1 {
+  margin:0;
+  color:#d7f1ff;
+  font-size:clamp(22px,3vw,32px);
+  line-height:1.22;
+  letter-spacing:-.015em;
+}
+.topic-content { padding:24px 28px 30px; color:var(--text); }
+.topic-content p { margin:0 0 11px; }
+.topic-content h3 {
+  margin:22px -28px 12px;
+  padding:10px 28px;
+  border-top:1px solid #25303c;
+  border-bottom:1px solid #25303c;
+  background:#12171d;
+  color:#b9c8d5;
+  font-size:.82rem;
+  letter-spacing:.055em;
+  text-transform:uppercase;
+}
+.topic-content h3:first-child { margin-top:-24px; border-top:0; }
+.topic-content ul,.topic-content ol { padding-left:26px; }
+.topic-content li { margin:5px 0; }
+.topic-content a { color:var(--accent); text-decoration:none; }
+.topic-content a:hover { text-decoration:underline; }
+.shortcut-line {
+  padding:7px 10px;
+  border:1px solid #334353;
+  border-radius:7px;
+  background:var(--key);
+  color:#eef7ff;
+  font:inherit;
+}
+.empty-state {
+  display:none;
+  padding:26px;
+  border:1px solid var(--line);
+  border-radius:12px;
+  background:var(--panel);
+  color:var(--muted);
+  text-align:center;
+}
+.empty-state.visible { display:block; }
+
+@media (max-width:760px) {
+  :root { --sidebar:300px; }
+  .content-inner { width:min(100% - 24px,1200px); padding-top:16px; }
+}
+@media (max-width:620px) {
+  body { overflow:auto; }
+  .help-shell { height:auto; min-height:100vh; grid-template-columns:1fr; }
+  .splitter { display:none; }
+  .sidebar {
+    height:48vh;
+    min-height:320px;
+    overflow:hidden;
+    border-right:0;
+    border-bottom:1px solid var(--line);
+  }
+  .content-pane { height:auto; min-height:52vh; overflow:visible; }
+  .content-inner { padding-bottom:30px; }
+}
+.topic-content code {
+  display:inline-block;
+  padding:1px 6px 2px;
+  border:1px solid #4d5e70;
+  border-bottom-color:#2a3541;
+  border-radius:5px;
+  background:var(--key);
+  color:#f7fbff;
+  font:600 .9em/1.45 Consolas,"Cascadia Mono",monospace;
+  box-shadow:inset 0 1px #ffffff12;
+}
+.topic-content strong code {
+  font-weight:700;
+}
+</style></head><body><div class="help-shell"><aside class="sidebar"><div class="brand"><h1>SubEdit-Player <span class="next">Next</span><span class="subtitle">Pomoc</span></h1></div><div class="search-box"><label for="helpSearch">Przeszukaj pomoc</label><div class="search-wrap"><input id="helpSearch" type="search" placeholder="Wpisz szukaną frazę..." autocomplete="off"><button id="clearSearch" class="clear-search" type="button" title="Wyczyść">×</button></div><div id="searchStatus" class="search-status">Wyszukiwanie obejmuje tytuły i treść tematów.</div></div><div class="tree-caption">Spis treści</div><nav class="tree" id="helpTree"></nav></aside><div id="splitter" class="splitter" role="separator" aria-orientation="vertical" aria-label="Zmień szerokość panelu pomocy" title="Przeciągnij, aby zmienić szerokość panelu. Dwuklik przywraca szerokość domyślną."></div><main class="content-pane" id="contentPane"><div class="content-inner"><div id="emptyState" class="empty-state">Brak tematów pasujących do wyszukiwania.</div><div id="topicHost"></div></div></main></div><script id="help-data" type="application/json">{"categories":[{"id":"cat-01","title":"Wprowadzenie","topics":[{"id":"temat-001","title":"SubEdit-Player Next","content":"\u003cp>Edytor napisów i odtwarzacz filmów.\u003c/p>\n\u003cp>SubEdit-Player Next jest wolnym oprogramowaniem udostępnianym na warunkach licencji GNU GPL-3.0-or-later. Szczegóły znajdują się w pliku LICENSE.\u003c/p>\n\u003cp>Posiada zaawansowane mechanizmy ułatwiające dostosowanie istniejących napisów, jak i funkcje wspomagające tworzenie nowych. Zawiera wiele opcji wspomagających oglądanie filmu.\u003c/p>\u003cp>Program wyposażony jest w pomoc kontekstową uzyskiwaną po wciśnięciu klawisza \u003ccode>F1\u003c/code>.\u003c/p>\u003ch3>SKRÓTOWY OPIS MOŻLIWOŚCI PROGRAMU\u003c/h3>\u003ch3>Obsługa formatów napisów:\u003c/h3>\u003cp>\u003ca href=\"#temat-185\">mDVD\u003c/a>\u003c/p>\u003cp>\u003ca href=\"#temat-184\">MPL2\u003c/a>\u003c/p>\u003cp>\u003ca href=\"#temat-183\">TMPlayer\u003c/a>\u003c/p>\u003cp>\u003ca href=\"#temat-187\">SRT\u003c/a>\u003c/p>\u003cp>\u003ca href=\"#temat-123\">Dostosowanie szerokości napisów, jeżeli wychodzą poza ekran\u003c/a>\u003c/p>\u003ch3>Mechanizmy ułatwiające edycję napisów:\u003c/h3>\n\u003cp>\u003ca href=\"#temat-052\">Pełna obsługa (oraz konwersja) formatów:&nbsp;mDVD, MPL2, TMPlayer, SRT\u003c/a>\u003c/p>\n\u003cp>\u003ca href=\"#temat-053\">Przesunięcie napisów o stałą wartość czasu\u003c/a>\u003c/p>\n\u003cp>\u003ca href=\"#temat-081\">Przesunięcie napisów o różną (ale liniowo zmienną) wartość klatek\u003c/a>\u003c/p>\n\u003cp>\u003ca href=\"#temat-058\">\"Inteligentne\" łączenie szybko wyświetlanych napisów\u003c/a>\u003c/p>\n\u003cp>\u003ca href=\"#temat-056\">Dostosowanie napisów do filmu o innym współczynniku FPS niż ten, dla którego były tworzone\u003c/a>\u003c/p>\n\u003cp>\u003ca href=\"#temat-054\">Zmiana czasu wyświetlania napisów (np. zależna od długości tekstu)\u003c/a>\u003c/p>\n\u003cp>\u003ca href=\"#temat-063\">Mechanizmy poprawiające błędy z programów rozpoznających napisy z DVD\u003c/a>\u003c/p>\n\u003cp>\u003ca href=\"#temat-096\">Szybkie wyszukanie linii, która zawiera nierozpoznany format napisu\u003c/a>\u003c/p>\n\u003cp>\u003ca href=\"#temat-116\">Podświetlanie na inny kolor linii o nierozpoznanym formacie i nieposortowanych\u003c/a>\u003c/p>\n\u003cp>\u003ca href=\"#temat-118\">Oznaczanie w edytorze linii o różnej jasności zależnej od długości jej wyświetlania\u003c/a>\u003c/p>\n\u003cp>\u003ca href=\"#temat-069\">Śledzenie napisów w edytorze\u003c/a>\u003c/p>\u003ch3>Mechanizmy ułatwiające tworzenie nowych napisów:\u003c/h3>\n\u003cp>\u003ca href=\"#temat-010\">Wczytanie filmu\u003c/a>\u003c/p>\n\u003cp>\u003ca href=\"#temat-066\">Wstawienie numeru aktualnie wyświetlanej klatki filmu do bieżącej linii\u003c/a>\u003c/p>\n\u003cp>\u003ca href=\"#temat-070\">Odtwarzanie filmu od napisu, na którym jest kursor\u003c/a>\u003c/p>\n\u003cp>\u003ca href=\"#temat-068\">Przejście do aktualnie wyświetlanego napisu\u003c/a>\u003c/p>\n\u003cp>\u003ca href=\"#temat-026\">Zaawansowane metody wyszukiwania napisów\u003c/a>\u003c/p>"}]},{"id":"cat-02","title":"Plik","topics":[{"id":"temat-004","title":"Menu: Plik","content":"\u003ch3>Elementy menu Plik:\u003c/h3>\n\u003cp>\u003ca href=\"#temat-010\">Otwórz plik wideo\u003c/a>\u003c/p>\n\u003cp>\u003ca href=\"#temat-016\">Zamknij plik wideo\u003c/a>\u003c/p>\n\u003cp>\u003ca href=\"#temat-014\">Właściwości pliku wideo\u003c/a>\u003c/p>\n\u003cp>\u003ca href=\"#temat-005\">Utwórz nowe napisy\u003c/a>\u003c/p>\n\u003cp>\u003ca href=\"#temat-011\">Otwórz plik napisów\u003c/a>\u003c/p>\n\u003cp>\u003ca href=\"#temat-012\">Dodaj plik na koniec napisów\u003c/a>\u003c/p>\n\u003cp>\u003ca href=\"#temat-020\">Podziel plik napisów (film w kilku częściach)\u003c/a>\u003c/p>\n\u003cp>\u003ca href=\"#temat-021\">Dołącz plik napisów (film w jednej części)\u003c/a>\u003c/p>\n\u003cp>\u003ca href=\"#temat-006\">Zamknij plik napisów\u003c/a>\u003c/p>\n\u003cp>\u003ca href=\"#temat-018\">Zapisz napisy\u003c/a>\u003c/p>\n\u003cp>\u003ca href=\"#temat-019\">Zapisz napisy jako\u003c/a>\u003c/p>\n\u003cp>\u003ca href=\"#temat-007\">Zapisz napisy jako SRT\u003c/a>\u003c/p>\n\u003cp>\u003ca href=\"#temat-015\">Historia otwieranych plików\u003c/a>\u003c/p>\n\u003cp>\u003ca href=\"#temat-022\">Zakończ\u003c/a>\u003c/p>"},{"id":"temat-010","title":"Otwórz plik wideo","content":"\u003cp>Otwiera plik z filmem.\u003c/p>\n\u003cp>Jeżeli aktualnie edytowane napisy zawierają niezapisane zmiany, przed otwarciem nowego filmu program pyta, czy je zachować. Wybranie opcji anulowania przerywa otwieranie nowego filmu i pozostawia dotychczasowy film oraz napisy bez zmian.\u003c/p>\n\u003cp>Po otwarciu filmu program automatycznie próbuje dopasować i wczytać pasujący plik napisów znajdujący się w tym samym katalogu.\u003c/p>\n\u003cp>Film można również otworzyć metodą Drag&amp;Drop, przeciągając plik na okno programu.\u003c/p>\n\u003cp>Program można także uruchomić z plikiem wideo podanym jako argument wiersza poleceń, np. \u003ccode>SubEdit.Player.Next.exe \"D:\\Filmy\\film.mkv\"\u003c/code>. Plik zostanie otwarty podczas startu programu. Ścieżkę zawierającą spacje należy ująć w cudzysłów.\u003c/p>\n\u003cp>Po otwarciu filmu dostępne stają się funkcje wymagające otwartego pliku wideo.\u003c/p>"},{"id":"temat-016","title":"Zamknij plik wideo","content":"\u003cp>Jeżeli aktualnie jest otwarty jakiś plik wideo zostanie on zamknięty.\u003c/p>\n\u003cp class=\"shortcut-line\">\u003cstrong>Skrót:\u003c/strong> \u003ccode>Ctrl+Alt+F4\u003c/code>.\u003c/p>"},{"id":"temat-014","title":"Właściwości pliku wideo","content":"\u003cp>Otwiera okienko z podstawowymi informacjami o pliku wideo.\u003c/p>"},{"id":"temat-005","title":"Utwórz nowe napisy","content":"\u003cp>Zamyka aktualnie edytowany plik z napisami i czyści okno edytora.\u003c/p>\n\u003cp>Jeżeli plik nie jest zapisany zostanie wyświetlone zapytanie czy go zapisać.\u003c/p>"},{"id":"temat-011","title":"Otwórz plik napisów","content":"\u003cp>Otwiera plik z napisami do aktualnie odtwarzanego filmu lub do edycji.\u003c/p>\n\u003cp>Funkcję można wywołać z menu \u003cstrong>Plik → Otwórz plik napisów\u003c/strong>, skrótem \u003ccode>Ctrl+Shift+O\u003c/code> lub przyciskiem na pasku narzędzi.\u003c/p>\n\u003cp>Napisy można również wczytać metodą Drag&amp;Drop, przeciągając plik z napisami z Eksploratora Windows na okno programu.\u003c/p>\n\u003cp>Program obsługuje pliki napisów w formatach MicroDVD, MPL2, TMPlayer oraz SubRip SRT.\u003c/p>\n\u003cp>\u003cstrong>Zobacz także:\u003c/strong> \u003ca href=\"#temat-052\">Konwertuj format napisów\u003c/a>\u003c/p>"},{"id":"temat-012","title":"Dodaj plik na koniec napisów","content":"\u003cp>Otwiera wybrany plik napisów i dopisuje jego treść na końcu aktualnego dokumentu, bez zamykania bieżących napisów.\u003c/p>\n\u003cp>Jest to proste doklejenie tekstu. Program nie synchronizuje ani nie przelicza znaczników czasu dołączanego pliku.\u003c/p>\n\u003cp>Operacja nie zmienia ścieżki ani aktywnego kodowania bieżącego dokumentu i może zostać cofnięta za pomocą \u003ccode>Ctrl+Z\u003c/code>.\u003c/p>\n\u003cp>\u003cstrong>Zobacz także:\u003c/strong> \u003ca href=\"#temat-021\">Dołącz plik napisów (film w jednej części)\u003c/a> — funkcja służąca do synchronizowanego łączenia napisów z kilku części filmu.\u003c/p>"},{"id":"temat-006","title":"Zamknij plik napisów","content":"\u003cp>Zamyka aktualnie edytowany plik z napisami.\u003c/p>\n\u003cp>Jeżeli plik nie jest zapisany zostanie wyświetlone zapytanie o dalszym postępowaniu.\u003c/p>\n\u003cp class=\"shortcut-line\">\u003cstrong>Skrót:\u003c/strong> \u003ccode>Ctrl+F4\u003c/code>.\u003c/p>"},{"id":"temat-018","title":"Zapisz napisy","content":"\u003cp>Zapisuje otwarty plik z napisami pod aktualną nazwą.\u003c/p>\n\u003cp>Jeżeli nazwa pliku nie została jeszcze podana to zostanie wyświetlone okno dialogowe \u003ca href=\"#temat-019\">Zapisz napisy jako\u003c/a>.\u003c/p>\n\u003cp>\u003cbr>\u003c/p>"},{"id":"temat-019","title":"Zapisz napisy jako","content":"\u003cp>Zapisuje plik z napisami pod nową nazwą.\u003c/p>"},{"id":"temat-007","title":"Zapisz napisy jako SRT","content":"\u003cp>Zapisuje bieżące napisy do osobnego pliku w formacie SRT (SubRip).\u003c/p>\n\u003cp>Zapisany plik jest zawsze kodowany jako UTF-8 bez BOM.\u003c/p>\n\u003cp>Operacja nie zmienia nazwy ani ścieżki aktualnie otwartego pliku napisów, jego aktywnego kodowania ani stanu niezapisanych zmian.\u003c/p>"},{"id":"temat-020","title":"Podziel plik napisów (film w kilku częściach)","content":"\u003cp>Funkcja służy do podziału napisów przygotowanych dla filmu w jednej części na napisy dla filmu podzielonego na kilka części.\u003c/p>\n\u003cp>Wymaga otwartego filmu oraz wczytanych napisów. Granicą podziału jest pełny czas trwania aktualnie otwartego filmu.\u003c/p>\n\u003cp>Po wybraniu funkcji program otwiera okno zapisu dla pierwszej części napisów. Jeżeli zapis zostanie anulowany, zawartość edytora nie jest zmieniana.\u003c/p>\n\u003cp>Po poprawnym zapisaniu pierwszej części w edytorze pozostają napisy przeznaczone dla następnej części filmu, a ich czasy są przesunięte tak, aby początek następnego filmu odpowiadał czasowi 0.\u003c/p>\n\u003cp>Napis, który rozpoczyna się przed końcem aktualnego filmu, pozostaje w pierwszej części nawet wtedy, gdy jego czas końcowy wykracza poza granicę podziału.\u003c/p>\n\u003cp>Podział jest wykonywany wyłącznie na żądanie użytkownika. Program nie uruchamia tej funkcji automatycznie podczas przechodzenia do następnego filmu.\u003c/p>"},{"id":"temat-021","title":"Dołącz plik napisów (film w jednej części)","content":"\u003cp>Funkcja wspomaga łączenie napisów z wersji filmu podzielonej na kilka części w jeden dokument napisów.\u003c/p>\n\u003cp>Najpierw ustaw film w stanie \u003cstrong>Pauza\u003c/strong> na początku dowolnego dialogu, którego odpowiednik występuje w dołączanym pliku napisów.\u003c/p>\n\u003cp>Po wywołaniu tej funkcji użytkownik ręcznie wybiera plik napisów do dołączenia. Dotyczy to wyłącznie operacji scalania napisów w jeden dokument.\u003c/p>\n\u003cp>Jest to niezależne od automatycznego ładowania napisów podczas odtwarzania: przy otwarciu filmu lub automatycznym przejściu do kolejnej ponumerowanej części (np. \u003ccode>CD1\u003c/code> → \u003ccode>CD2\u003c/code>) program sam próbuje dopasować i wczytać właściwy plik napisów z katalogu filmu.\u003c/p>\n\u003cp>Następnie pojawia się okno z liniami dołączanego pliku. Wybierz dialog odpowiadający miejscu, na którym został zatrzymany film. Wybrana linia służy jako punkt synchronizacji, natomiast do bieżącego dokumentu zostaje dołączona cała zawartość wybranego pliku.\u003c/p>\n\u003cp>Dołączany plik powinien zawierać napisy w tym samym rozpoznawanym formacie co aktualny dokument. Do chwili zatwierdzenia wyboru aktywny dokument nie jest modyfikowany.\u003c/p>\n\u003ch3>Korekta FPS / geometryczna\u003c/h3>\n\u003cp>Jeżeli dla całego aktualnego dokumentu wcześniej wykonano zmianę współczynnika FPS lub geometryczne przesunięcie napisów, SubEdit-Player Next może zapamiętać wynikającą z niej korektę na czas bieżącej sesji i zastosować ją także do dołączanego pliku.\u003c/p>\n\u003cp>Informacja o takiej korekcie jest wyświetlana w oknie wyboru linii. Zaznaczenie opcji \u003cstrong>Ignoruj\u003c/strong> powoduje dołączenie pliku bez zastosowania zapamiętanej korekty.\u003c/p>"},{"id":"temat-015","title":"Historia otwieranych plików","content":"\u003cp>Program zapamiętuje listę ostatnio otwieranych plików w podmenu \u003cstrong>Plik → Ostatnio otwierane pliki\u003c/strong>.\u003c/p>\n\u003cp>Historia obejmuje:\u003c/p>\n\u003cul>\n\u003cli>do \u003cstrong>5 ostatnich plików wideo\u003c/strong>, oznaczonych cyframi 1–5,\u003c/li>\n\u003cli>do \u003cstrong>5 ostatnich plików napisów\u003c/strong>, oznaczonych literami a–e.\u003c/li>\n\u003c/ul>\n\u003cp>Ponowne otwarcie pliku znajdującego się już w historii przenosi go na początek listy i nie tworzy duplikatu.\u003c/p>\n\u003cp>Pozycja \u003cstrong>Wyczyść historię\u003c/strong> usuwa zapamiętane wpisy po potwierdzeniu operacji.\u003c/p>"},{"id":"temat-022","title":"Zakończ","content":"\u003cp>Kończy działanie programu.\u003c/p>\n\u003cp>Jeżeli plik z napisami nie jest zapisany, użytkownik zostanie zapytany o dalsze postępowanie.\u003c/p>"}]},{"id":"cat-03","title":"Edycja","topics":[{"id":"temat-023","title":"Menu: Edycja","content":"\u003ch3>Elementy menu Edycja:\u003c/h3>\n\u003cp>\u003ca href=\"#temat-024\">Cofnij\u003c/a>\u003c/p>\n\u003cp>\u003ca href=\"#temat-025\">Przywróć\u003c/a>\u003c/p>\u003cp>\u003ca href=\"#temat-035\">Wytnij\u003c/a>\u003c/p>\u003cp>\u003ca href=\"#temat-033\">Kopiuj\u003c/a>\u003c/p>\u003cp>\u003ca href=\"#temat-034\">Wklej\u003cbr>\u003c/a>\u003c/p>\u003cp>\u003ca href=\"#temat-027\">Znajdź krótko wyświetlany napis\u003c/a>\u003c/p>\u003cp>\u003ca href=\"#temat-032\">Znajdź długi wiersz\u003c/a>\u003c/p>\n\u003cp>\u003ca href=\"#temat-028\">Znajdź przerwę w wyświetlaniu napisów\u003c/a>\u003c/p>\u003cp>\u003ca href=\"#temat-029\">Znajdź nieposortowany napis\u003c/a>\u003c/p>\u003cp>\u003ca href=\"#temat-026\">Znajdź tekst\u003c/a>\u003c/p>\u003cp>\u003ca href=\"#temat-030\">Znajdź i zamień\u003c/a>\u003c/p>\n\u003cp>\u003ca href=\"#temat-031\">Znajdź następny\u003c/a>\u003c/p>\u003cp>\u003ca href=\"#temat-036\">Kursywa\u003c/a>\u003c/p>\u003cp>\u003ca href=\"#temat-037\">Podkreślenie\u003c/a>\u003c/p>\u003cp>\u003ca href=\"#temat-190\">Pogrubienie\u003c/a>\u003c/p>\u003cp>\u003ca href=\"#temat-191\">Zamień znaki kursywy\u003c/a>\u003c/p>\n\u003cp>\u003cbr>\u003c/p>\n\u003cp>\u003cbr>\u003c/p>"},{"id":"temat-024","title":"Cofnij","content":"\u003cp>Cofa ostatnio wykonaną zmianę tekstu.\u003c/p>"},{"id":"temat-025","title":"Przywróć","content":"\u003cp>Przywraca ostatnio cofniętą zmianę.\u003c/p>"},{"id":"temat-035","title":"Wytnij","content":"\u003cp>Usuwa zaznaczony fragment tekstu kopiując go do schowka.\u003c/p>"},{"id":"temat-033","title":"Kopiuj","content":"\u003cp>Kopiuje zaznaczony fragment tekstu do schowka.\u003c/p>"},{"id":"temat-034","title":"Wklej","content":"\u003cp>Wkleja tekst ze schowka.\u003c/p>"},{"id":"temat-027","title":"Znajdź krótko wyświetlany napis","content":"\u003cp>Funkcja służy do wyszukiwania napisów, które pojawiają się na krótką chwilę i szybko znikają.\u003c/p>\n\u003cp>Wyszukuje pierwszy napis, którego czas wyświetlania jest mniejszy lub równy czasowi podanemu.\u003c/p>\n\u003cp>Czas wyświetlania wyliczany jest z różnicy czasu pokazania następnego napisu i aktualnego a nie z różnicy czasu pokazania i schowania gdyż ten rodzaj szybkiego napisu można usunąć automatycznie używając \u003ca href=\"#temat-054\">zmiany czasu wyświetlania napisów\u003c/a>\u003c/p>\n\u003cp>\u003cb>Zależnie od długości linii\u003c/b>\u003c/p>\n\u003cp>Sprawia, że wpisany czas będzie rozkładany dla 30 znaków linii (bez zapisu indeksów). Czyli wpisany czas będzie niezmieniony dla linii o długości 30 znaków a dla linii dwa razy dłuższej czas będzie zwiększony dwukrotnie.\u003c/p>\n\u003cp class=\"shortcut-line\">\u003cstrong>Skrót:\u003c/strong> \u003ccode>F3\u003c/code> — znajdź następny krótko wyświetlany napis.\u003c/p>"},{"id":"temat-032","title":"Znajdź długi wiersz","content":"\u003cp>Funkcja wyszukuje wiersz (podlinię ograniczoną znakami '|'), który ma więcej znaków niż wartość podana jako parametr.\u003c/p>\n\u003cp class=\"shortcut-line\">\u003cstrong>Skrót:\u003c/strong> \u003ccode>F3\u003c/code> — znajdź następny długi wiersz.\u003c/p>"},{"id":"temat-028","title":"Znajdź przerwę w wyświetlaniu napisów","content":"\u003cp>Wyszukuje pierwszą, od aktualnej pozycji kursora, przerwę w wyświetlaniu napisów, większą lub równą podanej.\u003c/p>\n\u003cp class=\"shortcut-line\">\u003cstrong>Skrót:\u003c/strong> \u003ccode>F3\u003c/code> — znajdź następną przerwę.\u003c/p>"},{"id":"temat-029","title":"Znajdź nieposortowany napis","content":"\u003cp>Ustawia kursor na pierwszym napisie, którego czas pokazania jest mniejszy lub równy czasowi pokazania poprzedniego napisu.\u003c/p>\n\u003cp class=\"shortcut-line\">\u003cstrong>Skrót:\u003c/strong> \u003ccode>F3\u003c/code> — znajdź następny nieposortowany napis.\u003c/p>"},{"id":"temat-026","title":"Znajdź tekst","content":"\u003cp>Wyszukuje tekst w napisach.\u003c/p>\n\u003cp class=\"shortcut-line\">\u003cstrong>Skrót:\u003c/strong> \u003ccode>F3\u003c/code> — znajdź następny wynik wyszukiwania.\u003c/p>\n\u003ch3>Inne metody wyszukiwania:\u003c/h3>\n\u003cp>\u003ca href=\"#temat-051\">Przejdź do napisu\u003c/a>\u003c/p>\n\u003cp>\u003ca href=\"#temat-027\">Znajdź krótko wyświetlany napis\u003c/a>\u003c/p>\n\u003cp>\u003ca href=\"#temat-028\">Znajdź przerwę w wyświetlaniu napisów\u003c/a>\u003c/p>\n\u003cp>\u003ca href=\"#temat-029\">Znajdź nieposortowany napis\u003c/a>\u003c/p>\n\u003cp>\u003ca href=\"#temat-032\">Znajdź długi wiersz\u003c/a>\u003c/p>\n\u003cp>\u003ca href=\"#temat-030\">Znajdź i zamień\u003c/a>\u003c/p>\n\u003cp>\u003ca href=\"#temat-031\">Znajdź następny\u003c/a>\u003c/p>"},{"id":"temat-030","title":"Znajdź i zamień","content":"\u003cp>Powoduje wyszukanie podanego tekstu i ewentualną zamianę na inny.\u003c/p>"},{"id":"temat-031","title":"Znajdź następny","content":"\u003cp>Jeżeli funkcja jest wywoływana po raz pierwszy, powoduje otwarcie okna \u003ca href=\"#temat-026\">Znajdź tekst\u003c/a>.\u003c/p>\n\u003ch3>Jeżeli przed wywołaniem tej funkcji było wywoływane:\u003c/h3>\n\u003cul>\n\u003cli>\u003ca href=\"#temat-026\">Znajdź tekst\u003c/a>\u003c/li>\n\u003cli>\u003ca href=\"#temat-027\">Znajdź krótko wyświetlany napis\u003c/a>\u003c/li>\n\u003cli>\u003ca href=\"#temat-028\">Znajdź przerwę w wyświetlaniu napisów\u003c/a>\u003c/li>\n\u003cli>\u003ca href=\"#temat-029\">Znajdź nieposortowany napis\u003c/a>\u003c/li>\n\u003cli>\u003ca href=\"#temat-032\">Znajdź długi wiersz\u003c/a>\u003c/li>\n\u003c/ul>\n\u003cp>to poszukiwanie będzie kontynuowane z parametrami wpisanymi podczas ostatniego wyszukiwania, czyli okno dialogowe nie zostanie ponownie wyświetlone.\u003c/p>"},{"id":"temat-036","title":"Kursywa","content":"\u003cp>Włącza i wyłącza kursywę we wierszu.\u003c/p>\u003cp>Jeśli wiersz zaczyna się znakiem kursywy \"/\" zostaje on skasowany. Kolejne wybranie funkcji&nbsp;\u003cb>Kursywa\u003c/b>&nbsp;wstawia &lt;i&gt; na początku wiersza oraz &lt;/i&gt; na końcu wiersza.\u003c/p>\n\u003cp>Wiersz nie zawsze oznacza całą linię napisu ale tekst między znakami '|'.\u003c/p>\n\u003cp>W napisach do filmów tekst między znakami '/' lub \"&lt;i&gt;&nbsp;&lt;/i&gt;\"&nbsp;wyświetlany jest jako pochyły.\u003c/p>\n\u003cp>SubEdit umożliwia wyświetlenie całego wiersza zaczynającego się od \"/\" jako kursywę. Nie można w ten sposób sformatować dowolnego wycinka tekstu.\u003c/p>\u003cp>Dowolny wycinek tekstu można formatować umieszczając go pomiędzy &lt;i&gt; a &lt;/i&gt;.\u003c/p>\n\u003cp>Uwaga!\u003c/p>\n\u003cp>Funkcja działa tylko dla napisów w jednym z rozpoznawanych przez program formatów.\u003c/p>\n\u003cp>Uwaga!\u003c/p>\n\u003cp>Funkcja nie działa dla zaznaczonego fragmentu lecz dla wiersza, na którym znajduje się kursor.\u003c/p>\n\u003cp>\u003cstrong>Zobacz także:\u003c/strong> \u003ca href=\"#temat-124\">Wiersz zaczynający się od znaku \"/\" wyświetlaj w kursywie\u003c/a>\u003c/p>"},{"id":"temat-037","title":"Podkreślenie","content":"\u003cdiv>Włącza i wyłącza podkreślenie we wierszu.\u003cp>\u003c/p>\u003cp>Wybranie funkcji&nbsp;\u003cb>Podkreślenie\u003c/b>&nbsp;wstawia &lt;u&gt; na początku wiersza oraz &lt;/u&gt; na końcu wiersza.\u003c/p>\u003cp>Dowolny wycinek tekstu można formatować umieszczając go pomiędzy &lt;u&gt; a &lt;/u&gt;.\u003c/p>\n\u003cp>Uwaga!\u003c/p>\n\u003cp>Funkcja działa tylko dla napisów w jednym z rozpoznawanych przez program formatów.\u003c/p>\n\u003cp>Uwaga!\u003c/p>\n\u003cp>Funkcja nie działa dla zaznaczonego fragmentu lecz dla wiersza, na którym znajduje się kursor.\u003c/p>\u003cp>\u003cbr>\u003c/p>\u003c/div>"},{"id":"temat-190","title":"Pogrubienie","content":"\u003cdiv>Włącza i wyłącza pogrubienie we wierszu.\u003cp>\u003c/p>\u003cp>Wybranie funkcji&nbsp;\u003cb>Pogrubienie\u003c/b>&nbsp;wstawia &lt;b&gt; na początku wiersza oraz &lt;/b&gt; na końcu wiersza.\u003c/p>\u003cp>Dowolny wycinek tekstu można formatować umieszczając go pomiędzy &lt;b&gt; a &lt;/b&gt;.\u003c/p>\n\u003cp>Uwaga!\u003c/p>\n\u003cp>Funkcja działa tylko dla napisów w jednym z rozpoznawanych przez program formatów.\u003c/p>\n\u003cp>Uwaga!\u003c/p>\n\u003cp>Funkcja nie działa dla zaznaczonego fragmentu lecz dla wiersza, na którym znajduje się kursor.\u003c/p>\u003cp>\u003cbr>\u003c/p>\u003c/div>"},{"id":"temat-191","title":"Zamień znaki kursywy","content":"\u003cp>Jeśli w tekście napisów występują znaki \"/\" , \"*\" , \"#\" można je zamienić na &lt;i&gt; &lt;/i&gt;.\u003c/p>\u003cdiv>\u003cp>Zamienia kursywę w całym tekście napisów.\u003c/p>\u003cp>\u003cbr>\u003c/p>\u003c/div>"}]},{"id":"cat-04","title":"Widok","topics":[{"id":"temat-038","title":"Menu: Widok","content":"\u003ch3>Elementy menu Widok:\u003c/h3>\n\u003cp>\u003ca href=\"#temat-040\">Edytor napisów\u003c/a>\u003c/p>\n\u003cp>\u003ca href=\"#temat-199\">Przesunięcie obrazu\u003c/a>\u003c/p>\n\u003cp>\u003ca href=\"#temat-043\">Powiększenie\u003c/a>\u003c/p>\n\u003cp>\u003ca href=\"#temat-047\">Resetuj transformacje\u003c/a>\u003c/p>\n\u003cp>\u003ca href=\"#temat-048\">Minimalizuj okno\u003c/a>\u003c/p>\n\u003cp>\u003ca href=\"#temat-039\">Zawsze na wierzchu\u003c/a>\u003c/p>\n\u003cp>\u003ca href=\"#temat-044\">Tryb pełnoekranowy\u003c/a>\u003c/p>\n\u003ch3>Powiązane\u003c/h3>\n\u003cp>\u003ca href=\"#temat-201\">Menu kontekstowe obrazu wideo (PPM / F8)\u003c/a>\u003c/p>"},{"id":"temat-040","title":"Edytor napisów","content":"\u003cp>Funkcja włącza i wyłącza pokazywanie edytora napisów.\u003c/p>\n\u003cp>Pokazywanie edytora jest przywracane po ponownym uruchomieniu programu.\u003c/p>"},{"id":"temat-199","title":"Przesunięcie obrazu","content":"\u003cp>Funkcja pozwala przesuwać obraz filmu w pionie i w poziomie bez zmiany położenia okna programu.\u003c/p>\n\u003cp>Każde użycie polecenia przesuwa obraz o 5 pikseli w wybranym kierunku.\u003c/p>\n\u003cul>\n\u003cli>\u003cstrong>W górę\u003c/strong> — przesuwa obraz o 5 px w górę.\u003c/li>\n\u003cli>\u003cstrong>W dół\u003c/strong> — przesuwa obraz o 5 px w dół.\u003c/li>\n\u003cli>\u003cstrong>W lewo\u003c/strong> — przesuwa obraz o 5 px w lewo.\u003c/li>\n\u003cli>\u003cstrong>W prawo\u003c/strong> — przesuwa obraz o 5 px w prawo.\u003c/li>\n\u003c/ul>\n\u003cp class=\"shortcut-line\">\u003cstrong>Skróty:\u003c/strong> \u003ccode>Ctrl+Alt+Up\u003c/code>, \u003ccode>Ctrl+Alt+Down\u003c/code>, \u003ccode>Ctrl+Alt+Left\u003c/code>, \u003ccode>Ctrl+Alt+Right\u003c/code>.\u003c/p>\n\u003cp>OSD pokazuje aktualne łączne przesunięcie. Zniknięcie komunikatu OSD nie cofa transformacji.\u003c/p>\n\u003cp>Transformacja dotyczy obrazu filmu. Napisy tekstowe wyświetlane przez SubEdit-Player pozostają niezależną warstwą i nie są przesuwane razem z obrazem.\u003c/p>\n\u003cp>Funkcja jest dostępna tylko przy otwartym filmie i działa również podczas pauzy oraz po użyciu funkcji Stop. Ustawienie jest tymczasowe i nie jest zapisywane w konfiguracji programu.\u003c/p>"},{"id":"temat-043","title":"Powiększenie","content":"\u003cp>Funkcja zmienia powiększenie obrazu filmu bez zmiany rozmiaru okna programu.\u003c/p>\n\u003cp>\u003cstrong>Powiększ\u003c/strong> zwiększa zoom obrazu o 10%, a \u003cstrong>Pomniejsz\u003c/strong> zmniejsza go o 10%.\u003c/p>\n\u003cp class=\"shortcut-line\">\u003cstrong>Skróty:\u003c/strong> \u003ccode>Ctrl+Alt+=\u003c/code> lub \u003ccode>Ctrl+Alt+Num+\u003c/code> — powiększenie; \u003ccode>Ctrl+Alt+-\u003c/code> lub \u003ccode>Ctrl+Alt+Num-\u003c/code> — pomniejszenie.\u003c/p>\n\u003cp>Aktualna wartość powiększenia jest pokazywana w OSD. Zniknięcie komunikatu OSD nie resetuje ustawionego zoomu.\u003c/p>\n\u003cp>Transformacja dotyczy obrazu filmu. Napisy tekstowe wyświetlane przez SubEdit-Player pozostają niezależną warstwą i nie są skalowane razem z obrazem.\u003c/p>\n\u003cp>Powiększenie jest dostępne tylko przy otwartym filmie i działa również podczas pauzy oraz po użyciu funkcji Stop. Ustawienie jest tymczasowe i nie jest zapisywane w konfiguracji programu.\u003c/p>"},{"id":"temat-047","title":"Resetuj transformacje","content":"\u003cp>Przywraca domyślne ustawienia transformacji obrazu filmu:\u003c/p>\n\u003cul>\n\u003cli>zeruje przesunięcie pionowe,\u003c/li>\n\u003cli>zeruje przesunięcie poziome,\u003c/li>\n\u003cli>ustawia powiększenie obrazu na 100%.\u003c/li>\n\u003c/ul>\n\u003cp class=\"shortcut-line\">\u003cstrong>Skróty:\u003c/strong> \u003ccode>Ctrl+Alt+0\u003c/code> lub \u003ccode>Ctrl+Alt+Num0\u003c/code>.\u003c/p>\n\u003cp>Reset dotyczy wyłącznie transformacji obrazu i nie zmienia prędkości odtwarzania filmu.\u003c/p>\n\u003cp>Funkcja jest dostępna tylko przy otwartym filmie i działa również podczas pauzy oraz po użyciu funkcji Stop.\u003c/p>"},{"id":"temat-201","title":"Menu kontekstowe obrazu wideo (PPM / F8)","content":"\u003cp>Menu kontekstowe powierzchni wideo można otworzyć prawym przyciskiem myszy na obrazie filmu albo klawiszem \u003ccode>F8\u003c/code>.\u003c/p>\n\u003cp>Menu udostępnia najważniejsze funkcje odtwarzacza:\u003c/p>\n\u003cul>\n\u003cli>Otwórz plik wideo,\u003c/li>\n\u003cli>Otwórz plik napisów,\u003c/li>\n\u003cli>Pauza / Odtwarzanie,\u003c/li>\n\u003cli>Stop,\u003c/li>\n\u003cli>\u003ca href=\"#temat-199\">Przesunięcie obrazu\u003c/a>,\u003c/li>\n\u003cli>\u003ca href=\"#temat-043\">Powiększenie\u003c/a>,\u003c/li>\n\u003cli>\u003ca href=\"#temat-047\">Resetuj transformacje\u003c/a>,\u003c/li>\n\u003cli>\u003ca href=\"#temat-200\">Prędkość odtwarzania\u003c/a>,\u003c/li>\n\u003cli>\u003ca href=\"#temat-044\">Tryb pełnoekranowy\u003c/a>,\u003c/li>\n\u003cli>Opcje.\u003c/li>\n\u003c/ul>\n\u003cp>Przesunięcie, powiększenie, reset transformacji i prędkość odtwarzania korzystają z tych samych ustawień bieżącej sesji co odpowiadające im pozycje menu głównego i skróty klawiszowe.\u003c/p>\n\u003cp>Pozycje wymagające filmu są wyszarzone, gdy żaden film nie jest otwarty. Po otwarciu filmu pozostają dostępne podczas odtwarzania, pauzy i po użyciu funkcji Stop.\u003c/p>\n\u003cp>To samo menu jest dostępne także w trybie pełnoekranowym.\u003c/p>"},{"id":"temat-048","title":"Minimalizuj okno","content":"\u003cp>Opcja minimalizuje okno programu do paska zadań.\u003c/p>\n\u003cp>W opcjach można określić, czy film ma być odtwarzany podczas minimalizacji.\u003c/p>"},{"id":"temat-039","title":"Zawsze na wierzchu","content":"\u003cp>Włączenie tej opcji sprawi, że okno programu będzie zawsze wyświetlane ponad oknami innych programów.\u003c/p>"},{"id":"temat-044","title":"Tryb pełnoekranowy","content":"\u003cp>Wy\u015bwietla film na ca\u0142ym ekranie monitora, bez standardowego obramowania okna i menu.\u003c/p>\n\u003cp>Tryb pe\u0142noekranowy mo\u017cna w\u0142\u0105czy\u0107 lub wy\u0142\u0105czy\u0107:\u003c/p>\n\u003cul>\n\u003cli>klawiszem \u003ccode>F11\u003c/code> lub alternatywnie skr\u00f3tem \u003ccode>Alt+Enter\u003c/code>,\u003c/li>\n\u003cli>podw\u00f3jnym klikni\u0119ciem lewym przyciskiem myszy na obszarze filmu,\u003c/li>\n\u003cli>przyciskiem \u003cstrong>Tryb pe\u0142noekranowy\u003c/strong> lub odpowiedni\u0105 pozycj\u0105 menu,\u003c/li>\n\u003cli>z menu kontekstowego filmu.\u003c/li>\n\u003c/ul>\n\u003cp>W trybie pe\u0142noekranowym przesuni\u0119cie kursora do g\u00f3rnej kraw\u0119dzi ekranu powoduje pojawienie si\u0119 panelu sterowania z suwakiem pozycji filmu, elementami sterowania odtwarzaniem i paskiem stanu. Panel znika po opuszczeniu jego obszaru.\u003c/p>\n\u003cp>Kursor myszy ukrywa si\u0119 automatycznie po 2 sekundach bezruchu.\u003c/p>"}]},{"id":"cat-05","title":"Napisy","topics":[{"id":"temat-050","title":"Menu: Napisy","content":"\u003ch3>Elementy menu NAPISY:\u003c/h3>\n\u003cp>\u003ca href=\"#temat-051\">Przejdź do napisu\u003c/a>\u003c/p>\n\u003cp>\u003ca href=\"#temat-052\">Konwertuj format napisów\u003c/a>\u003c/p>\n\u003cp>\u003ca href=\"#temat-053\">Przesuń czas napisów\u003c/a>\u003c/p>\n\u003cp>\u003ca href=\"#temat-054\">Zmień czas wyświetlania napisów\u003c/a>\u003c/p>\n\u003cp>\u003ca href=\"#temat-058\">Połącz szybko znikające napisy\u003c/a>\u003c/p>\n\u003cp>\u003ca href=\"#temat-192\">Podziel długie wiersze\u003c/a>\u003c/p>\n\u003cp>\u003ca href=\"#temat-055\">Ogranicz ilość wierszy w linii\u003c/a>\u003c/p>\n\u003cp>\u003ca href=\"#temat-056\">Zmień współczynnik FPS napisów\u003c/a>\u003c/p>\n\u003cp>\u003ca href=\"#temat-063\">Popraw napisy\u003c/a>\u003c/p>\n\u003cp>\u003ca href=\"#temat-057\">Sortuj napisy\u003c/a>\u003c/p>\n\u003cp>\u003ca href=\"#temat-059\">Kodowanie napisów\u003c/a>\u003c/p>\n\u003cp>\u003ca href=\"#temat-060\">Dodaj pół sekundy do czasu napisu\u003c/a>\u003c/p>\n\u003cp>\u003ca href=\"#temat-061\">Odejmij pół sekundy od czasu napisu\u003c/a>\u003c/p>\n\u003ch3>Opóźnienie napisów\u003c/h3>\n\u003cp>\u003ca href=\"#temat-078\">Zmierz opóźnienie napisu względem dźwięku\u003c/a>\u003c/p>\n\u003cp>\u003ca href=\"#temat-079\">Zmierz początkowe opóźnienie napisu\u003c/a>\u003c/p>\n\u003cp>\u003ca href=\"#temat-080\">Zmierz końcowe opóźnienie napisu\u003c/a>\u003c/p>\n\u003cp>\u003ca href=\"#temat-081\">Geometryczne przesunięcie napisów\u003c/a>\u003c/p>\n\u003cp>Współczynnik FPS jest wykorzystywany przez funkcje, które wymagają przeliczania wartości klatkowych i czasowych. Szczegółowe warunki działania opisano w tematach poszczególnych funkcji.\u003c/p>"},{"id":"temat-051","title":"Przejdź do napisu","content":"\u003cp>Wyszukuje napis o czasie wyświetlenia najbardziej zbliżonym do podanego czasu.\u003c/p>\n\u003cp>W celu przejścia do linii o klatce filmu, która jest aktualnie wyświetlana należy użyć opcji\u003c/p>\n\u003cp>\u003ca href=\"#temat-065\">Skocz do linii z aktualnym czasem filmu\u003c/a>\u003c/p>"},{"id":"temat-052","title":"Konwertuj format napisów","content":"\u003cp>Umożliwia zmianę formatu znaczników czasu w bieżącym dokumencie napisów.\u003c/p>\n\u003cp>Funkcja dostępna jest w menu \u003cstrong>Napisy → Konwertuj format napisów\u003c/strong>, pod skrótem \u003ccode>Ctrl+T\u003c/code> oraz na pasku narzędzi.\u003c/p>\n\u003ch3>Obsługiwane formaty docelowe:\u003c/h3>\n\u003cul>\n\u003cli>\u003ccode>{000}{000}\u003c/code> — format klatkowy MicroDVD,\u003c/li>\n\u003cli>\u003ccode>[000][000]\u003c/code> — format czasowy MPL2,\u003c/li>\n\u003cli>\u003ccode>00:00:00\u003c/code> — pełny format czasowy TMPlayer,\u003c/li>\n\u003cli>\u003ccode>0:00:00\u003c/code> — skrócony format czasowy TMPlayer.\u003c/li>\n\u003c/ul>\n\u003cp>Zakres konwersji można określić według zaznaczenia, od aktualnej linii lub do aktualnej linii. Przy braku zaznaczenia odpowiednia opcja może objąć cały dokument.\u003c/p>\n\u003cp>Konwersja pomiędzy formatem klatkowym i czasowym wykorzystuje aktualną wartość FPS.\u003c/p>\n\u003cp>\u003cstrong>Format SRT:\u003c/strong> konwerter nie zapisuje do formatu SubRip SRT. Do tego służy funkcja \u003ca href=\"#temat-007\">Zapisz napisy jako SRT\u003c/a>. Gdy w edytorze otwarty jest dokument SRT, funkcja konwersji formatu jest nieaktywna.\u003c/p>"},{"id":"temat-053","title":"Przesuń czas napisów","content":"\u003cp>Przesuwa czasy pokazywania i/lub chowania napisów o stałą liczbę klatek.\u003c/p>\n\u003ch3>Opcje przesunięcia:\u003c/h3>\n\u003cul>\u003cli>Zmieniaj czas/klatki \u003ca href=\"#temat-178\">startowe\u003c/a>\u003c/li>\u003c/ul>\n\u003cp>Przy zmianie przesunięcia, zmienia również czas/klatki startowe napisów.\u003c/p>\n\u003cul>\u003cli>Zmieniaj czas/klatki \u003ca href=\"#temat-179\">końcowe\u003c/a>\u003c/li>\u003c/ul>\n\u003cp>Przy zmianie przesunięcia, zmienia również czas/klatki końcowe napisów.\u003c/p>\n\u003cp>\u003cbr>\u003c/p>\u003cp>Dla zapisu zwykłego czasowego (h:m:s) powyższe parametry są ignorowane.\u003c/p>\n\u003cp>Czas, o jaki należy przesunąć napisy można zmierzyć używając funkcji\u003c/p>\n\u003cp>\u003ca href=\"#temat-078\">Zmierz opóźnienie napisu względem dźwięku\u003c/a>\u003c/p>"},{"id":"temat-054","title":"Zmień czas wyświetlania napisów","content":"\u003cp>Zmienia czas wyświetlania napisów.\u003c/p>\n\u003ch3>Opcje zmiany napisów:\u003c/h3>\n\u003cul>\u003cli>\u003cstrong>Zmieniaj tylko nieokreślone czasy\u003c/strong>\u003c/li>\u003c/ul>\n\u003cp>Po zaznaczeniu tej opcji zmieniane są tylko napisy, których czas końcowy jest pusty, np.:\u003c/p>\n\u003cp>\u003ccode>{klatkastartowa}{}napis\u003c/code>\u003c/p>\n\u003cp>\u003ccode>[czasstartowy][]napis\u003c/code>\u003c/p>\n\u003cul>\u003cli>\u003cstrong>Czas zależny od długości napisu\u003c/strong>\u003c/li>\u003c/ul>\n\u003cp>Po zaznaczeniu tej opcji czas wyświetlania zależy od długości tekstu. Wpisana liczba sekund odnosi się do tekstu o długości 50 znaków; dla krótszych i dłuższych napisów czas jest odpowiednio zmniejszany lub zwiększany.\u003c/p>\n\u003cp>Jeżeli opcja nie jest zaznaczona, czas wyświetlania jest taki sam dla wszystkich napisów.\u003c/p>\n\u003cp>Czas podany za znakiem \u003ccode>+\u003c/code> jest zawsze stały, niezależnie od długości napisu.\u003c/p>\n\u003cul>\u003cli>\u003cstrong>Blokuj czas końcowy\u003c/strong>\u003c/li>\u003c/ul>\n\u003cp>Po zaznaczeniu tej opcji czas schowania napisu nie będzie późniejszy niż czas pokazania następnego napisu.\u003c/p>\n\u003cp>Jeżeli chcesz zastosować tylko tę opcję, bez zmiany czasu wyświetlania napisów, użyj funkcji \u003ca href=\"#temat-063\">Popraw napisy\u003c/a>.\u003c/p>\n\u003cul>\u003cli>\u003cstrong>Wpisz puste pozycje\u003c/strong>\u003c/li>\u003c/ul>\n\u003cp>Czyści czasy końcowe napisów, np.:\u003c/p>\n\u003cp>\u003ccode>{klatkastartowa}{}napis\u003c/code>\u003c/p>\n\u003cp>\u003ccode>[czasstartowy][]napis\u003c/code>\u003c/p>"},{"id":"temat-058","title":"Połącz szybko znikające napisy","content":"\u003cp>Służy do automatycznego łączenia sąsiadujących napisów, które znikają zbyt szybko i znajdują się odpowiednio blisko siebie w czasie.\u003c/p>\n\u003cp>Funkcja dostępna jest w menu \u003cstrong>Napisy → Połącz szybko znikające napisy\u003c/strong> pod skrótem \u003ccode>Ctrl+Shift+L\u003c/code>.\u003c/p>\n\u003cp>W oknie dialogowym można określić między innymi:\u003c/p>\n\u003cul>\n\u003cli>maksymalny czas wyświetlania 50 znaków tekstu,\u003c/li>\n\u003cli>maksymalny czas między początkiem pierwszego a końcem drugiego napisu,\u003c/li>\n\u003cli>maksymalny czas między początkiem pierwszego a początkiem drugiego napisu,\u003c/li>\n\u003cli>maksymalną liczbę wierszy tekstu po połączeniu,\u003c/li>\n\u003cli>maksymalną liczbę znaków w wierszu.\u003c/li>\n\u003c/ul>\n\u003cp>Można także określić obszar modyfikacji według zaznaczenia, od bieżącej linii lub do bieżącej linii.\u003c/p>\n\u003cp>Po zakończeniu operacji program wyświetla liczbę połączonych napisów.\u003c/p>"},{"id":"temat-192","title":"Podziel długie wiersze","content":"\u003cp>Funkcja pozwala na rozdzielenie długich linii (bądź też długich wierszy linii) znakiem podziału (\"|\").\u003c/p>\n\u003cp>Po zaznaczeniu opcji \u003cstrong>Przed podziałem usuń stare znaki podziału\u003c/strong> przed nowym podziałem linii zostaną usunięte wszystkie znaki \"|\" i podział nastąpi od nowa.\u003c/p>\n\u003cp>Dodatkowo zaznaczenie opcji \u003cstrong>Nie usuwaj przed dialogami\u003c/strong> sprawi, że powyższa opcja nie zadziała, jeżeli za znakiem \"|\" będzie stał znak dialogu \"-\".\u003c/p>\n\u003cp>Można określić maksymalną ilość wierszy, które mogą być utworzone.\u003c/p>\n\u003cp>\u003cstrong>Usuń znaki podziału\u003c/strong> pozwala usunąć z tekstu wszystkie znaki podziału.\u003c/p>"},{"id":"temat-055","title":"Ogranicz ilość wierszy w linii","content":"\u003cp>Funkcja sprawia, że po jej wykonaniu żaden napis nie będzie miał w linii więcej wierszy niż ilość podana jako parametr.\u003c/p>\n\u003cp>Wszystkie nadmiarowe znaki podziału wiersza (\"|\") zostaną usunięte w taki sposób, żeby rozkład długości pozostałych wierszy był jak najrówniejszy.\u003c/p>\n\u003cp>Jeżeli któraś linia zawiera mniej wierszy to jej struktura nie zostanie zmieniona.\u003c/p>"},{"id":"temat-056","title":"Zmień współczynnik FPS napisów","content":"\u003cp>Pozwala dostosować napisy do filmu, którego współczynnik&nbsp;\u003ca href=\"#temat-180\">FPS\u003c/a> jest inny niż współczynnik FPS filmu, dla którego napisy były robione.\u003c/p>\n\u003cp>Wartość „Aktualna” oznacza wartość FPS filmu, dla którego napisy były przygotowane.\u003c/p>\n\u003cp>Jeżeli nie jest ona znana, należy użyć funkcji \u003ca href=\"#temat-081\">Geometryczne przesunięcie napisów\u003c/a> znajdującej się w menu \u003cstrong>Napisy &gt; Opóźnienie napisów\u003c/strong>.\u003c/p>\n\u003cp>Wyliczona wartość FPS aktualnie wczytanego filmu jest wyświetlana w oknie dialogowym tej funkcji.\u003c/p>\n\u003cp>Klikając na niej, można wpisać ją jako wartość „Docelową” współczynnika.\u003c/p>\n\u003cp>Notka: Zapis klatkowy napisów ma tę wadę, że pasuje tylko do filmu o takim współczynniku FPS, jaki ma film, dla którego napisy były przygotowane.\u003c/p>"},{"id":"temat-063","title":"Popraw napisy","content":"\u003cul>\u003cli>Blokuj czas pokazywania napisu\u003c/li>\u003c/ul>\n\u003cp>Dla zaznaczonej opcji, czas, w którym napis ma zostać schowany nie będzie większy niż czas pokazania napisu linii następnej.\u003c/p>\n\u003cul>\u003cli>Popraw pozycje znaków interpunkcyjnych\u003c/li>\u003c/ul>\n\u003cp>Usuwa znaki spacji znajdujące się przed znakami interpunkcyjnymi ('.', ',', '!', '?', ':', ';') a za znakiem wstawia tylko jedną spację. Ostatnia spacja nie jest wstawiana jeżeli za znakiem interpunkcyjnym znajduje się inny znak interpunkcyjny, znak podziału wiersza '|' oraz wtedy, kiedy jest on ostatnim znakiem w linii.\u003c/p>\n\u003cul>\u003cli>Popraw pozycję znaku myślnika (dialogi)\u003c/li>\u003c/ul>\n\u003cp>Usuwa znaki spacji znajdujące się przed znakiem myślnika. Za znakiem wstawia tylko jedną spację.\u003c/p>\n\u003cp>W ten sposób ustawiany jest tylko myślnik na początku wiersza. Reszta myślników zostaje bez zmian.\u003c/p>\n\u003cul>\u003cli>Usunięcie pustych wierszy\u003c/li>\u003c/ul>\n\u003cp>Usuwa wszystkie wiersze, w których nie ma żadnych znaków oraz linie w których istnieje tylko zapis o czasie pokazania (ewentualnie schowania) napisu a nie ma za nim żadnego tekstu.\u003c/p>\n\u003cul>\u003cli>Usunięcie powtarzających się wierszy\u003c/li>\u003c/ul>\n\u003cp>Jeżeli w napisach występują po sobie linie, w których tekst jest taki sam (czas wyświetlenia może być różny), to wszystkie te linie oprócz pierwszej zostaną usunięte. Czas schowania napisu będzie wzięty z ostatniej usuniętej linii.\u003c/p>\n\u003cul>\u003cli>Usunięcie podwójnych spacji\u003c/li>\u003c/ul>\n\u003cp>Usuwa wszystkie podwójne (lub wielokrotne) spacje w napisach, które występują obok siebie.\u003c/p>\n\u003cp>Np: \"&nbsp; \" zostanie zmienione na: \" \".\u003c/p>\n\u003cul>\u003cli>Usunięcie spacji na końcach wierszy\u003c/li>\u003c/ul>\n\u003cp>Usuwa wszystkie spacje z końców wierszy. Koniec wiersza nie oznacza tylko końca linii, ale każdy wiersz zakończony znakiem \"|\", czyli w takim układzie w jakim jest wyświetlany podczas oglądania filmu.\u003c/p>\n\u003cul>\u003cli>Usunięcie znaku dialogu jeżeli jest on jedynym w linii\u003c/li>\u003c/ul>\n\u003cp>Usuwa znak dialogu (znak myślnika) wraz z ewentualnymi otaczającymi go spacjami jeżeli w danej linii jest tylko jeden dialog i znajduje się on na początku linii.\u003c/p>\n\u003cul>\u003cli>Usunięcie wielokropka w pojedynczych wierszach\u003c/li>\u003c/ul>\n\u003cp>Usuwa wszystkie kropki, które są na początku linii jeżeli w linii napisu znajduje się tylko jeden wiersz (nie ma znaków '|').\u003c/p>\n\u003cul>\u003cli>Usunięcie spacji między cyframi\u003c/li>\u003c/ul>\n\u003cp>Niektóre \"rozpoznawacze\" napisów z DVD zapisują cyfry oddzielone spacjami. Jeżeli między cyframi znajduje się tylko jedna spacja to ta funkcja ją usunie.\u003c/p>\n\u003cul>\u003cli>Usunięcie informacji o kolorze (mDVDp)\u003c/li>\u003c/ul>\n\u003cp>Niektóre programy (np. MicroDVD Player) mogą zapisywać kolor napisu w kodach kontrolnych mDVDp, np. \u003ccode>{c:$bbggrr}\u003c/code> lub \u003ccode>{C:$bbggrr}\u003c/code>.\u003c/p>\n\u003cp>Funkcja usuwa wyłącznie rozpoznane kody koloru mDVDp. Nie usuwa innych kodów kontrolnych, np. \u003ccode>{y:b,u}\u003c/code>, \u003ccode>{Y:b}\u003c/code>, \u003ccode>{s:18}\u003c/code> i \u003ccode>{f:Times}\u003c/code>, ani zwykłego tekstu zapisanego w nawiasach klamrowych, np. \u003ccode>{śmiech}\u003c/code>.\u003c/p>\n\u003cp>Nie są również usuwane znaczniki \u003ca href=\"#temat-178\">klatki startowej\u003c/a> i \u003ca href=\"#temat-179\">końcowej\u003c/a> napisu w formacie klatkowym.\u003c/p>\n\u003cp>Opcja może być bezpiecznie używana do usuwania informacji o kolorze bez kasowania pozostałego formatowania i treści napisów.\u003c/p>"},{"id":"temat-057","title":"Sortuj napisy","content":"\u003cp>Sortuje napisy rosnąco. Przy sortowaniu brany jest pod uwagę czas pokazania napisu.\u003c/p>\u003cbr>"},{"id":"temat-059","title":"Kodowanie napisów","content":"\u003cp>Pozwala przekonwertować standard kodowania pliku tekstowego napisów na jeden z poniższych:\u003c/p>\n\u003cul>\n\u003cli>ANSI\u003c/li>\n\u003cli>UTF-8\u003c/li>\n\u003cli>UTF-8-BOM\u003c/li>\n\u003cli>UTF-16 BE BOM\u003c/li>\n\u003cli>UTF-16 LE BOM\u003c/li>\n\u003c/ul>"},{"id":"temat-060","title":"Dodaj pół sekundy do czasu napisu","content":"\u003cp>Dodaje pół sekundy do \u003ca href=\"#temat-178\">czasu pokazania\u003c/a> i \u003ca href=\"#temat-179\">czasu schowania\u003c/a> napisu.\u003c/p>\n\u003cp>Przy widocznym edytorze zmieniany jest napis znajdujący się w bieżącej linii kursora. W formacie SRT program odnajduje odpowiedni wiersz czasu dla danego bloku napisu.\u003c/p>\n\u003cp>Przy ukrytym edytorze, również w trybie pełnoekranowym, zmieniany jest aktualnie wyświetlany napis. Jeżeli w danej chwili żaden napis nie jest wyświetlany, funkcja nie wprowadza zmian.\u003c/p>\n\u003cp class=\"shortcut-line\">\u003cstrong>Skrót:\u003c/strong> \u003ccode>Ctrl+.\u003c/code>\u003c/p>\n\u003cp>Funkcja działa także bez otwartego filmu, jeżeli napisy są dostępne w edytorze.\u003c/p>"},{"id":"temat-061","title":"Odejmij pół sekundy od czasu napisu","content":"\u003cp>Odejmuje pół sekundy od \u003ca href=\"#temat-178\">czasu pokazania\u003c/a> i \u003ca href=\"#temat-179\">czasu schowania\u003c/a> napisu.\u003c/p>\n\u003cp>Przy widocznym edytorze zmieniany jest napis znajdujący się w bieżącej linii kursora. W formacie SRT program odnajduje odpowiedni wiersz czasu dla danego bloku napisu.\u003c/p>\n\u003cp>Przy ukrytym edytorze, również w trybie pełnoekranowym, zmieniany jest aktualnie wyświetlany napis. Jeżeli w danej chwili żaden napis nie jest wyświetlany, funkcja nie wprowadza zmian.\u003c/p>\n\u003cp class=\"shortcut-line\">\u003cstrong>Skrót:\u003c/strong> \u003ccode>Ctrl+,\u003c/code>\u003c/p>\n\u003cp>Jeżeli zmiana spowoduje powstanie ujemnego czasu, program wyświetli ostrzeżenie.\u003c/p>"},{"id":"temat-078","title":"Zmierz opóźnienie napisu względem dźwięku","content":"\u003cp>Dokonuje pomiaru opóźnienia aktualnej linii napisów względem dźwięku filmu odpowiadającemu tejże linii oraz wywołuje okienko&nbsp;\u003ca href=\"#temat-053\">Przesunięcie klatek\u003c/a>&nbsp;z wpisaną zmierzoną wartością opóźnienia.\u003c/p>\n\u003cp>Notka: Tę funkcję zaleca się stosować w sytuacji, w której napisy są przesunięte o stałą wartość na całej długości filmu. W przeciwnym wypadku należy użyć funkcji\u003c/p>\n\u003cp>\u003ca href=\"#temat-081\">Geometryczne przesunięcie napisów\u003c/a>\u003c/p>"},{"id":"temat-079","title":"Zmierz początkowe opóźnienie napisu","content":"\u003cp>Dokonuje pomiaru opóźnienia aktualnej linii napisów za dźwiękiem filmu odpowiadającemu tejże linii.\u003c/p>\n\u003cp>Pomiaru należy dokonać przy napisie maksymalnie bliskim początkowi filmu.\u003c/p>\u003cp>Jeżeli dodatkowo zostanie prawidłowo dokonany \u003ca href=\"#temat-080\">pomiar końcowy\u003c/a>, zostanie włączona opcja&nbsp;\u003ca href=\"#temat-081\">Geometryczne przesunięcie napisów\u003c/a>.\u003c/p>"},{"id":"temat-080","title":"Zmierz końcowe opóźnienie napisu","content":"\u003cp>Dokonuje pomiaru opóźnienia aktualnej linii napisów za dźwiękiem filmu odpowiadającemu tejże linii.\u003c/p>\n\u003cp>Pomiaru należy dokonać przy napisie maksymalnie bliskim końcowi filmu.\u003c/p>\u003cp>Jeżeli dodatkowo zostanie prawidłowo dokonany \u003ca href=\"#temat-079\">pomiar początkowy\u003c/a>, zostanie włączona opcja&nbsp;\u003ca href=\"#temat-081\">Geometryczne przesunięcie napisów\u003c/a>.\u003c/p>"},{"id":"temat-081","title":"Geometryczne przesunięcie napisów","content":"\u003cp>Służy do dostosowania napisów w formacie \u003ca href=\"#temat-185\">klatkowym\u003c/a> do filmu, w którym opóźnienie nie jest stałe tylko rośnie lub maleje wraz z czasem&nbsp;\u003ca href=\"#temat-080\">opóźnienia\u003c/a>.\u003c/p>\u003cp>Jeżeli znany jest współczynnik&nbsp;\u003ca href=\"#temat-180\">FPS\u003c/a> filmu, do którego były robione napisy łatwiej jest użyć funkcji&nbsp;\u003ca href=\"#temat-056\">Zmiana współczynnika FPS napisów\u003c/a>&nbsp;a później, ewentualnie\u003c/p>\n\u003cp>\u003ca href=\"#temat-053\">Przesunięcia klatek\u003c/a>.\u003c/p>\n\u003cp>Żeby opcja wyboru tej funkcji się aktywowała uprzednio należy dokonać \u003ca href=\"#temat-079\">początkowego\u003c/a>&nbsp;i&nbsp;\u003ca href=\"#temat-080\">końcowego\u003c/a> pomiaru opóźnienia napisów względem filmu.\u003c/p>\n\u003cp>Dokładność dostosowania napisów zależy od dokładności tych pomiarów i od doboru linii, w których zostały one dokonane.\u003c/p>\n\u003cp>Pole \"Zmieniaj od tej linii\" służy do ograniczenia działania tej funkcji od miejsca w którym dokonany był pomiar początkowy.\u003c/p>\n\u003cp>Pole \"Zmieniaj do tej linii\" służy do ograniczenia działania tej funkcji do miejsca w którym dokonany był pomiar końcowy.\u003c/p>\n\u003cp>Notka: Za pomocą tej funkcji można zmienić współczynnik FPS dla kilku napisów bez każdorazowych pomiarów.\u003c/p>\n\u003cp>Jednak kolejne napisy modyfikowane w ten sposób trzeba jeszcze dostosować za pomocą przesunięcia liniowego.\u003c/p>"}]},{"id":"cat-06","title":"Film","topics":[{"id":"temat-064","title":"Menu: Film","content":"\u003ch3>Elementy menu Film:\u003c/h3>\n\u003cp>\u003ca href=\"#temat-065\">Skocz do...\u003c/a>\u003c/p>\n\u003cp>\u003ca href=\"#temat-066\">Wstaw klatkę początkową\u003c/a>\u003c/p>\n\u003cp>\u003ca href=\"#temat-067\">Wstaw klatkę końcową\u003c/a>\u003c/p>\n\u003cp>\u003ca href=\"#temat-068\">Skocz do linii z aktualnym czasem filmu\u003c/a>\u003c/p>\n\u003cp>\u003ca href=\"#temat-069\">Śledzenie napisów w edytorze\u003c/a>\u003c/p>\n\u003cp>\u003ca href=\"#temat-070\">Odtwarzaj film od bieżącego napisu\u003c/a>\u003c/p>\n\u003cp>\u003ca href=\"#temat-071\">Pauza / Odtwarzanie\u003c/a>\u003c/p>\n\u003cp>\u003ca href=\"#temat-072\">Stop\u003c/a>\u003c/p>\n\u003cp>\u003ca href=\"#temat-200\">Prędkość odtwarzania\u003c/a>\u003c/p>\n\u003ch3>Filmy w aktualnym katalogu\u003c/h3>\n\u003cp>\u003ca href=\"#temat-193\">Odtwarzaj wszystkie filmy w katalogu\u003c/a>\u003c/p>\n\u003cp>\u003ca href=\"#temat-194\">Sortowanie plików\u003c/a>\u003c/p>\n\u003cp>\u003ca href=\"#temat-195\">Wczytaj poprzedni/następny plik z katalogu\u003c/a>\u003c/p>\n\u003ch3>Przewijanie\u003c/h3>\n\u003cp>\u003ca href=\"#temat-074\">Przewiń 5 sekund w przód\u003c/a>\u003c/p>\n\u003cp>\u003ca href=\"#temat-075\">Przewiń 5 sekund wstecz\u003c/a>\u003c/p>\n\u003cp>\u003ca href=\"#temat-073\">Przewinięcie użytkownika - wstecz/w przód\u003c/a>\u003c/p>\n\u003cp>\u003ca href=\"#temat-076\">Przejdź na początek filmu\u003c/a>\u003c/p>\n\u003cp>\u003ca href=\"#temat-077\">Przejdź na koniec filmu\u003c/a>\u003c/p>\n\u003cp>Uwaga: Funkcje sterujące odtwarzaniem i obrazem wymagają otwartego pliku wideo.\u003c/p>"},{"id":"temat-065","title":"Skocz do...","content":"\u003cp>Przeskakuje do wybranej klatki, lub wybranego czasu filmu.\u003c/p>"},{"id":"temat-066","title":"Wstaw klatkę początkową","content":"\u003cp>Wstawia bieżącą pozycję filmu jako początek napisu w aktualnej linii.\u003c/p>\n\u003cp>Jeżeli linia zawiera już rozpoznany format napisów, pozycja zostaje zapisana w tym samym formacie. Jeżeli linia nie ma jeszcze znacznika czasu, program używa aktualnego \u003ca href=\"#temat-086\">domyślnego formatu napisów\u003c/a>.\u003c/p>\n\u003cp class=\"shortcut-line\">\u003cstrong>Skrót:\u003c/strong> \u003ccode>Insert\u003c/code>\u003c/p>"},{"id":"temat-067","title":"Wstaw klatkę końcową","content":"\u003cp>Wstawia bieżącą pozycję filmu jako koniec napisu w aktualnej linii.\u003c/p>\n\u003cp>Jeżeli linia zawiera już rozpoznany format napisów, pozycja zostaje zapisana w tym samym formacie. Jeżeli linia nie ma jeszcze znacznika czasu, program używa aktualnego \u003ca href=\"#temat-086\">domyślnego formatu napisów\u003c/a>.\u003c/p>\n\u003cp class=\"shortcut-line\">\u003cstrong>Skrót:\u003c/strong> \u003ccode>Alt+Insert\u003c/code>\u003c/p>"},{"id":"temat-068","title":"Skocz do linii z aktualnym czasem filmu","content":"\u003cp>Przesuwa kursor do linii z napisem, którego \u003ca href=\"#temat-178\">czas pokazania\u003c/a> ma wartość najbardziej zbliżoną do aktualnego czasu filmu.\u003c/p>"},{"id":"temat-069","title":"Śledzenie napisów w edytorze","content":"\u003cp>Włączenie opcji sprawia, że tekst edytora napisów jest automatycznie przewijany do miejsca, w którym są aktualnie wyświetlane napisy, bądź też napisy, które będą wyświetlone jako następne.\u003c/p>\n\u003cp>Jeżeli w danej chwili wyświetlany jest jakiś napis to w edytorze zostanie on zaznaczony.\u003c/p>\n\u003cp>Podczas przewijania filmu automatycznie przewijane są także napisy w edytorze.\u003c/p>\u003cp>Ten tryb pracy edytora jest tylko do odczytu. W celu edycji napisów należy wyłączyć tryb śledzenia.\u003c/p>\n\u003cp>Tryb śledzenia wymaga włączonego edytora i włączonego wyświetlania napisów. Jeżeli któraś z tych opcji nie jest włączona to zostanie włączona automatycznie.\u003c/p>"},{"id":"temat-070","title":"Odtwarzaj film od bieżącego napisu","content":"\u003cp>Jeżeli aktualna linia tekstu (ta, na której jest kursor) zawiera napis w jednym z rozpoznawanych przez program formatów to po wybraniu tej opcji film będzie odtwarzany od miejsca, w którym ma być wyświetlony napis z tej linii.\u003c/p>"},{"id":"temat-071","title":"Pauza / Odtwarzanie","content":"\u003cp>Włącza lub wyłącza odtwarzanie filmu.\u003c/p>"},{"id":"temat-072","title":"Stop","content":"\u003cp>Zatrzymuje odtwarzanie filmu.\u003c/p>"},{"id":"temat-200","title":"Prędkość odtwarzania","content":"\u003cp>Funkcja pozwala zmieniać szybkość odtwarzania aktualnie otwartego filmu.\u003c/p>\n\u003cul>\n\u003cli>\u003cstrong>Przyspiesz\u003c/strong> — zwiększa prędkość o 0,25×.\u003c/li>\n\u003cli>\u003cstrong>Normalna prędkość\u003c/strong> — przywraca 1,00×.\u003c/li>\n\u003cli>\u003cstrong>Zwolnij\u003c/strong> — zmniejsza prędkość o 0,25×.\u003c/li>\n\u003c/ul>\n\u003cp class=\"shortcut-line\">\u003cstrong>Skróty:\u003c/strong> \u003ccode>Alt+Up\u003c/code> — przyspiesz; \u003ccode>Alt+Down\u003c/code> — zwolnij.\u003c/p>\n\u003cp>Aktualny mnożnik prędkości jest pokazywany w OSD. Zniknięcie komunikatu OSD nie przywraca prędkości normalnej.\u003c/p>\n\u003cp>Funkcja jest dostępna tylko przy otwartym filmie i działa również podczas pauzy oraz po użyciu funkcji Stop.\u003c/p>\n\u003cp>Zmiana prędkości jest niezależna od przesunięcia i powiększenia obrazu. Polecenie \u003ca href=\"#temat-047\">Resetuj transformacje\u003c/a> nie zmienia prędkości odtwarzania.\u003c/p>\n\u003cp>Ustawienie nie jest zapisywane w konfiguracji programu.\u003c/p>"},{"id":"temat-193","title":"Odtwarzaj filmy w aktualnym katalogu","content":"\u003cp>Włącza sekwencyjne odtwarzanie kolejnych plików wideo znajdujących się w tym samym katalogu co aktualnie otwarty film.\u003c/p>\n\u003cp>Funkcję można włączyć lub wyłączyć w menu \u003cstrong>Film → Filmy w aktualnym katalogu → Odtwarzaj wszystkie filmy w katalogu\u003c/strong>, skrótem \u003ccode>Ctrl+Alt+.\u003c/code> lub odpowiednim przyciskiem na pasku sterowania.\u003c/p>\n\u003cp>Po zakończeniu filmu program automatycznie ładuje następny plik zgodnie z wybranym porządkiem katalogu i próbuje wczytać pasujące do niego napisy. Każdy kolejny film jest odtwarzany od początku.\u003c/p>\n\u003cp>Kolejność odtwarzania określa wybrane \u003ca href=\"#temat-194\">sortowanie plików filmowych\u003c/a>: według nazwy, rozszerzenia lub losowo. Gdy ten tryb jest włączony, kolejność wynika z listy katalogu i ma pierwszeństwo przed mechanizmem kolejnych ponumerowanych części filmu.\u003c/p>\n\u003ch3>Automatyczne przejście do kolejnej części filmu\u003c/h3>\n\u003cp>Jeżeli odtwarzanie całego katalogu nie jest aktywne, po naturalnym zakończeniu filmu program próbuje odnaleźć kolejną ponumerowaną część na podstawie nazwy pliku, np. \u003ccode>CD1\u003c/code> → \u003ccode>CD2\u003c/code> lub \u003ccode>Part01\u003c/code> → \u003ccode>Part02\u003c/code>. Jeżeli odpowiedni plik istnieje, zostaje otwarty automatycznie.\u003c/p>\n\u003cp>Po załadowaniu kolejnej części program automatycznie przeszukuje katalog filmu i wybiera najlepiej pasujący zewnętrzny plik napisów. Dzięki temu właściwe napisy dla \u003ccode>CD2\u003c/code> mogą zostać wczytane automatycznie także wtedy, gdy w katalogu znajduje się więcej plików napisów.\u003c/p>\n\u003cp>Po zakończeniu ostatniego filmu w katalogu odtwarzanie zostaje zatrzymane.\u003c/p>\n\u003cp>\u003cstrong>Uwaga:\u003c/strong> włączenie funkcji \u003cstrong>Powtarzaj odtwarzanie\u003c/strong> zapętla wyłącznie bieżący film i zatrzymuje automatyczne przechodzenie do kolejnych plików z katalogu.\u003c/p>\n\u003cp>Do poprzedniego lub następnego pliku można przejść ręcznie za pomocą \u003ca href=\"#temat-195\">Wczytaj następny/poprzedni plik\u003c/a>: \u003ccode>Alt+,\u003c/code> oraz \u003ccode>Alt+.\u003c/code>.\u003c/p>"},{"id":"temat-194","title":"Sortowanie plików filmowych","content":"\u003cp>Określa kolejność filmów używaną przez \u003ca href=\"#temat-193\">odtwarzanie filmów w aktualnym katalogu\u003c/a> oraz funkcję \u003ca href=\"#temat-195\">Wczytaj następny/poprzedni plik\u003c/a>.\u003c/p>\n\u003cp>Opcja jest dostępna w menu \u003cstrong>Film → Filmy w aktualnym katalogu\u003c/strong> i oferuje trzy tryby:\u003c/p>\n\u003cul>\n\u003cli>\u003ccode>Sortowanie plików: Nazwa\u003c/code> — alfabetycznie według nazwy pliku,\u003c/li>\n\u003cli>\u003ccode>Sortowanie plików: Rozszerzenie\u003c/code> — według rozszerzenia, a następnie nazwy,\u003c/li>\n\u003cli>\u003ccode>Sortowanie plików: Losowo\u003c/code> — losowa kolejność odtwarzania.\u003c/li>\n\u003c/ul>"},{"id":"temat-195","title":"Wczytaj następny/poprzedni plik","content":"\u003cp>Umo\u017cliwia natychmiastowe za\u0142adowanie nast\u0119pnego lub poprzedniego pliku wideo z bie\u017c\u0105cego katalogu zgodnie z aktywnym \u003ca href=\"#temat-194\">sortowaniem plik\u00f3w filmowych\u003c/a>.\u003c/p>\n\u003cp class=\"shortcut-line\">\u003cstrong>Skr\u00f3ty:\u003c/strong> \u003ccode>Alt+.\u003c/code> \u2014 nast\u0119pny plik; \u003ccode>Alt+,\u003c/code> \u2014 poprzedni plik.\u003c/p>\n\u003cp>Funkcje s\u0105 r\u00f3wnie\u017c dost\u0119pne z paska sterowania odtwarzacza. Po za\u0142adowaniu filmu program pr\u00f3buje automatycznie wczyta\u0107 odpowiadaj\u0105ce mu napisy, a odtwarzanie rozpoczyna si\u0119 od pocz\u0105tku.\u003c/p>\n\u003cp>Skr\u00f3ty dzia\u0142aj\u0105 w ka\u017cdym trybie programu: z widocznym edytorem napis\u00f3w, z ukrytym edytorem oraz w trybie pe\u0142noekranowym.\u003c/p>"},{"id":"temat-074","title":"Przewiń 5 sekund w przód","content":"\u003cp>Przewija film 5 sekund do przodu.\u003c/p>"},{"id":"temat-075","title":"Przewiń 5 sekund wstecz","content":"\u003cp>Przewija film 5 sekund do tyłu.\u003c/p>"},{"id":"temat-073","title":"Przewinięcie użytkownika - wstecz/w przód","content":"\u003cp>Przewija film o wartość zdefiniowaną w ustawieniach przez użytkownika.\u003c/p>\n\u003cp>Wartość ustalana jest niezależnie dla przesunięcia wstecz i w przód.\u003c/p>\u003cp>Uwaga! Jest to jedyne przewinięcie, które skrót klawiszowy ma taki sam w trybie z edytorem i bez (\u003ccode>Alt+Left\u003c/code> / \u003ccode>Alt+Right\u003c/code>).\u003c/p>"},{"id":"temat-076","title":"Przejdź na początek filmu","content":"\u003cp>Przeskakuje na początek filmu.\u003c/p>"},{"id":"temat-077","title":"Przejdź na koniec filmu","content":"\u003cp>Przeskakuje na koniec filmu.\u003c/p>"}]},{"id":"cat-07","title":"Narzędzia i funkcje","topics":[{"id":"temat-084","title":"Menu: Narzędzia","content":"\u003ch3>Elementy menu Narzędzia:\u003c/h3>\u003cp>\u003ca href=\"#temat-086\">Domyślny format napisów\u003c/a>\u003c/p>\u003cp>\u003ca href=\"#temat-087\">Domyślna wartość współczynnika FPS\u003c/a>\u003c/p>\u003cp>\u003ca href=\"#temat-093\">Wyświetlaj napisy\u003c/a>\u003c/p>\u003cp>\u003ca href=\"#temat-092\">Przezroczyste napisy\u003c/a>\u003c/p>\u003cp>\u003ca href=\"#temat-088\">Wyświetlaj aktualny czas\u003c/a>\u003c/p>\u003cp>\u003ca href=\"#temat-089\">Opcje\u003c/a>\u003c/p>\u003cbr>"},{"id":"temat-086","title":"Domyślny format napisów","content":"\u003cp>Określa aktywny format znaczników czasu używany podczas wstawiania czasu do linii, która nie zawiera jeszcze rozpoznanego formatu napisów.\u003c/p>\n\u003cp>W menu \u003cstrong>Narzędzia\u003c/strong> przy pozycji \u003cstrong>Domyślny format napisów\u003c/strong> wyświetlany jest aktualnie wybrany format. Okno wyboru ma tytuł \u003cstrong>Aktywny format napisów\u003c/strong>.\u003c/p>\n\u003ch3>Dostępne formaty:\u003c/h3>\n\u003cul>\n\u003cli>\u003ccode>00:00:00\u003c/code> — format czasowy TMPlayer,\u003c/li>\n\u003cli>\u003ccode>0:00:00\u003c/code> — skrócony format czasowy TMPlayer,\u003c/li>\n\u003cli>\u003ccode>{000}{000}\u003c/code> — format klatkowy mDVD,\u003c/li>\n\u003cli>\u003ccode>[000][000]\u003c/code> — format czasowy MPL2.\u003c/li>\n\u003c/ul>\n\u003cp>Ustawienie jest używane przez funkcje \u003ca href=\"#temat-066\">Wstaw klatkę początkową\u003c/a> (\u003ccode>Insert\u003c/code>) oraz \u003ca href=\"#temat-067\">Wstaw klatkę końcową\u003c/a> (\u003ccode>Alt+Insert\u003c/code>), gdy edytowana linia nie ma jeszcze własnego rozpoznanego formatu.\u003c/p>\n\u003cp>Jeżeli linia posiada już rozpoznany format, zostaje on zachowany.\u003c/p>\n\u003cp>Po otwarciu pliku napisów aktywny format jest automatycznie dostosowywany do formatu wykrytego w pliku. Ustawienie jest zapamiętywane i przywracane po ponownym uruchomieniu programu.\u003c/p>\n\u003cp class=\"shortcut-line\">\u003cstrong>Skrót:\u003c/strong> \u003ccode>Ctrl+`\u003c/code>\u003c/p>"},{"id":"temat-087","title":"Domyślna wartość współczynnika FPS","content":"\u003cp>Pozwala ręcznie ustawić wartość współczynnika klatek na sekundę (FPS) używaną przez program do przeliczania wartości czasowych i klatkowych napisów.\u003c/p>\n\u003cp>Funkcja dostępna jest w menu \u003cstrong>Narzędzia → Domyślna wartość współczynnika FPS\u003c/strong> oraz pod skrótem \u003ccode>Ctrl+Shift+Q\u003c/code>.\u003c/p>\n\u003cp>W oknie dialogowym można wpisać własną wartość lub skorzystać z typowych wartości FPS.\u003c/p>\n\u003cp>Jeżeli FPS został ręcznie nadpisany przez użytkownika, wartość FPS na pasku stanu jest wyświetlana na czerwono.\u003c/p>\n\u003cp>Po otwarciu nowego pliku wideo ręczne nadpisanie jest resetowane, a program ponownie korzysta z FPS wykrytego dla filmu.\u003c/p>"},{"id":"temat-093","title":"Wyświetlaj napisy","content":"\u003cp>Włącza lub wyłącza wyświetlanie napisów.\u003c/p>\n\u003cp>Program obsługuje wyświetlanie napisów w formatach: \u003ca href=\"#temat-183\">czasowym TMPlayer\u003c/a>, \u003ca href=\"#temat-184\">czasowym MPL2\u003c/a>, \u003ca href=\"#temat-185\">klatkowym mDVD\u003c/a> oraz \u003ca href=\"#temat-187\">SubRip SRT\u003c/a>.\u003c/p>\n\u003cp>Jeżeli napis nie ma określonego czasu końcowego, czas jego wyświetlania jest wyznaczany na podstawie długości tekstu. Jeżeli czas końcowy jest zapisany w napisie, program korzysta z tej wartości.\u003c/p>"},{"id":"temat-092","title":"Przezroczyste napisy","content":"\u003cp>Włącza/wyłącza przezroczyste napisy.\u003c/p>\n\u003cp>Opcja jest domyślnie wyłączona. Przy ponownym uruchomieniu zostanie przywrócone ostatnie ustawienie.\u003c/p>\u003cp>Przezroczystość tła napisu można zmieniać w menu \u003cb>Opcje\u003c/b> na zakładce \u003cb>Napisy - wygląd\u003c/b>.\u003c/p>\u003cp>\u003cbr>\u003c/p>"},{"id":"temat-088","title":"Wyświetlaj aktualny czas","content":"\u003cdiv>Włącza/wyłącza wyświetlanie czasu filmu w lewym górnym rogu ekranu.\u003c/div>\u003cdiv>\u003cbr>\u003c/div>\u003cdiv>Format czasu: 0:00:00 / 0:00:00 czyli \"Czas od początku filmu / Czas trwania filmu\"\u003c/div>\u003cdiv>\u003cbr>\u003c/div>"},{"id":"temat-089","title":"Opcje","content":"\u003cp>Przechodzi do okna ustawień programu.\u003c/p>\n\u003cp>\u003ca href=\"#temat-102\">Dokładny opis opcji\u003c/a>\u003c/p>"},{"id":"temat-096","title":"Błąd formatu w aktualnej linii","content":"\u003cp>Podczas sprawdzania napisów została znaleziona linia o nierozpoznanym formacie.\u003c/p>\n\u003cp>Przerwij, ustawiając kursor na nierozpoznanej linii napisu\u003c/p>\n\u003cp>Jeżeli edytujesz gotowe napisy, w których nie powinno być błędów, przejdź do linii, w której on wystąpił po czym zmień ją tak, by była zgodna ze standardem danego formatu.\u003c/p>\n\u003cp>Kontynuuj, traktując nierozpoznane linie jako tekst napisu\u003c/p>\n\u003cp>Jeżeli napisy są dopiero tworzone i są w nich linie które nie zawierają informacji o czasie pokazania, a mimo to użytkownik chce je poprawić opcją \"Podziel długie wiersze\", \"Ogranicz ilość wierszy w linii\" lub \"Popraw napisy\" to można tego dokonać zaznaczając tę opcję.\u003c/p>\n\u003cp>Kontynuuj, IGNORUJĄC wszystkie nierozpoznane linie\u003c/p>\n\u003cp>Jeżeli napisy są dopiero tworzone i są w nich linie które nie zawierają informacji o czasie pokazania to można wybrać trzecią ewentualność i kontynuować działanie wybranej funkcji omijając wszystkie nierozpoznane linie.\u003c/p>\n\u003cp>Kontynuuj, USUWAJĄC wszystkie nierozpoznane linie\u003c/p>\n\u003cp>Czwartą możliwością jest usunięcie wszystkich nierozpoznanych linii. Należy ją stosować jeżeli w napisach jest wiele linii z informacjami nie wyświetlanymi jako napisy, lub przy konwersji z napisów, których format jest rozszerzony o dodatkowe linie opisów.\u003c/p>"}]},{"id":"cat-08","title":"Opcje programu","topics":[{"id":"temat-102","title":"Opcje","content":"\u003ch3>Ustawienia\u003c/h3>\u003ch3>Edytor\u003c/h3>\n\u003cp>\u003ca href=\"#temat-103\">Zapisuj plik napisów co N minut\u003c/a>\u003c/p>\n\u003cp>\u003ca href=\"#temat-104\">Twórz kopię zapasową pliku z napisami\u003c/a>\u003c/p>\u003cp>\u003ca href=\"#temat-108\">Czcionka edytora\u003c/a>\u003c/p>\n\u003cp>\u003ca href=\"#temat-116\">Zaznaczaj czerwoną czcionką linie o błędnym formacie\u003c/a>\u003c/p>\n\u003cp>\u003ca href=\"#temat-117\">Zaznaczaj czerwonym tłem nieposortowane linie\u003c/a>\u003c/p>\n\u003cp>\u003ca href=\"#temat-118\">Rozjaśniaj krótko wyświetlane linie\u003c/a>\u003c/p>\n\u003cp>\u003ca href=\"#temat-119\">Zaznaczaj na zielono bardzo krótko wyświetlane linie\u003c/a>\u003c/p>\n\u003cp>\u003ca href=\"#temat-120\">Po włączeniu edytora napisów przenoś kursor na aktualnie wyświetlany napis\u003c/a>\u003c/p>\u003cp>\u003ca href=\"#temat-163\">Wychodząc z trybu pełnoekranowego ustaw kursor na aktualnym napisie\u003c/a>\u003c/p>\u003cp>\u003cbr>\u003c/p>\u003ch3>Edycja\u003c/h3>\n\u003cp>\u003ca href=\"#temat-109\">Szybkość reakcji w sekundach (do opcji: \"Wstaw klatkę początkową\")\u003c/a>\u003c/p>\n\u003cp>\u003ca href=\"#temat-110\">Zastosuj dla: \"Wstaw klatkę końcową\"\u003c/a>\u003c/p>\n\u003cp>\u003ca href=\"#temat-111\">Zastosuj przy badaniu opóźnienia napisów względem filmu\u003c/a>\u003c/p>\n\u003cp>\u003ca href=\"#temat-112\">Przy wstawianiu klatki początkowej zachowaj poprzednią różnicę między klatkami\u003c/a>\u003c/p>\n\u003cp>\u003ca href=\"#temat-113\">Po wstawieniu klatki początkowej napisu przenieś kursor do następnego wiersza\u003c/a>\u003c/p>\n\u003cp>\u003ca href=\"#temat-114\">Domyślny czas wyświetlania napisu\u003c/a>\u003c/p>\u003ch3>Napisy\u003c/h3>\u003cp>\u003ca href=\"#temat-123\">Dostosuj szerokość wierszy napisów, jeżeli wychodzą poza ekran\u003c/a>\u003c/p>\n\u003cp>\u003ca href=\"#temat-125\">Interpretuj w napisach kody kontrolne mDVDp (np. {y:i}{c:$FA0530} )\u003c/a>\u003c/p>\n\u003cp>\u003ca href=\"#temat-133\">Podczas odtwarzania ostrzegaj o nieposortowanych napisach\u003c/a>\u003c/p>\n\u003cp>\u003ca href=\"#temat-124\">Wyświetlaj w kursywie wiersze zaczynające się od: /, *, #\u003c/a>\u003c/p>\n\u003cp>\u003ca href=\"#temat-127\">Minimalny odstęp między wyświetlanymi napisami (w klatkach)\u003c/a>\u003c/p>\u003ch3>Napisy - wygląd\u003c/h3>\n\u003cp>\u003ca href=\"#temat-132\">Czcionka napisów\u003c/a>\u003c/p>\n\u003cp>\u003ca href=\"#temat-131\">Rozmiar czcionki napisów\u003c/a>\u003c/p>\n\u003cp>\u003ca href=\"#temat-134\">Kolor czcionki i tła napisów\u003c/a>\u003c/p>\u003cp>\u003ca href=\"#temat-196\">Przezroczystość tła napisu i kolor obrysu\u003c/a>\u003c/p>\n\u003cp>\u003ca href=\"#temat-136\">Pozycja napisów\u003c/a>\u003c/p>\u003ch3>Film\u003c/h3>\u003cp>\u003ca href=\"#temat-151\">Przewinięcie użytkownika w lewo/prawo\u003c/a>\u003c/p>\n\u003cp>\u003ca href=\"#temat-167\">Wstrzymaj film, gdy okno aplikacji jest zminimalizowane\u003c/a>\u003c/p>\n\u003cp>\u003ca href=\"#temat-168\">Wstrzymaj film, gdy wyświetlane okno dialogowe\u003c/a>\u003c/p>\u003cp>\u003ca href=\"#temat-169\">Wstrzymaj film, gdy okno aplikacji nie jest aktywne\u003c/a>\u003c/p>\u003ch3>Tryb pełnoekranowy\u003c/h3>\u003cp>\u003ca href=\"#temat-202\">Po zakończeniu odtwarzania wyjdź z trybu pełnoekranowego\u003c/a>\u003c/p>\u003ch3>OSD\u003c/h3>\u003cp>\u003ca href=\"#temat-160\">Pozycja tekstu informacyjnego OSD\u003c/a>\u003c/p>\n\u003cp>\u003ca href=\"#temat-147\">Wyświetlaj OSD również w trybie okienkowym\u003c/a>\u003c/p>\u003cp>\u003ca href=\"#temat-161\">Wielkość czcionki OSD\u003c/a>\u003c/p>\u003cp>\u003ca href=\"#temat-162\">Czas wyświetlania OSD na ekranie\u003c/a>\u003c/p>\u003cp>\u003ca href=\"#temat-197\">Kolory i tło OSD\u003c/a>\u003c/p>\u003ch3>Wideo\u003c/h3>\u003ca href=\"#temat-198\">Dekodowanie filmu\u003c/a>"},{"id":"temat-103","title":"Zapisuj plik napisów co N minut","content":"\u003cp>Jeżeli opcja jest wybrana to plik z napisami będzie automatycznie zapisywany co zadany czas w przedziale od 1 do 60 minut.\u003c/p>"},{"id":"temat-104","title":"Twórz kopię zapasową pliku z napisami","content":"\u003cp>Jeżeli opcja jest wybrana to w katalogu z plikiem napisów tworzony jest plik o takiej samej nazwie i rozszerzeniu .bak - w którym jest poprzednia zawartość pliku.\u003c/p>\n\u003cp>Ilość plików zapasowych może być ustawiona w zakresie 1-99.\u003c/p>\u003cp>Pliki kopii zapasowych zostaną nazwane w następujący sposób:\u003c/p>\u003cp>Nazwa Pliku.01.bak\u003c/p>\n\u003cp>Nazwa Pliku.02.bak\u003c/p>\u003cp>...\u003c/p>\n\u003cp>Nazwa Pliku.99.bak\u003c/p>\u003cp>\u003cbr>\u003c/p>"},{"id":"temat-108","title":"Czcionka edytora","content":"\u003cp>Określa rodzaj czcionki w edytorze.\u003c/p>\n\u003cp>Uwaga! Ze względu na zachowanie kolumnowości w edytorze, dla czcionek o zmiennej szerokości edytor może być nieczytelny.\u003c/p>\u003cp>Najlepiej sprawdzają się czcionki Fixedsys lub Courier New.\u003c/p>\u003cp>\u003cbr>\u003c/p>\u003cp>Wielkość czcionki edytora napisów można zmieniać w zakresie 6-22 punkty.\u003c/p>\u003cp>\u003cbr>\u003c/p>\u003cp>\u003cbr>\u003c/p>"},{"id":"temat-116","title":"Zaznaczaj czerwoną czcionką linie o błędnym formacie","content":"\u003cp>Jeżeli opcja zostanie wybrana, każda linia, która jest w formacie nierozpoznawanym przez SubEdit zostanie wyświetlona czerwoną czcionką.\u003c/p>\n\u003cp>\u003cstrong>Zobacz także:\u003c/strong> \u003ca href=\"#temat-117\">Zaznaczaj czerwonym tłem nieposortowane linie\u003c/a>\u003c/p>"},{"id":"temat-117","title":"Zaznaczaj czerwonym tłem nieposortowane linie","content":"\u003cp>Po włączeniu tej opcji czerwonym tłem oznaczane są linie, których czas rozpoczęcia jest wcześniejszy niż czas rozpoczęcia poprzedniego rozpoznanego napisu.\u003c/p>\n\u003cp>Puste i nierozpoznane linie są pomijane. Napisy rozpoczynające się w tym samym czasie nie są oznaczane.\u003c/p>\n\u003cp>Funkcja nie zmienia kolejności ani czasów napisów.\u003c/p>\n\u003cp>\u003cstrong>Zobacz także:\u003c/strong> \u003ca href=\"#temat-116\">Zaznaczaj czerwoną czcionką linie o błędnym formacie\u003c/a>\u003c/p>"},{"id":"temat-118","title":"Rozjaśniaj krótko wyświetlane linie","content":"\u003cp>Jeżeli opcja zostanie wybrana to każda linia, która jest w rozpoznawalnym formacie będzie wyświetlona czcionką o jasności odpowiadającej jej długości wyświetlania podczas oglądania.\u003c/p>\n\u003cp>Czyli: im krócej będzie wyświetlana dana linia tym jaśniejszym szarym kolorem będzie wyświetlana jej czcionka.\u003c/p>\n\u003cp>Notka: Pisząc 'długość wyświetlania' mam na myśli 'długość wyświetlania w porównaniu do długości samego napisu'.\u003c/p>"},{"id":"temat-119","title":"Zaznaczaj na zielono bardzo krótko wyświetlane linie","content":"\u003cp>Jeżeli linia napisu będzie wyświetlana zbyt krótko to zostanie zaznaczona (wyświetlona) zielonym kolorem.\u003c/p>"},{"id":"temat-120","title":"Po włączeniu edytora napisów przenoś kursor na aktualnie wyświetlany napis","content":"\u003cp>Jeżeli opcja jest wybrana to po włączeniu edytora napisów kursor będzie przesuwany w miejsce z napisem, który aktualnie jest wyświetlany w filmie.\u003c/p>"},{"id":"temat-163","title":"Wychodząc z trybu pełnoekranowego ustaw kursor na aktualnym napisie","content":"\u003cp>Jeżeli włączone jest okno edycyjne i wybrana jest ta opcja, to po wyjściu z trybu pełnoekranowego kursor zostanie ustawiony na linii z napisem, który aktualnie jest wyświetlany, bądź będzie wyświetlony za chwilę.\u003c/p>"},{"id":"temat-109","title":"Szybkość reakcji w sekundach (do opcji: \"Wstaw klatkę początkową\")","content":"\u003cp>Określa ilość sekund, przeznaczoną na czas reakcji użytkownika między usłyszeniem dźwięku a przyciśnięciem klawisza \u003ccode>Insert\u003c/code>.\u003c/p>\u003cp>Wartość wpisana będzie odjęta od czasu \u003ca href=\"#temat-178\">pokazania napisu\u003c/a>\u003c/p>\u003cp>\u003cbr>\u003c/p>\u003cp>Czas reakcji może być także uwzględniony przy:\u003c/p>\n\u003cp>\u003ca href=\"#temat-110\">Wstawianiu klatki końcowej\u003c/a>\u003c/p>\n\u003cp>\u003ca href=\"#temat-111\">Badaniu opóźnienia napisów względem filmu\u003c/a>\u003c/p>"},{"id":"temat-110","title":"Zastosuj dla: \"Wstaw klatkę końcową\"","content":"\u003cp>\u003ca href=\"#temat-109\">Szybkość reakcji\u003c/a> będzie brana pod uwagę także przy wstawianiu \u003ca href=\"#temat-179\">klatki końcowej\u003c/a> napisu.\u003c/p>"},{"id":"temat-111","title":"Zastosuj przy badaniu opóźnienia napisów względem filmu","content":"\u003cp>\u003ca href=\"#temat-109\">Szybkość reakcji\u003c/a> będzie brana pod uwagę także przy badaniu \u003ca href=\"#temat-078\">opóźnienia napisów względem filmu\u003c/a>\u003c/p>"},{"id":"temat-112","title":"Przy wstawianiu klatki początkowej zachowaj poprzednią różnicę klatki końcowej i początkowej","content":"\u003cp>Jeżeli w aktualnej linii istnieje już wpis o \u003ca href=\"#temat-178\">klatce początkowej\u003c/a>&nbsp;i&nbsp;\u003ca href=\"#temat-179\">końcowej\u003c/a> to po wstawieniu nowej klatki początkowej funkcją&nbsp;\u003ca href=\"#temat-066\">Wstaw klatkę początkową\u003c/a>&nbsp;(klawisz \u003ccode>Insert\u003c/code>) zostanie zachowana poprzednia różnica klatki końcowej do początkowej. Czyli pozostanie poprzednia długość wyświetlania napisu.\u003c/p>"},{"id":"temat-113","title":"Po wstawieniu klatki początkowej napisu przenieś kursor do następnego wiersza","content":"\u003cp>Opcja powoduje przeniesienie kursora do następnego wiersza po wstawieniu \u003ca href=\"#temat-178\">klatki początkowej\u003c/a> lub końcowej.\u003c/p>\n\u003cp>Jeżeli klatka początkowa bądź końcowa jest wstawiana w miejscu, w którym nie ma żadnego tekstu kursor nie będzie przeniesiony do następnej linii.\u003c/p>"},{"id":"temat-114","title":"Domyślny czas wyświetlania napisu","content":"\u003cp>Określa czas pokazywania napisu, którego czas wyświetlania nie jest określony jawnie.\u003c/p>\n\u003cp>Wartości te są też wykorzystywane przez inne opcje programu, które potrzebują wyliczenia długości wyświetlania napisu.\u003c/p>"},{"id":"temat-123","title":"Dostosuj szerokość wierszy napisów, jeżeli wychodzą poza ekran","content":"\u003cp>Jeżeli przy danej wielkości czcionki któryś wiersz napisów wychodzi poza ekran, jego wyrazy początkowe przenoszone są o jeden wiersz wyżej, aż do chwili, kiedy napis będzie się mieścił na ekranie.\u003c/p>"},{"id":"temat-125","title":"Interpretuj w napisach kody kontrolne mDVDp (np. {y:i}{c:$FA0530})","content":"\u003cp>Pozwala sterować parametrami czcionki napisów z poziomu tekstu napisu.\u003c/p>\n\u003ch3>Dostępne kody kontrolne:\u003c/h3>\n\u003cp>\u003cstrong>\u003ccode>{c:$bbggrr}\u003c/code>\u003c/strong> - kolor napisu dla wiersza (rr, gg, bb to składowe RGB koloru napisu)\u003c/p>\n\u003cp>\u003cstrong>\u003ccode>{C:$bbggrr}\u003c/code>\u003c/strong> - kolor napisu dla całej linii\u003c/p>\n\u003cp>\u003cstrong>\u003ccode>{b:$bbggrr}\u003c/code>\u003c/strong> - kolor tła napisu dla wiersza (rr, gg, bb to składowe RGB koloru napisu)\u003c/p>\n\u003cp>\u003cstrong>\u003ccode>{B:$bbggrr}\u003c/code>\u003c/strong> - kolor tła napisu dla całej linii\u003c/p>\n\u003cp>\u003cstrong>\u003ccode>{f:fontname}\u003c/code>\u003c/strong> - czcionka dla wiersza\u003c/p>\n\u003cp>\u003cstrong>\u003ccode>{F:fontname}\u003c/code>\u003c/strong> - czcionka dla całej linii\u003c/p>\n\u003cp>\u003cstrong>\u003ccode>{s:size}\u003c/code>\u003c/strong> - rozmiar czcionki dla wiersza\u003c/p>\n\u003cp>\u003cstrong>\u003ccode>{S:size}\u003c/code>\u003c/strong> - rozmiar czcionki dla całej linii\u003c/p>\n\u003cp>\u003cstrong>\u003ccode>{y:style}\u003c/code>\u003c/strong> - format czcionki dla wiersza\u003c/p>\n\u003cp>\u003cstrong>\u003ccode>{Y:style}\u003c/code>\u003c/strong> - format czcionki dla całej linii\u003c/p>\n\u003cp>\u003cstrong>\u003ccode>style\u003c/code>\u003c/strong> - \u003cstrong>bold\u003c/strong>, \u003cstrong>italic\u003c/strong>, \u003cstrong>underline\u003c/strong> (separator: \u003ccode>+\u003c/code>), np. \u003ccode>{y:bold+italic}\u003c/code>\u003cbr>\u003cstrong>b\u003c/strong>, \u003cstrong>i\u003c/strong>, \u003cstrong>u\u003c/strong> (separator: \u003ccode>,\u003c/code>), np. \u003ccode>{y:b,i}\u003c/code>\u003c/p>\n\u003ch3>Przykład:\u003c/h3>\n\u003cp>\u003ccode>{1000}{1100}{C:$FF0050}{y:b}Tutaj tekst.|{s:25}{f:Courier}A tutaj druga linia.\u003c/code>\u003c/p>"},{"id":"temat-133","title":"Podczas odtwarzania ostrzegaj o nieposortowanych napisach","content":"\u003cp>Po włączeniu tej opcji program podczas odtwarzania ostrzega o napisie, którego czas rozpoczęcia jest wcześniejszy niż czas rozpoczęcia poprzedniego napisu.\u003c/p>\n\u003cp>Napisy rozpoczynające się dokładnie w tym samym czasie nie wywołują ostrzeżenia.\u003c/p>\n\u003cp>Okno ostrzeżenia podaje numer problematycznej linii i zamyka się automatycznie po pięciu sekundach, jeżeli użytkownik nie zamknie go wcześniej.\u003c/p>\n\u003cp>Jeżeli film był odtwarzany, na czas wyświetlania ostrzeżenia zostaje wstrzymany, a po zamknięciu okna odtwarzanie jest automatycznie wznawiane.\u003c/p>\n\u003cp>Ten sam wpis nie jest ponownie zgłaszany podczas dalszego odtwarzania. Po cofnięciu filmu ostrzeżenie może pojawić się ponownie.\u003c/p>"},{"id":"temat-124","title":"Wyświetlaj w kursywie wiersze zaczynające się od: /, *, #","content":"\u003cp>Funkcja pozwala wybrać sposób identyfikacji wiersza (logicznego, czyli rozdzielony \"|\"), który będzie wyświetlany w kursywie.\u003c/p>\u003cp>Dostępne znaki rozpoznawcze kursywy zostaną usunięte podczas zamiany formatowania wiersza.\u003c/p>\u003cp>\u003cbr>\u003c/p>\u003cp>Np. napis:\u003c/p>\u003cp>{11}{22}/kursywa/|wiersz2 zostanie wyświetlony jako:\u003c/p>\n\u003cp>\u003ci>kursywa\u003c/i>\u003cbr>wiersz2\u003c/p>\u003cp>albo napis\u003c/p>\u003cp>{11}{22}*kursywa*|wiersz2&nbsp;\u003c/p>\u003cp>również zostanie wyświetlony jako:\u003c/p>\n\u003cp>\u003ci>kursywa\u003c/i>\u003cbr>wiersz2\u003c/p>\u003cp>\u003cbr>\u003c/p>"},{"id":"temat-127","title":"Minimalny odstęp między wyświetlanymi napisami (w klatkach)","content":"\u003cp>Określa minimalną ilość klatek, które będą stanowiły odstęp, między schowaniem aktualnego napisu, a wyświetleniem następnego.\u003c/p>\n\u003cp>Ten parametr jest również wykorzystywany przy opcjach\u003c/p>\n\u003cp>\u003ca href=\"#temat-054\">Zmień czas wyświetlania napisów\u003c/a>\u003c/p>\n\u003cp>\u003ca href=\"#temat-063\">Popraw napisy\u003c/a>\u003c/p>"},{"id":"temat-132","title":"Czcionka napisów","content":"\u003cp>Określa czcionkę używaną do wyświetlania napisów tekstowych.\u003c/p>\n\u003cp>SubEdit-Player Next używa wspólnego ustawienia czcionki w trybie okienkowym i pełnoekranowym — nie ma oddzielnych czcionek dla obu trybów.\u003c/p>\n\u003cp>Wygląd wybranej czcionki jest prezentowany w podglądzie w oknie opcji.\u003c/p>\n\u003cp>Napisy tekstowe są renderowane w niezależnej warstwie. Przesunięcie i powiększenie obrazu filmu nie przesuwa ani nie skaluje czcionki napisów.\u003c/p>\n\u003cp>\u003cstrong>Zobacz także:\u003c/strong> \u003ca href=\"#temat-131\">Rozmiar czcionki napisów\u003c/a>\u003c/p>"},{"id":"temat-131","title":"Rozmiar czcionki napisów","content":"\u003cp>Określa sposób sterowania rozmiarem czcionki napisów tekstowych.\u003c/p>\n\u003cp>\u003cstrong>\u003ccode>Stała wielkość\u003c/code>\u003c/strong>\u003c/p>\n\u003cp>Rozmiar czcionki pozostaje stały niezależnie od wielkości okna programu i rozdzielczości ekranu.\u003c/p>\n\u003cp>\u003cstrong>\u003ccode>Zależny od wielkości okna\u003c/code>\u003c/strong>\u003c/p>\n\u003cp>Rozmiar czcionki jest skalowany wraz z wysokością obszaru odtwarzacza. W trybie pełnoekranowym skaluje się odpowiednio do wysokości ekranu.\u003c/p>\n\u003cp>\u003cstrong>\u003ccode>Minimalny rozmiar czcionki\u003c/code>\u003c/strong>\u003c/p>\n\u003cp>Określa dolną granicę rozmiaru czcionki w trybie zależnym od wielkości okna. Ustawienie jest aktywne tylko w tym trybie.\u003c/p>"},{"id":"temat-134","title":"Kolor czcionki i tła napisów","content":"\u003cp>Pozwala zmienić kolor czcionki i tła napisów.\u003c/p>\n\u003cp>Ustawienie działa zarówno dla trybu okienkowego jak i pełnoekranowego oraz dla czcionek przezroczystych i nieprzezroczystych.\u003c/p>"},{"id":"temat-196","title":"Przezroczystość tła napisu i kolor obrysu","content":"\u003cp>Pozwala zmienić przezroczystość tła napisu w zakresie 0-100%\u003c/p>\u003cp>0% = napisy na zupełnie przezroczystym tle\u003c/p>\u003cp>100% = napisy na nieprzezroczystym tle w wybranym \u003ca href=\"#temat-134\">kolorze\u003c/a>.\u003c/p>\u003cp>\u003cbr>\u003c/p>\u003cp>Kolor obrysu pozwala ustawić inny kolor obrysu czcionki niż sam kolor czcionki napisu. Można również ustalić grubość wybranego koloru obrysu czcionki.\u003c/p>\u003cp>Np. jeśli wyświetlamy białą czcionkę to warto ustawić czarny obrys bo białe litery mogą być niewidoczne na jasnych scenach filmu.\u003c/p>\u003cp>\u003cbr>\u003c/p>"},{"id":"temat-136","title":"Pozycja napisów","content":"\u003cp>Umożliwia określenie miejsca wyświetlania napisów tekstowych oraz ich marginesów.\u003c/p>\n\u003cp>Ustawienia znajdują się w oknie \u003cstrong>Opcje programu\u003c/strong> (\u003ccode>F12\u003c/code>) w sekcji wyglądu napisów.\u003c/p>\n\u003cp>Dostępne są:\u003c/p>\n\u003cul>\n\u003cli>\u003cstrong>Wyrównanie napisów\u003c/strong> — wybór jednej z 9 pozycji bazowych (góra / środek / dół oraz lewo / środek / prawo),\u003c/li>\n\u003cli>\u003cstrong>Marginesy\u003c/strong> — wartości w pikselach określające odstęp od krawędzi obszaru bazowego,\u003c/li>\n\u003cli>\u003cstrong>Pozycja napisów względem klatki obrazu\u003c/strong> — wybór, czy napisy mają być pozycjonowane względem właściwego prostokąta obrazu filmu, czy względem całego okna odtwarzacza lub ekranu w trybie pełnoekranowym.\u003c/li>\n\u003c/ul>\n\u003cp>Po odznaczeniu opcji pozycjonowania względem klatki obrazu napisy mogą być umieszczane również poza właściwym prostokątem filmu, np. na czarnym pasie pod obrazem panoramicznym.\u003c/p>\n\u003cp>Tekstowe napisy są renderowane w niezależnej warstwie i nie są skalowane ani przesuwane przez funkcje Pan i Zoom obrazu wideo.\u003c/p>"},{"id":"temat-151","title":"Przewinięcie użytkownika w lewo/prawo","content":"\u003cp>Definiuje liczbę sekund przewinięcia filmu niezależnie w lewo i w prawo.\u003c/p>\n\u003cp class=\"shortcut-line\">\u003cstrong>Skróty:\u003c/strong> \u003ccode>Alt+Left\u003c/code> — przewinięcie w lewo; \u003ccode>Alt+Right\u003c/code> — przewinięcie w prawo.\u003c/p>\n\u003cp>Jest to przewinięcie, którego skróty działają tak samo w trybie z edytorem i bez edytora.\u003c/p>"},{"id":"temat-167","title":"Wstrzymaj film, gdy okno aplikacji jest zminimalizowane","content":"\u003cp>Funkcja włącza pauzę (wstrzymuje odtwarzanie filmu), gdy aplikacja jest zminimalizowana.\u003c/p>\n\u003cp>Po przywróceniu okna aplikacji odtwarzanie filmu zostaje automatycznie przywrócone.\u003c/p>"},{"id":"temat-168","title":"Wstrzymaj film, gdy wyświetlane okno dialogowe","content":"\u003cp>Funkcja włącza pauzę (wstrzymuje odtwarzanie filmu), gdy wyświetlane jest jakieś okno dialogowe.\u003c/p>\n\u003cp>Po zamknięciu okna odtwarzanie filmu zostaje automatycznie przywrócone.\u003c/p>"},{"id":"temat-169","title":"Wstrzymaj film, gdy okno aplikacji nie jest aktywne","content":"\u003cp>Funkcja włącza pauzę (wstrzymuje odtwarzanie filmu), gdy okno aplikacji SubEdit przestaje być oknem aktywnym, a włącza odtwarzanie filmu w momencie, gdy okno stanie się ponownie aktywne.\u003c/p>"},{"id":"temat-202","title":"Po zakończeniu odtwarzania wyjdź z trybu pełnoekranowego","content":"\u003cp>Po włączeniu tej opcji program po naturalnym zakończeniu odtwarzania przywraca tryb okienkowy, jeżeli film był wyświetlany na pełnym ekranie.\u003c/p>\n\u003cp>Podczas odtwarzania kolejnych filmów z katalogu lub kolejnych części wieloczęściowego filmu tryb pełnoekranowy jest zachowywany pomiędzy plikami. Powrót do trybu okienkowego następuje dopiero po zakończeniu ostatniego filmu w danej sekwencji.\u003c/p>"},{"id":"temat-160","title":"Pozycja tekstu informacyjnego OSD","content":"\u003cp>Określa pozycję tekstu informacyjnego OSD albo całkowicie wyłącza jego wyświetlanie.\u003c/p>\n\u003cp>Dostępne ustawienia:\u003c/p>\n\u003cul>\n\u003cli>\u003ccode>Prawy górny róg okna\u003c/code>,\u003c/li>\n\u003cli>\u003ccode>Nie wyświetlaj\u003c/code>.\u003c/li>\n\u003c/ul>"},{"id":"temat-147","title":"Wyświetlaj OSD również w trybie okienkowym","content":"\u003cp>Włącza wyświetlanie komunikatów OSD również w trybie okienkowym.\u003c/p>\n\u003cp>Po wyłączeniu tej opcji komunikaty OSD są wyświetlane tylko w trybie pełnoekranowym. Jeżeli pozycja OSD jest ustawiona na \u003ccode>Nie wyświetlaj\u003c/code>, komunikaty pozostają ukryte niezależnie od trybu pracy.\u003c/p>"},{"id":"temat-161","title":"Wielkość czcionki OSD","content":"\u003cp>Określa wielkość czcionki używanej do wyświetlania informacji OSD.\u003c/p>\n\u003cp>Ustawienie jest wspólne dla trybu okienkowego i pełnoekranowego.\u003c/p>"},{"id":"temat-162","title":"Czas wyświetlania OSD na ekranie","content":"\u003cp>Określa, przez jaki czas komunikaty OSD pozostają widoczne na ekranie.\u003c/p>\n\u003cp>Wartość podawana jest w sekundach i może być ułamkowa, np. \u003ccode>1,5 s\u003c/code>.\u003c/p>"},{"id":"temat-197","title":"Kolory i tło OSD","content":"\u003cp>Pozwala ustawić wygląd komunikatów OSD w trybie okienkowym i pełnoekranowym.\u003c/p>\n\u003cp>Dostępne ustawienia obejmują:\u003c/p>\n\u003cul>\n\u003cli>kolor tekstu OSD,\u003c/li>\n\u003cli>kolor tła,\u003c/li>\n\u003cli>przezroczystość tła w zakresie 0–100%,\u003c/li>\n\u003cli>kolor obramowania,\u003c/li>\n\u003cli>grubość obramowania w zakresie 0–5 px.\u003c/li>\n\u003c/ul>\n\u003cp>\u003ccode>0%\u003c/code> oznacza całkowicie przezroczyste tło, a \u003ccode>100%\u003c/code> — tło całkowicie nieprzezroczyste.\u003c/p>\n\u003cp>Zmiany można ocenić na bieżąco w podglądzie dostępnym w oknie opcji.\u003c/p>"},{"id":"temat-198","title":"Dekodowanie filmu","content":"\u003cp>Pozwala ustawić sposób dekodowania filmu.\u003c/p>\u003cp>Automatyczne - zalecany wybór\u003c/p>\u003cp>Sprzętowe (HW) - dekodowanie wideo obciąża kartę graficzną\u003c/p>\u003cp>Programowe (SW) - dekodowanie wideo obciąża procesor\u003c/p>\u003cp>\u003cbr>\u003c/p>\u003cp>Na dolnym pasku statusu oraz na pasku statusu na pełnym ekranie jest informacja&nbsp;\u003cstrong>\u003ccode>[H/W]\u003c/code>\u003c/strong>&nbsp;lub&nbsp;\u003cstrong>\u003ccode>[S/W]\u003c/code>\u003c/strong>&nbsp;pokazująca który tryb jest aktualnie wykorzystywany.\u003c/p>\u003cp>\u003cbr>\u003c/p>"}]},{"id":"cat-09","title":"Pojęcia i formaty","topics":[{"id":"temat-178","title":"Klatka początkowa","content":"\u003cp>Klatka początkowa (startowa)\u003c/p>\n\u003cp>Klatka napisu, która określa klatkę filmu, w której napis ma zostać wyświetlony.\u003c/p>\u003cp>{klatka_startowa}{klatka_końcowa}napis|wiersz 2\u003c/p>\n\u003cp>Pojęcie to dotyczy też czasu pokazania napisów w formacie MPL2\u003c/p>\u003cp>[czas_startowy][czas_końcowy]napis|wiersz 2\u003c/p>"},{"id":"temat-179","title":"Klatka końcowa","content":"\u003cp>Klatka napisu, która określa klatkę filmu, w której napis ma być ukryty.\u003c/p>\u003cp>{klatka_pokazania}{klatka_schowania}napis|wiersz 2\u003c/p>\n\u003cp>Pojęcie to dotyczy też czasu schowania napisów w formacie MPL2\u003c/p>\u003cp>[czas_pokazania][czas_schowania]napis|wiersz 2\u003c/p>"},{"id":"temat-180","title":"FPS","content":"\u003cp>Ang. Frames Per Second, czyli ilość klatek na sekundę odtwarzania filmu.\u003c/p>"},{"id":"temat-183","title":"Format czasowy TMPlayer","content":"\u003cp>Oznacza, format zapisu napisów do filmu, w którym moment wyświetlenia napisu przedstawiony jest w postaci godziny, minuty i sekundy filmu, podczas której napis ma zostać wyświetlony.\u003c/p>\n\u003ch3>Najpopularniejsze formaty zapisu czasowego:\u003c/h3>\n\u003cp>0:00:00:napis\u003c/p>\n\u003cp>00:00:00:napis\u003c/p>\n\u003cp>00:00:00 napis\u003c/p>\n\u003cp>0:00:00=napis\u003c/p>\n\u003ch3>Przykład:\u003c/h3>\n\u003cp>00:00:26:Komandosi mogą być|dumni ze swojej tradycji.\u003c/p>\n\u003cp>00:00:29:Od XVIII wieku, stajemy|na pierwszej linii ognia na wszystkich...\u003c/p>\n\u003cp>00:00:33:w których biorą udział Stany Zjednoczone.\u003c/p>\n\u003cp>00:00:36:To właśnie Wy jesteście|dziedzicami tej spuścizny,\u003c/p>\n\u003cp>00:00:40:dlatego żal mi się z Wami żegnać.|Oddanie służyliście swojej ojczyźnie,\u003c/p>"},{"id":"temat-184","title":"Format czasowy MPL2","content":"\u003cp>Oznacza format zapisu napisów do filmu, w którym moment wyświetlenia \nnapisu przedstawia liczba określająca czas w dziesiątych częściach \nsekundy od początku filmu.\u003c/p>\n\u003cp>Format zawiera też informację na temat ukrycia napisu.\u003c/p>\n\u003cp>[czas_pokazania][czas_schowania]napis|wiersz 2\u003c/p>\n\u003cp>MPL2 jest formatem wywodzącym się z formatu MPL. Została zmieniona \njedynie forma zapisu na zbliżoną do formatu klatkowego (w celu \nułatwienia dostosowania do tego formatu programom obsługującym format \nklatkowy).\u003c/p>\n\u003ch3>Notka:\u003c/h3>\u003cp>Format MPL2 posiada zalety formatu klatkowego i czasowego przy czym pozbawiony jest też ich wad.\u003c/p>\n\u003cp>Napisy pasują do filmów z różnym współczynnikiem FPS filmu (również \njest to zaletą formatu czasowego, ale wadą formatu klatkowego).\u003c/p>\n\u003cp>Można dokładnie odwzorować czas pokazania i schowania napisu (jest to\n zaletą w formacie klatkowym, ale wadą w zwykłym formacie czasowym).\u003c/p>\n\u003ch3>Przykład:\u003c/h3>\n\u003cp>[260][291]Komandosi mogą być|dumni ze swojej tradycji.\u003c/p>\n\u003cp>[292][333]Od XVIII wieku, stajemy|na pierwszej linii ognia na wszystkich...\u003c/p>\n\u003cp>[333][364]w których biorą udział Stany Zjednoczone.\u003c/p>\n\u003cp>[365][406]To właśnie Wy jesteście|dziedzicami tej spuścizny,\u003c/p>\n\u003cp>[406][448]dlatego żal mi się z Wami żegnać.|Oddanie służyliście swojej ojczyźnie,\u003c/p>"},{"id":"temat-185","title":"Format klatkowy mDVD","content":"\u003cp>Oznacza format zapisu napisów do filmu, w którym moment wyświetlenia \nnapisu przedstawia klatka filmu, podczas której napis ma zostać \nwyświetlony&nbsp;\u003c/p>\u003cp>{klatka startowa}\u003c/p>\n\u003cp>Format zawiera też informację na temat ukrycia napisu {klatka końcowa}\u003c/p>\n\u003ch3>Format zapisu klatkowego:\u003c/h3>\n\u003cp>{klatka_pokazania}{klatka_schowania}napis|wiersz 2\u003c/p>\n\u003ch3>Przykład:\u003c/h3>\n\u003cp>{625}{699}Komandosi mogą być|dumni ze swojej tradycji.\u003c/p>\n\u003cp>{700}{799}Od XVIII wieku, stajemy|na pierwszej linii ognia na wszystkich...\u003c/p>\n\u003cp>{800}{874}w których biorą udział Stany Zjednoczone.\u003c/p>\n\u003cp>{875}{974}To właśnie Wy jesteście|dziedzicami tej spuścizny,\u003c/p>\n\u003cp>{975}{1074}dlatego żal mi się z Wami żegnać.|Oddanie służyliście swojej ojczyźnie,\u003c/p>"},{"id":"temat-187","title":"Format SRT (SubRip)","content":"\u003cp>SRT to format używany m.in. przez ripper napisów z płyt DVD.\u003c/p>\n\u003cp>SubEdit obsługuje ten format napisów.\u003c/p>\n\u003ch3>UKŁAD:\u003c/h3>\u003cdiv>\u003cpre id=\"mwDQ\" data-mw=\"{&quot;name&quot;:&quot;pre&quot;,&quot;attrs&quot;:{},&quot;body&quot;:{&quot;extsrc&quot;:&quot;\\n Numer napisu\\n Początek wyświetlania --&gt; Koniec wyświetlania\\n Tekst napisu (jedna lub więcej linii)\\n Przerwa\\n&quot;}}\"> Numer napisu\n Początek wyświetlania --&gt; Koniec wyświetlania\n Tekst napisu (jedna lub więcej linii)\n Przerwa\u003c/pre>\u003c/div>\u003ch3>PRZYKŁAD:\u003c/h3>\u003cpre id=\"mwDw\" data-mw=\"{&quot;name&quot;:&quot;pre&quot;,&quot;attrs&quot;:{},&quot;body&quot;:{&quot;extsrc&quot;:&quot;\\n 1\\n 00:00:03,036 --&gt; 00:00:08,201\\n Pewnego dnia, w domu przeciętnego\\n studenta pojawiły się trzy boginie.\\n\\n 2\\n 00:00:08,708 --&gt; 00:00:13,168\\n Wszystkie używają różnych mocy,\\n by uczynić ludzi szczęśliwymi.\\n&quot;}}\"> 1\n 00:00:03,036 --&gt; 00:00:08,201\n Pewnego dnia, w domu przeciętnego\n studenta pojawiły się trzy boginie.\n\n 2\n 00:00:08,708 --&gt; 00:00:13,168\n Wszystkie używają różnych mocy,\n by uczynić ludzi szczęśliwymi.\u003c/pre>"}]}]}</script><script>(() => {
+  const data = JSON.parse(document.getElementById('help-data').textContent);
+  const tree = document.getElementById('helpTree');
+  const topicHost = document.getElementById('topicHost');
+  const search = document.getElementById('helpSearch');
+  const clear = document.getElementById('clearSearch');
+  const status = document.getElementById('searchStatus');
+  const contentPane = document.getElementById('contentPane');
+  const emptyState = document.getElementById('emptyState');
+  const splitter = document.getElementById('splitter');
+
+  function esc(value) {
+    return String(value ?? '')
+      .replace(/&/g,'&amp;')
+      .replace(/</g,'&lt;')
+      .replace(/>/g,'&gt;')
+      .replace(/"/g,'&quot;');
+  }
+
+  function normalizeText(value) {
+    return (value || '')
+      .toLocaleLowerCase('pl-PL')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g,'');
+  }
+
+  function stripHtml(value) {
+    const div = document.createElement('div');
+    div.innerHTML = value || '';
+    return div.textContent || div.innerText || '';
+  }
+
+  function render() {
+    tree.innerHTML = '';
+    topicHost.innerHTML = '';
+
+    data.categories.forEach((category, index) => {
+      const details = document.createElement('details');
+      details.className = 'tree-group';
+      if (index === 0) details.open = true;
+      details.dataset.categoryId = category.id;
+
+      const summary = document.createElement('summary');
+      summary.innerHTML = '<span class="tree-marker" aria-hidden="true"></span><span></span>';
+      summary.lastElementChild.textContent = category.title;
+      details.appendChild(summary);
+
+      const items = document.createElement('div');
+      items.className = 'tree-items';
+
+      category.topics.forEach(topic => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'topic-link';
+        button.dataset.target = topic.id;
+        button.dataset.search = normalizeText(category.title + ' ' + topic.title + ' ' + stripHtml(topic.content));
+        button.textContent = topic.title;
+        items.appendChild(button);
+
+        const article = document.createElement('article');
+        article.className = 'help-topic';
+        article.id = topic.id;
+        article.innerHTML =
+          '<header class="topic-header"><h1>' + esc(topic.title) + '</h1></header>' +
+          '<div class="topic-content">' + (topic.content || '') + '</div>';
+        topicHost.appendChild(article);
+      });
+
+      details.appendChild(items);
+      tree.appendChild(details);
+    });
+
+    const first = data.categories.flatMap(c => c.topics)[0];
+    if (first) showTopic(location.hash ? location.hash.slice(1) : first.id, false);
+  }
+
+  function allLinks() {
+    return Array.from(document.querySelectorAll('.topic-link'));
+  }
+
+  function allTopics() {
+    return Array.from(document.querySelectorAll('.help-topic'));
+  }
+
+  function showTopic(id, updateHash = true) {
+    const topic = document.getElementById(id);
+    if (!topic || !topic.classList.contains('help-topic')) return;
+
+    allTopics().forEach(t => t.classList.toggle('active', t === topic));
+    allLinks().forEach(l => l.classList.toggle('active', l.dataset.target === id));
+
+    const activeLink = allLinks().find(l => l.dataset.target === id);
+    if (activeLink) {
+      const group = activeLink.closest('.tree-group');
+      if (group) group.open = true;
+      activeLink.scrollIntoView({block:'nearest'});
+    }
+
+    emptyState.classList.remove('visible');
+    contentPane.scrollTop = 0;
+    if (updateHash) history.replaceState(null,'','#' + id);
+  }
+
+  tree.addEventListener('click', event => {
+    const link = event.target.closest('.topic-link');
+    if (link) showTopic(link.dataset.target);
+  });
+
+  function applySearch() {
+    const q = normalizeText(search.value.trim());
+    const links = allLinks();
+    let matches = 0;
+
+    links.forEach(link => {
+      const visible = !q || link.dataset.search.includes(q);
+      link.classList.toggle('search-hidden', !visible);
+      if (visible) matches++;
+    });
+
+    document.querySelectorAll('.tree-group').forEach(group => {
+      const count = group.querySelectorAll('.topic-link:not(.search-hidden)').length;
+      group.classList.toggle('search-hidden', count === 0);
+      if (q && count > 0) group.open = true;
+    });
+
+    if (!q) {
+      status.textContent = 'Wyszukiwanie obejmuje tytuły i treść tematów.';
+      emptyState.classList.remove('visible');
+    } else {
+      status.textContent = matches === 1 ? 'Znaleziono 1 temat.' : 'Znaleziono ' + matches + ' tematów.';
+      emptyState.classList.toggle('visible', matches === 0);
+    }
+  }
+
+  search.addEventListener('input', applySearch);
+  search.addEventListener('keydown', event => {
+    if (event.key === 'Enter') {
+      const first = allLinks().find(l => !l.classList.contains('search-hidden'));
+      if (first) showTopic(first.dataset.target);
+    } else if (event.key === 'Escape') {
+      search.value = '';
+      applySearch();
+      search.focus();
+    }
+  });
+
+  clear.addEventListener('click', () => {
+    search.value = '';
+    applySearch();
+    search.focus();
+  });
+
+  contentPane.addEventListener('click', event => {
+    const anchor = event.target.closest('a[href^="#"]');
+    if (!anchor) return;
+    const id = anchor.getAttribute('href').slice(1);
+    const target = document.getElementById(id);
+    if (target?.classList.contains('help-topic')) {
+      event.preventDefault();
+      showTopic(id);
+    }
+  });
+
+  const DEFAULT_SIDEBAR_WIDTH = 360;
+  const MIN_SIDEBAR_WIDTH = 240;
+  const MAX_SIDEBAR_WIDTH = 700;
+
+  function clampSidebarWidth(width) {
+    const viewportLimit = Math.max(MIN_SIDEBAR_WIDTH, window.innerWidth - 320);
+    return Math.max(MIN_SIDEBAR_WIDTH, Math.min(MAX_SIDEBAR_WIDTH, viewportLimit, width));
+  }
+
+  function setSidebarWidth(width) {
+    const finalWidth = clampSidebarWidth(width);
+    document.documentElement.style.setProperty('--sidebar', finalWidth + 'px');
+    return finalWidth;
+  }
+
+  if (splitter) {
+    let dragging = false;
+    splitter.addEventListener('pointerdown', event => {
+      if (window.innerWidth <= 620) return;
+      dragging = true;
+      splitter.classList.add('dragging');
+      document.body.classList.add('resizing');
+      splitter.setPointerCapture(event.pointerId);
+      event.preventDefault();
+    });
+    splitter.addEventListener('pointermove', event => {
+      if (dragging) setSidebarWidth(event.clientX);
+    });
+    function endResize(event) {
+      if (!dragging) return;
+      dragging = false;
+      splitter.classList.remove('dragging');
+      document.body.classList.remove('resizing');
+      if (event?.pointerId !== undefined && splitter.hasPointerCapture(event.pointerId)) {
+        splitter.releasePointerCapture(event.pointerId);
+      }
+    }
+    splitter.addEventListener('pointerup', endResize);
+    splitter.addEventListener('pointercancel', endResize);
+    splitter.addEventListener('dblclick', () => setSidebarWidth(DEFAULT_SIDEBAR_WIDTH));
+  }
+
+  render();
+})();</script></body></html>

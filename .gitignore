@@ -1,0 +1,46 @@
+# Visual Studio and user-local files
+.vs/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+# Build and generated output (do not ignore required native DLL sources)
+bin/
+obj/
+*.pdb
+*.binlog
+*_wpftmp*
+*.nuget.g.props
+*.nuget.g.targets
+*.csproj.nuget.dgspec.json
+project.assets.json
+*.runtimeconfig.json
+*.runtimeconfig.dev.json
+*.deps.json
+# Local state, restore caches, logs and temporary files
+.cache/
+cache/
+packages/
+artifacts/
+logs/
+log/
+tmp/
+temp/
+scratch/
+*.cache
+*.log
+*.tmp
+*.bak
+SubEdit.Player.Next.json
+NuGet.Config.user
+Thumbs.db
+Desktop.ini
+# Test and coverage output
+TestResults/
+coverage/
+coverage-results/
+coverage.*
+*.trx
+*.coverage
+*.coveragexml
+BenchmarkDotNet.Artifacts/
