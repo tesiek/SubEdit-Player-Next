@@ -19,6 +19,12 @@ Projekt nie powstałby bez oryginalnego SubEdit-Playera i pracy Artura Sikory, k
 - Korekta tekstu, wyszukiwanie i zamiana, sortowanie napisów, dzielenie długich linii i łączenie szybko znikających napisów.
 - Wybór dostępnych ścieżek audio, napisów osadzonych i rozdziałów filmu.
 
+![SubEdit-Player Next](docs/images/SubEdit-1.png)
+
+![SubEdit-Player Next](docs/images/SubEdit-2.png)
+
+![SubEdit-Player Next](docs/images/SubEdit-3.png)
+
 ## Wymagania
 
 - **Windows 10 lub Windows 11, x64.**
@@ -36,7 +42,7 @@ Ustawienia są zapisywane w pliku `SubEdit.Player.Next.json` w katalogu programu
 
 ### Ostrzeżenia Windows i podpisy
 
-**Uwaga:** Aplikacja nie jest obecnie podpisana komercyjnym certyfikatem podpisywania kodu. Przy pierwszym uruchomieniu Microsoft Defender SmartScreen może wyświetlić ostrzeżenie. W niektórych konfiguracjach zabezpieczeń systemu Windows może również pojawić się komunikat dotyczący podpisu jednego z dołączonych komponentów.
+**Uwaga:** Aplikacja nie jest podpisana komercyjnym certyfikatem podpisywania kodu. Przy pierwszym uruchomieniu Microsoft Defender SmartScreen może wyświetlić ostrzeżenie. W niektórych konfiguracjach zabezpieczeń systemu Windows może również pojawić się komunikat dotyczący podpisu jednego z dołączonych komponentów.
 
 Jeśli pojawi się ostrzeżenie Microsoft Defender SmartScreen, wybierz **Więcej informacji (More info)**, a następnie **Uruchom mimo to (Run anyway)**.
 
