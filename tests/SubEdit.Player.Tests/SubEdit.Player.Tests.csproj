@@ -9,6 +9,8 @@
     <UseWindowsForms>true</UseWindowsForms>
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
+    <!-- TestPlatform has neutral English resources; omit its localized satellites. -->
+    <SatelliteResourceLanguages>en-US</SatelliteResourceLanguages>
   </PropertyGroup>
 
   <ItemGroup>
@@ -24,5 +26,21 @@
     <ProjectReference Include="..\..\src\SubEdit.Player.Core\SubEdit.Player.Core.csproj" />
     <ProjectReference Include="..\..\src\SubEdit.Player.WinForms\SubEdit.Player.WinForms.csproj" />
   </ItemGroup>
+
+  <!-- ProjectReference Content is collected by GetCopyToOutputDirectoryItems.
+       Filter the collected items before any copy task, including incremental builds. -->
+  <Target Name="FilterNonX64TestRuntimeAssets"
+          AfterTargets="GetCopyToOutputDirectoryItems"
+          BeforeTargets="_CopyOutOfDateSourceItemsToOutputDirectory;_CopyOutOfDateSourceItemsToOutputDirectoryAlways;_CopyDifferingSourceItemsToOutputDirectory">
+    <ItemGroup>
+      <_NonX64TestRuntimeAssets
+          Include="@(_SourceItemsToCopyToOutputDirectory);@(_SourceItemsToCopyToOutputDirectoryAlways);@(_SourceItemsToCopyToOutputDirectoryIfDifferent)"
+          Condition="$([System.Text.RegularExpressions.Regex]::IsMatch('%(TargetPath)', '(?i)^runtimes[\\/](win-x86|win-arm64)[\\/]'))" />
+      <_SourceItemsToCopyToOutputDirectory Remove="@(_NonX64TestRuntimeAssets)" />
+      <_SourceItemsToCopyToOutputDirectoryAlways Remove="@(_NonX64TestRuntimeAssets)" />
+      <_SourceItemsToCopyToOutputDirectoryIfDifferent Remove="@(_NonX64TestRuntimeAssets)" />
+      <AllItemsFullPathWithTargetPath Remove="@(_NonX64TestRuntimeAssets)" />
+    </ItemGroup>
+  </Target>
 
 </Project>
