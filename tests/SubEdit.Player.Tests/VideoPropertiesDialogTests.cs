@@ -1,11 +1,13 @@
 using System.Runtime.ExceptionServices;
 using System.Windows.Forms;
 using SubEdit.Player.Core.Playback;
+using SubEdit.Player.UI.DesignSystem;
 using SubEdit.Player.WinForms;
 using Xunit;
 
 namespace SubEdit.Player.Tests;
 
+[Collection("Diagnostics UI")]
 public class VideoPropertiesDialogTests
 {
     [Fact]
@@ -14,39 +16,41 @@ public class VideoPropertiesDialogTests
         RunSta(() =>
         {
             var snapshot = VideoFilePropertiesTests.LargeSnapshot();
-            using var dialog = new VideoPropertiesDialog(snapshot) { Opacity = 0 };
-            dialog.Show(); // Native WinForms layout only; no player or media runtime.
-            var viewport = Assert.Single(dialog.Controls.OfType<Panel>(), panel => panel.AutoScroll);
-            var footer = Assert.Single(dialog.Controls.OfType<Panel>(), panel => !panel.AutoScroll);
-            var content = Assert.Single(viewport.Controls.OfType<TableLayoutPanel>());
-            Assert.Equal(new[] { "OK", "Kopiuj" }, footer.Controls.OfType<Button>().Select(button => button.Text));
+            string? copied = null;
+            using var dialog = new VideoPropertiesDialog(snapshot, value => copied = value);
+            dialog.Show(); Pump();
+            var content = dialog.ReportContent;
+            var report = content.Report;
+            var footer = dialog.LayoutView.Actions;
+            Assert.Equal(new[] { "Kopiuj", "Zamknij" }, footer.Buttons.Values.Select(b => b.Text));
             Assert.Equal(VideoFilePropertiesFormatter.FormatText(snapshot), dialog.ReportText);
-            var subtitleRows = Assert.Single(VideoFilePropertiesFormatter.GetSections(snapshot), section => section.Heading.StartsWith("NAPISY")).Rows;
-            foreach (var (_, value) in subtitleRows)
+            foreach (var section in VideoFilePropertiesFormatter.GetSections(snapshot))
             {
-                Assert.Contains(content.Controls.OfType<Label>(), label => label.Text == value);
-                Assert.Contains(value, dialog.ReportText);
+                Assert.Contains(section.Heading, report.Text);
+                foreach (var (label, value) in section.Rows)
+                { Assert.Contains(label, report.Text); Assert.Contains(value, report.Text); }
             }
-            Assert.True(viewport.VerticalScroll.Visible);
-            Assert.False(viewport.HorizontalScroll.Visible);
-            var area = Screen.FromControl(dialog).WorkingArea;
-            Assert.True(area.Contains(dialog.Bounds));
+            Assert.True(report.ReadOnly && report.WordWrap);
+            Assert.Equal(RichTextBoxScrollBars.Vertical, report.ScrollBars);
+            Assert.True(Screen.FromControl(dialog).WorkingArea.Contains(dialog.Bounds));
             foreach (var width in new[] { 500, 900, 600 })
             {
-                dialog.Size = new System.Drawing.Size(width, 400);
-                dialog.PerformLayout();
-                content.PerformLayout();
-                Assert.False(viewport.HorizontalScroll.Visible);
-                Assert.True(content.Width <= viewport.ClientSize.Width);
-                Assert.All(content.Controls.OfType<Label>().Where(label => label.AutoSize), label =>
-                    Assert.True(label.Height >= label.GetPreferredSize(new System.Drawing.Size(label.Width, 0)).Height));
+                dialog.Size = new System.Drawing.Size(width, 400); Pump();
+                Assert.True(content.ClientRectangle.Contains(report.Bounds));
+                Assert.All(footer.Buttons.Values, button => Assert.True(footer.RectangleToScreen(footer.ClientRectangle).Contains(button.RectangleToScreen(button.ClientRectangle))));
             }
-            var footerBeforeScroll = footer.Bounds;
-            viewport.AutoScrollPosition = new System.Drawing.Point(0, content.Height);
-            Assert.Equal(footerBeforeScroll, footer.Bounds);
-            Assert.Contains("Pełny tytuł ścieżki #40", dialog.ReportText);
-            Assert.Contains("Rozdział #9", dialog.ReportText);
-            Assert.All(footer.Controls.OfType<Button>(), button => Assert.True(footer.ClientRectangle.Contains(button.Bounds)));
+            var headerBefore = dialog.LayoutView.Header.Bounds;
+            var footerBefore = footer.Bounds;
+            content.ScrollToEnd(); Pump();
+            Assert.Equal(headerBefore, dialog.LayoutView.Header.Bounds);
+            Assert.Equal(footerBefore, footer.Bounds);
+            Assert.Contains("Pełny tytuł ścieżki #40", report.Text);
+            Assert.Contains("Rozdział #9", report.Text);
+            report.Select(0, 12);
+            Assert.True(dialog.HandleTextShortcut(Keys.Control | Keys.C));
+            Assert.Equal(report.SelectedText, copied);
+            footer.Button(DialogActionRole.Secondary).PerformClick();
+            Assert.Equal(VideoFilePropertiesFormatter.FormatText(snapshot), copied);
             dialog.Close();
         });
     }
@@ -64,17 +68,13 @@ public class VideoPropertiesDialogTests
         });
     }
 
+    private static void Pump() { for (var i = 0; i < 4; i++) Application.DoEvents(); }
     private static void RunSta(Action action)
     {
         Exception? failure = null;
-        var thread = new Thread(() =>
-        {
-            try { action(); }
-            catch (Exception exception) { failure = exception; }
-        }) { IsBackground = true };
-        thread.SetApartmentState(ApartmentState.STA);
-        thread.Start();
-        Assert.True(thread.Join(TimeSpan.FromSeconds(15)), "WinForms layout test timed out.");
+        var thread = new Thread(() => { try { action(); } catch (Exception error) { failure = error; } }) { IsBackground = true };
+        thread.SetApartmentState(ApartmentState.STA); thread.Start();
+        Assert.True(thread.Join(TimeSpan.FromSeconds(30)), "WinForms UI test timed out.");
         if (failure is not null) ExceptionDispatchInfo.Capture(failure).Throw();
     }
 }

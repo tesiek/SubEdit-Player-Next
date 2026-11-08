@@ -2,7 +2,7 @@ using System.Globalization;
 
 namespace SubEdit.Player.WinForms;
 
-internal sealed class GoToVideoPositionDialog : SubEditDialog
+internal sealed class GoToVideoPositionDialog : StandardDialog
 {
     private readonly double _framesPerSecond;
     private readonly long _currentPositionMilliseconds;
@@ -13,88 +13,42 @@ internal sealed class GoToVideoPositionDialog : SubEditDialog
     private readonly TextBox _timeSecondsTextBox;
     private readonly ToolTip _toolTip = new();
     private bool _updatingFields;
+    private bool _clockInputPending;
+    private const string ClockOutsideRangeHint = "Czas poza zakresem zegara 00:00:00–99:59:59";
+    private const string ClockHint = "Czas do którego będzie wykonany skok";
 
-    public GoToVideoPositionDialog(double framesPerSecond, long currentPositionMilliseconds)
+    public GoToVideoPositionDialog(double framesPerSecond, long currentPositionMilliseconds) : base(360)
     {
         _framesPerSecond = Math.Max(1d, framesPerSecond);
         _currentPositionMilliseconds = Math.Max(0, currentPositionMilliseconds);
-        Text = "Skocz do";
-        ClientSize = new Size(248, 224);
-
-        var panel = new GroupBox
-        {
-            Text = string.Empty,
-            Location = new Point(10, 10),
-            Size = new Size(230, 160)
-        };
-
-        panel.Controls.Add(CreateLabel("&Sekundy:", 20, 0));
-        panel.Controls.Add(CreateLabel("&Klatki:", 52, 1));
-        panel.Controls.Add(CreateLabel("&Czasu:", 84, 2));
-
-        _secondsTextBox = CreateTextBox(new Point(77, 18), new Size(114, 23), "0", 10, 3);
-        _framesTextBox = CreateTextBox(new Point(77, 50), new Size(114, 23), "0", 13, 4);
-        _hoursTextBox = CreateTextBox(new Point(77, 82), new Size(24, 23), "00", 2, 5);
-        _minutesTextBox = CreateTextBox(new Point(122, 82), new Size(24, 23), "00", 2, 6);
-        _timeSecondsTextBox = CreateTextBox(new Point(167, 82), new Size(24, 23), "00", 2, 7);
-
-        var currentButton = new Button
-        {
-            Text = "&Aktualny",
-            FlatStyle = FlatStyle.Flat,
-            Location = new Point(15, 123),
-            Size = new Size(70, 25),
-            TabIndex = 8
-        };
+        Text = "Przejdź do czasu filmu";
+        var group = Page.AddSection("Pozycja");
+        _secondsTextBox = Input("0.0"); _framesTextBox = Input("0", 13);
+        _hoursTextBox = Input("00", 2); _minutesTextBox = Input("00", 2); _timeSecondsTextBox = Input("00", 2);
+        group.AddField("&Sekundy:", _secondsTextBox); group.AddField("&Klatki:", _framesTextBox);
+        var clock = new SubEdit.Player.UI.DesignSystem.AdaptiveSettingsRow { KeepTogether = true };
+        clock.AddControl(new SubEdit.Player.UI.DesignSystem.FieldValueLayout(_hoursTextBox, "g", keepTogether: true, widthSample: "99"));
+        clock.AddControl(new SubEdit.Player.UI.DesignSystem.FieldValueLayout(_minutesTextBox, "m", keepTogether: true, widthSample: "59"));
+        clock.AddControl(new SubEdit.Player.UI.DesignSystem.FieldValueLayout(_timeSecondsTextBox, "s", keepTogether: true, widthSample: "59"));
+        group.AddField("&Czas:", clock);
+        var currentButton = new Button { Text = "&Aktualny", AutoSize = true };
+        SubEdit.Player.UI.DesignSystem.NativeControlLayout.ConfigureButton(currentButton);
+        group.AddAdaptiveRow().AddControl(currentButton);
         currentButton.Click += (_, _) => UpdateFields(_currentPositionMilliseconds / 1000d);
-
-        panel.Controls.AddRange([
-            _secondsTextBox,
-            _framesTextBox,
-            _hoursTextBox,
-            _minutesTextBox,
-            _timeSecondsTextBox,
-            CreateUnitLabel("g", 103),
-            CreateUnitLabel("m", 148),
-            CreateUnitLabel("s", 193),
-            currentButton
-        ]);
-
         _secondsTextBox.TextChanged += (_, _) => UpdateFromSeconds();
         _framesTextBox.TextChanged += (_, _) => UpdateFromFrames();
         _hoursTextBox.TextChanged += (_, _) => UpdateFromClock();
         _minutesTextBox.TextChanged += (_, _) => UpdateFromClock();
         _timeSecondsTextBox.TextChanged += (_, _) => UpdateFromClock();
-
-        var ok = new Button
-        {
-            Text = "OK",
-            Location = new Point(47, 187),
-            Size = new Size(75, 25),
-            TabIndex = 9
-        };
-        ok.Click += (_, _) => AcceptValue();
-        var cancel = new Button
-        {
-            Text = "Anuluj",
-            DialogResult = DialogResult.Cancel,
-            Location = new Point(127, 187),
-            Size = new Size(75, 25),
-            TabIndex = 10
-        };
-
-        Controls.AddRange([panel, ok, cancel]);
-        AcceptButton = ok;
-        CancelButton = cancel;
-
+        ConfigureActions(AcceptValue);
         _toolTip.SetToolTip(currentButton, "Wpisuje aktualny czas filmu");
         _toolTip.SetToolTip(_secondsTextBox, "Sekunda do której będzie wykonany skok");
         _toolTip.SetToolTip(_framesTextBox, "Klatka do której będzie wykonany skok");
-        const string clockHint = "Czas do którego będzie wykonany skok";
-        _toolTip.SetToolTip(_hoursTextBox, clockHint);
-        _toolTip.SetToolTip(_minutesTextBox, clockHint);
-        _toolTip.SetToolTip(_timeSecondsTextBox, clockHint);
+        _toolTip.SetToolTip(_hoursTextBox, ClockHint);
+        _toolTip.SetToolTip(_minutesTextBox, ClockHint);
+        _toolTip.SetToolTip(_timeSecondsTextBox, ClockHint);
 
+        BindOptionToolTips(_toolTip);
         Shown += (_, _) =>
         {
             _secondsTextBox.Focus();
@@ -113,31 +67,6 @@ internal sealed class GoToVideoPositionDialog : SubEditDialog
 
         base.Dispose(disposing);
     }
-
-    private static Label CreateLabel(string text, int top, int tabIndex) => new()
-    {
-        Text = text,
-        Location = new Point(7, top),
-        Size = new Size(68, 20),
-        TextAlign = ContentAlignment.MiddleRight,
-        TabIndex = tabIndex
-    };
-
-    private static Label CreateUnitLabel(string text, int left) => new()
-    {
-        Text = text,
-        Location = new Point(left, 86),
-        AutoSize = true
-    };
-
-    private static TextBox CreateTextBox(Point location, Size size, string text, int maxLength, int tabIndex) => new()
-    {
-        Location = location,
-        Size = size,
-        Text = text,
-        MaxLength = maxLength,
-        TabIndex = tabIndex
-    };
 
     private void UpdateFromSeconds()
     {
@@ -163,15 +92,13 @@ internal sealed class GoToVideoPositionDialog : SubEditDialog
 
     private void UpdateFromClock()
     {
-        if (_updatingFields ||
-            !TryParseClockPart(_hoursTextBox.Text, out var hours) ||
-            !TryParseClockPart(_minutesTextBox.Text, out var minutes) ||
-            !TryParseClockPart(_timeSecondsTextBox.Text, out var seconds))
+        if (_updatingFields) return;
+        _clockInputPending = true;
+        if (TryGetClockSeconds(out var seconds))
         {
-            return;
+            UpdateFields(seconds, updateClock: false);
+            SetClockHint(ClockHint);
         }
-
-        UpdateFields(hours * 3600d + minutes * 60d + seconds, updateClock: false);
     }
 
     private void UpdateFields(
@@ -201,10 +128,13 @@ internal sealed class GoToVideoPositionDialog : SubEditDialog
 
             if (updateClock)
             {
-                var wholeSeconds = (long)Math.Min(long.MaxValue, Math.Floor(seconds));
-                _hoursTextBox.Text = (wholeSeconds / 3600).ToString("00", CultureInfo.InvariantCulture);
-                _minutesTextBox.Text = (wholeSeconds / 60 % 60).ToString("00", CultureInfo.InvariantCulture);
-                _timeSecondsTextBox.Text = (wholeSeconds % 60).ToString("00", CultureInfo.InvariantCulture);
+                _clockInputPending = false;
+                var fitsClock = seconds < 100 * 3600d;
+                var wholeSeconds = fitsClock ? (long)Math.Floor(seconds) : 0;
+                _hoursTextBox.Text = fitsClock ? (wholeSeconds / 3600).ToString("00", CultureInfo.InvariantCulture) : "";
+                _minutesTextBox.Text = fitsClock ? (wholeSeconds / 60 % 60).ToString("00", CultureInfo.InvariantCulture) : "";
+                _timeSecondsTextBox.Text = fitsClock ? (wholeSeconds % 60).ToString("00", CultureInfo.InvariantCulture) : "";
+                SetClockHint(fitsClock ? ClockHint : ClockOutsideRangeHint);
             }
         }
         finally
@@ -215,6 +145,15 @@ internal sealed class GoToVideoPositionDialog : SubEditDialog
 
     private void AcceptValue()
     {
+        if (_clockInputPending && !TryGetClockSeconds(out _))
+        {
+            MessageBox.Show(this, "Podaj prawidłowy czas: godziny 00–99, minuty i sekundy 00–59.",
+                "Nieprawidłowa wartość", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            _hoursTextBox.Focus();
+            _hoursTextBox.SelectAll();
+            return;
+        }
+
         if (!SubtitleTimingInput.TryParseNonNegativeNumber(_secondsTextBox.Text, out var seconds))
         {
             MessageBox.Show(this, "Podaj prawidłowy czas.", "Nieprawidłowa wartość", MessageBoxButtons.OK, MessageBoxIcon.Warning);
@@ -227,7 +166,23 @@ internal sealed class GoToVideoPositionDialog : SubEditDialog
         DialogResult = DialogResult.OK;
     }
 
-    private static bool TryParseClockPart(string text, out long value) =>
-        long.TryParse(text, NumberStyles.None, CultureInfo.InvariantCulture, out value) && value >= 0;
+    private void SetClockHint(string hint)
+    {
+        foreach (var field in new[] { _hoursTextBox, _minutesTextBox, _timeSecondsTextBox })
+            _toolTip.SetToolTip(field, hint);
+    }
+
+    private bool TryGetClockSeconds(out double seconds)
+    {
+        seconds = 0;
+        if (!TryParseClockPart(_hoursTextBox.Text, 99, out var hours) ||
+            !TryParseClockPart(_minutesTextBox.Text, 59, out var minutes) ||
+            !TryParseClockPart(_timeSecondsTextBox.Text, 59, out var clockSeconds)) return false;
+        seconds = hours * 3600d + minutes * 60d + clockSeconds;
+        return true;
+    }
+
+    private static bool TryParseClockPart(string text, long maximum, out long value) =>
+        long.TryParse(text, NumberStyles.None, CultureInfo.InvariantCulture, out value) && value >= 0 && value <= maximum;
 
 }

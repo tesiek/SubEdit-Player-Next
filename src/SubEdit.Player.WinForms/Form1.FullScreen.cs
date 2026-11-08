@@ -279,6 +279,7 @@ public partial class Form1
             ApplyMovieTransformations();
             UpdateSubtitleConversionAvailability();
             ToolbarButton("toolbarFullscreen").Checked = true;
+            _fullScreenMenuItem?.Checked = true;
             _videoOverlay.IsFullScreen = true;
             UpdateTimeCounterOsd(_playback.PositionMilliseconds, _playback.DurationMilliseconds, force: true);
             ShowPlaybackOsd("Pełny ekran");
@@ -301,6 +302,7 @@ public partial class Form1
         ApplyMovieTransformations();
         UpdateSubtitleConversionAvailability();
         ToolbarButton("toolbarFullscreen").Checked = false;
+        _fullScreenMenuItem?.Checked = false;
         _videoOverlay.IsFullScreen = false;
         UpdateTimeCounterOsd(_playback.PositionMilliseconds, _playback.DurationMilliseconds, force: true);
         ShowPlaybackOsd("Tryb okienkowy");

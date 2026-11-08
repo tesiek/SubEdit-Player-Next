@@ -10,7 +10,7 @@ internal enum SubtitleDisplayTimeScope
     ToCurrentLine
 }
 
-internal sealed class SubtitleDisplayTimeDialog : SubEditDialog
+internal sealed class SubtitleDisplayTimeDialog : StandardDialog
 {
     private readonly double _framesPerSecond;
     private readonly CheckBox _clearEndTimes;
@@ -30,135 +30,36 @@ internal sealed class SubtitleDisplayTimeDialog : SubEditDialog
     private readonly ToolTip _toolTip = new();
     private bool _updatingValues;
 
-    public SubtitleDisplayTimeDialog(double framesPerSecond, SubtitleDisplayTimeSettings defaults)
+    public SubtitleDisplayTimeDialog(double framesPerSecond, SubtitleDisplayTimeSettings defaults) : base(440)
     {
-        _framesPerSecond = Math.Max(1d, framesPerSecond);
-        Text = "Zmień czas wyświetlania napisów";
-        ClientSize = new Size(340, 392);
-
-        _clearEndTimes = AddCheckBox(this, "Wpisz &puste pozycje", 18, 12, false);
-        _clearEndTimes.CheckedChanged += (_, _) => UpdateOptionsAvailability();
-
-        var optionsGroup = new GroupBox
-        {
-            Text = "Opcje",
-            Location = new Point(15, 39),
-            Size = new Size(310, 88)
-        };
-        _onlyUndefined = AddCheckBox(
-            optionsGroup,
-            "&Zmieniaj tylko nieokreślone czasy",
-            12,
-            18,
-            defaults.ChangeOnlyUndefinedEndTimes);
-        _dependsOnTextLength = AddCheckBox(
-            optionsGroup,
-            "&Czas zależny od długości napisu",
-            12,
-            40,
-            defaults.DurationDependsOnTextLength);
-        _blockEndTime = AddCheckBox(
-            optionsGroup,
-            "&Blokuj czas końcowy",
-            12,
-            62,
-            defaults.BlockEndTime);
-
-        var durationGroup = new GroupBox
-        {
-            Text = "Czas wyświetlania",
-            Location = new Point(15, 135),
-            Size = new Size(310, 104)
-        };
-        _baseSecondsLabel = AddLabel(durationGroup, "&Sekund:", 8, 25);
-        _baseFramesLabel = AddLabel(durationGroup, "&Klatek:", 8, 57);
-        _baseSeconds = AddTextBox(
-            durationGroup,
-            FormatNumber(defaults.BaseDurationSeconds),
-            70,
-            25,
-            112);
-        _baseFrames = AddTextBox(
-            durationGroup,
-            RoundLikeOriginal(defaults.BaseDurationSeconds * _framesPerSecond).ToString(CultureInfo.InvariantCulture),
-            70,
-            57,
-            112);
-        durationGroup.Controls.Add(new Label
-        {
-            Text = "+",
-            TextAlign = ContentAlignment.MiddleCenter,
-            Location = new Point(186, 25),
-            Size = new Size(18, 23)
-        });
-        durationGroup.Controls.Add(new Label
-        {
-            Text = "+",
-            TextAlign = ContentAlignment.MiddleCenter,
-            Location = new Point(186, 57),
-            Size = new Size(18, 23)
-        });
-        _additionalSeconds = AddTextBox(
-            durationGroup,
-            FormatNumber(defaults.AdditionalDurationSeconds),
-            206,
-            25,
-            50);
-        _additionalFrames = AddTextBox(
-            durationGroup,
-            RoundLikeOriginal(defaults.AdditionalDurationSeconds * _framesPerSecond).ToString(CultureInfo.InvariantCulture),
-            206,
-            57,
-            50);
-
+        _framesPerSecond = Math.Max(1d, framesPerSecond); Text = "Zmień czas wyświetlania napisów";
+        _clearEndTimes = Page.AddSection("Sposób zmiany").AddCheckBox("Wpisz &puste pozycje");
+        var options = Page.AddSection("Opcje");
+        _onlyUndefined = options.AddCheckBox("&Zmieniaj tylko nieokreślone czasy", defaults.ChangeOnlyUndefinedEndTimes);
+        _dependsOnTextLength = options.AddCheckBox("&Czas zależny od długości napisu", defaults.DurationDependsOnTextLength);
+        _blockEndTime = options.AddCheckBox("&Blokuj czas końcowy", defaults.BlockEndTime);
+        var duration = Page.AddSection("Czas wyświetlania");
+        _baseSeconds = Input(FormatNumber(defaults.BaseDurationSeconds));
+        _baseFrames = Input(RoundLikeOriginal(defaults.BaseDurationSeconds * _framesPerSecond).ToString(CultureInfo.InvariantCulture));
+        _additionalSeconds = Input(FormatNumber(defaults.AdditionalDurationSeconds));
+        _additionalFrames = Input(RoundLikeOriginal(defaults.AdditionalDurationSeconds * _framesPerSecond).ToString(CultureInfo.InvariantCulture));
+        var seconds = duration.AddAdaptiveRow();
+        var baseSecondsField = seconds.AddField("&Sekund:", _baseSeconds);
+        _baseSecondsLabel = baseSecondsField.Description; _baseSecondsLabel.UseMnemonic = true;
+        seconds.AddField("+", _additionalSeconds);
+        var frames = duration.AddAdaptiveRow();
+        var baseFramesField = frames.AddField("&Klatek:", _baseFrames);
+        _baseFramesLabel = baseFramesField.Description; _baseFramesLabel.UseMnemonic = true;
+        frames.AddField("+", _additionalFrames);
         _baseSeconds.TextChanged += (_, _) => UpdateFramesFromSeconds(_baseSeconds, _baseFrames);
         _baseFrames.TextChanged += (_, _) => UpdateSecondsFromFrames(_baseFrames, _baseSeconds);
         _additionalSeconds.TextChanged += (_, _) => UpdateFramesFromSeconds(_additionalSeconds, _additionalFrames);
         _additionalFrames.TextChanged += (_, _) => UpdateSecondsFromFrames(_additionalFrames, _additionalSeconds);
-
-        var scopeGroup = new GroupBox
-        {
-            Text = "Obszar zmian napisów",
-            ForeColor = Color.Blue,
-            Location = new Point(15, 247),
-            Size = new Size(310, 79)
-        };
-        _selectionScope = AddScopeOption(scopeGroup, "Według zaznaczenia", 16);
-        _fromCurrentLineScope = AddScopeOption(scopeGroup, "Od aktualnej linii", 36);
-        _toCurrentLineScope = AddScopeOption(scopeGroup, "Do aktualnej linii", 56);
-        _selectionScope.Checked = true;
-
-        _saveAsDefault = new CheckBox
-        {
-            Text = "Zachowaj ustawienia jako domyślne",
-            Location = new Point(18, 334),
-            AutoSize = true
-        };
-        var ok = new Button
-        {
-            Text = "OK",
-            Location = new Point(92, 362),
-            Size = new Size(75, 25)
-        };
-        ok.Click += (_, _) => AcceptOptions();
-        var cancel = new Button
-        {
-            Text = "Anuluj",
-            DialogResult = DialogResult.Cancel,
-            Location = new Point(173, 362),
-            Size = new Size(75, 25)
-        };
-
-        Controls.AddRange([optionsGroup, durationGroup, scopeGroup, _saveAsDefault, ok, cancel]);
-        AcceptButton = ok;
-        CancelButton = cancel;
-        AddToolTips();
-        UpdateOptionsAvailability();
-        Shown += (_, _) =>
-        {
-            _baseSeconds.Focus();
-            _baseSeconds.SelectAll();
-        };
+        _clearEndTimes.CheckedChanged += (_, _) => UpdateOptionsAvailability();
+        (_selectionScope, _fromCurrentLineScope, _toCurrentLineScope) = AddScope();
+        _saveAsDefault = AddSaveDefault(); ConfigureActions(AcceptOptions); AddToolTips(); UpdateOptionsAvailability();
+        BindOptionToolTips(_toolTip);
+        Shown += (_, _) => { _baseSeconds.Focus(); _baseSeconds.SelectAll(); };
     }
 
     public bool ClearEndTimes => _clearEndTimes.Checked;
@@ -191,63 +92,6 @@ internal sealed class SubtitleDisplayTimeDialog : SubEditDialog
         }
 
         base.Dispose(disposing);
-    }
-
-    private static CheckBox AddCheckBox(
-        Control parent,
-        string text,
-        int left,
-        int top,
-        bool isChecked)
-    {
-        var checkBox = new CheckBox
-        {
-            Text = text,
-            Location = new Point(left, top),
-            AutoSize = true,
-            Checked = isChecked
-        };
-        parent.Controls.Add(checkBox);
-        return checkBox;
-    }
-
-    private static Label AddLabel(Control parent, string text, int left, int top)
-    {
-        var label = new Label
-        {
-            Text = text,
-            TextAlign = ContentAlignment.MiddleRight,
-            Location = new Point(left, top),
-            Size = new Size(58, 23)
-        };
-        parent.Controls.Add(label);
-        return label;
-    }
-
-    private static TextBox AddTextBox(Control parent, string text, int left, int top, int width)
-    {
-        var textBox = new TextBox
-        {
-            Text = text,
-            Location = new Point(left, top),
-            Size = new Size(width, 23),
-            MaxLength = 10
-        };
-        parent.Controls.Add(textBox);
-        return textBox;
-    }
-
-    private static RadioButton AddScopeOption(Control parent, string text, int top)
-    {
-        var radioButton = new RadioButton
-        {
-            Text = text,
-            ForeColor = SystemColors.ControlText,
-            Location = new Point(8, top),
-            AutoSize = true
-        };
-        parent.Controls.Add(radioButton);
-        return radioButton;
     }
 
     private void UpdateOptionsAvailability()

@@ -5,6 +5,8 @@ namespace SubEdit.Player.WinForms;
 
 public partial class Form1
 {
+    private const int VolumeHostLogicalWidth = 90;
+
     private static Panel CreateFullScreenControlsPanel(
         out StatusStrip statusStrip,
         out ToolStripStatusLabel playbackStatus,
@@ -74,35 +76,8 @@ public partial class Form1
             Panel2MinSize = 150
         };
         videoPanel = new Panel { Dock = DockStyle.Fill, BackColor = Color.Black };
-        var videoSurface = videoPanel;
-        var osd = new Label
-        {
-            AutoSize = true,
-            Location = new Point(4, 5),
-            ForeColor = Color.FromArgb(255, 220, 180),
-            BackColor = Color.Black,
-            Font = new Font(FontFamily.GenericMonospace, 12, FontStyle.Regular),
-            Text = "0:00:00/0:00:00"
-        };
-        var logo = new Label
-        {
-            AutoSize = true,
-            ForeColor = Color.FromArgb(44, 180, 245),
-            BackColor = Color.Black,
-            Font = new Font("Arial", 28, FontStyle.Bold | FontStyle.Italic),
-            Text = "SubEdit"
-        };
-        videoSurface.Resize += (_, _) => logo.Location = new Point(
-            Math.Max(20, (videoSurface.ClientSize.Width - logo.Width) / 2),
-            Math.Max(40, (videoSurface.ClientSize.Height - logo.Height) / 2));
-        videoPanel.Controls.Add(osd);
-        videoPanel.Controls.Add(logo);
         videoPanel.DoubleClick += (_, _) => ToggleFullScreenFromVideoSurface();
-        osd.DoubleClick += (_, _) => ToggleFullScreenFromVideoSurface();
-        logo.DoubleClick += (_, _) => ToggleFullScreenFromVideoSurface();
         videoPanel.MouseMove += (_, _) => UpdateFullScreenControlsFromPointer();
-        osd.MouseMove += (_, _) => UpdateFullScreenControlsFromPointer();
-        logo.MouseMove += (_, _) => UpdateFullScreenControlsFromPointer();
 
         seekSlider = CreateSeekSlider();
 
@@ -133,7 +108,7 @@ public partial class Form1
             new PlaybackToolbarButton(PlaybackToolbarCommand.Chapters, "Rozdziały"),
             new SpringToolStripSpacer(),
             new PlaybackToolbarButton(PlaybackToolbarCommand.Volume, "Głośność"),
-            new ToolStripControlHost(volumeSlider) { AutoSize = false, Width = 90 }
+            new ToolStripControlHost(volumeSlider) { AutoSize = false, Width = VolumeHostLogicalWidth }
         ]);
         ConfigureToolbarToolTipBehavior(transport);
         split.Panel1.Controls.Add(videoPanel);
@@ -231,6 +206,17 @@ public partial class Form1
     }
 
     internal static int VolumeGroupOpticalInset(int dpi) => Math.Max(1, (int)Math.Round(2 * dpi / 96d));
+
+    private void UpdateVolumeHostWidth()
+    {
+        var host = _transportToolbar.Items.OfType<ToolStripControlHost>().Single(item => item.Control == _volumeSlider);
+        // WinForms scales the hosted bounds by the form's font. Reapply the width from its 96-DPI baseline.
+        var width = ScaleLogicalPixels(VolumeHostLogicalWidth);
+        if (host.Width == width) return;
+
+        host.Width = width;
+        _transportToolbar.PerformLayout();
+    }
 
     private static VolumeTrackBar CreateVolumeSlider() => new()
     {

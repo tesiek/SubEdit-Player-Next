@@ -17,7 +17,7 @@ public partial class Form1
             _settings.MinimumSubtitleFontSize,
             _settings.SubtitleTextColorArgb,
             _settings.SubtitleBackgroundColorArgb,
-            _settings.SubtitleBackgroundOpacityPercent,
+            _settings.SubtitleBackgroundTransparencyPercent,
             _settings.SubtitleOutlineColorArgb,
             _settings.SubtitleOutlineThickness,
             _settings.SubtitleAlignment,
@@ -28,7 +28,7 @@ public partial class Form1
             _settings.PositionSubtitlesRelativeToVideoFrame,
             _settings.LastOptionsTabIndex);
         dialog.ApplyRequested += (_, _) => ApplyOptions(dialog);
-        dialog.ShowDialog(this);
+        dialog.ShowForOwner(this);
         RememberOptionsTab(dialog.SelectedTabIndex);
     }
 
@@ -52,7 +52,7 @@ public partial class Form1
         _settings.MinimumSubtitleFontSize = dialog.SelectedMinimumSubtitleFontSize;
         _settings.SubtitleTextColorArgb = dialog.SelectedSubtitleTextColor.ToArgb();
         _settings.SubtitleBackgroundColorArgb = dialog.SelectedSubtitleBackgroundColor.ToArgb();
-        _settings.SubtitleBackgroundOpacityPercent = dialog.SelectedSubtitleBackgroundOpacityPercent;
+        _settings.SubtitleBackgroundTransparencyPercent = dialog.SelectedSubtitleBackgroundTransparencyPercent;
         _settings.SubtitleOutlineColorArgb = dialog.SelectedSubtitleOutlineColor.ToArgb();
         _settings.SubtitleOutlineThickness = dialog.SelectedSubtitleOutlineThickness;
         _settings.SubtitleAlignment = dialog.SelectedSubtitleAlignment;
@@ -83,7 +83,7 @@ public partial class Form1
         _videoOverlay.MinimumSubtitleFontSize = _settings.MinimumSubtitleFontSize;
         _videoOverlay.SubtitleTextColor = Color.FromArgb(_settings.SubtitleTextColorArgb);
         _videoOverlay.SubtitleBackgroundColor = Color.FromArgb(_settings.SubtitleBackgroundColorArgb);
-        _videoOverlay.SubtitleBackgroundOpacityPercent = _settings.SubtitleBackgroundOpacityPercent;
+        _videoOverlay.SubtitleBackgroundTransparencyPercent = _settings.SubtitleBackgroundTransparencyPercent;
         _videoOverlay.SubtitleOutlineColor = Color.FromArgb(_settings.SubtitleOutlineColorArgb);
         _videoOverlay.SubtitleOutlineThickness = _settings.SubtitleOutlineThickness;
         _videoOverlay.SubtitleAlignment = _settings.SubtitleAlignment;
@@ -96,7 +96,7 @@ public partial class Form1
         _videoOverlay.OsdFontSize = _settings.InformationOsd.FontSize;
         _videoOverlay.OsdTextColor = Color.FromArgb(_settings.InformationOsd.TextColorArgb);
         _videoOverlay.OsdBackgroundColor = Color.FromArgb(_settings.InformationOsd.BackgroundColorArgb);
-        _videoOverlay.OsdBackgroundOpacityPercent = _settings.InformationOsd.BackgroundOpacityPercent;
+        _videoOverlay.OsdBackgroundTransparencyPercent = _settings.InformationOsd.BackgroundTransparencyPercent;
         _videoOverlay.OsdBorderColor = Color.FromArgb(_settings.InformationOsd.BorderColorArgb);
         _videoOverlay.OsdBorderThickness = _settings.InformationOsd.BorderThickness;
     }

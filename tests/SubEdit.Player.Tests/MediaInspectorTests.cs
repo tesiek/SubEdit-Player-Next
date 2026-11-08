@@ -50,20 +50,6 @@ public sealed class MediaInspectorTests
     }
 
     [Fact]
-    public void GetCodecName_ExtractsAndNormalizesCodecFromDescriptionOrFourCc()
-    {
-        Assert.Equal("H.264", MediaInspector.GetCodecName(null, "hvc1", "h264 - MPEG-4 AVC (part 10)"));
-        Assert.Equal("H.265", MediaInspector.GetCodecName(null, "avc1", "hevc(H.265)"));
-        Assert.Equal("MPEG2", MediaInspector.GetCodecName(null, null, "mpeg2video-MPEG-2 video"));
-        Assert.Equal("H.264", MediaInspector.GetCodecName(null, "avc1", null));
-        Assert.Equal("H.265", MediaInspector.GetCodecName(null, "hvc1", " \t "));
-        Assert.Equal(string.Empty, MediaInspector.GetCodecName(null, null, null));
-
-        // An explicit AVI FourCC takes precedence without reading a file or normalizing its alias.
-        Assert.Equal("H264", MediaInspector.GetCodecName("video.AVI", "h264", "hevc (H.265)"));
-    }
-
-    [Fact]
     public void TryGetFileSize_ReturnsFormattedSizeForExistingFile_AndEmptyForMissing()
     {
         var path = Path.Combine(Path.GetTempPath(), "subedit_media_inspector_" + Guid.NewGuid().ToString("N") + ".bin");

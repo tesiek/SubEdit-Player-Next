@@ -48,20 +48,20 @@ public class EditorToolbarTests
         WithForm((form, _) =>
         {
             var toolbar = Field<ToolStrip>(form, "_mainToolbar");
-            var expected = new[] { "Otwórz plik wideo (Ctrl+O)", "Otwórz plik napisów (Ctrl+Shift+O)", "Nowy tekst (Ctrl+N)",
-                "Zapisz tekst (Ctrl+S)", "Cofnij (Ctrl+Z)", "Ponów (Ctrl+Y)", "Edytor napisów (Ctrl+E)", "Znajdź (Ctrl+F)" };
+            var expected = new[] { "Otwórz plik wideo (Ctrl+O)", "Otwórz plik napisów (Ctrl+Shift+O)", "Nowe napisy (Ctrl+N)",
+                "Zapisz tekst (Ctrl+S)", "Cofnij (Ctrl+Z)", "Ponów (Ctrl+Y)", "Edytor napisów (Ctrl+E)", "Znajdź tekst (Ctrl+F)" };
             Assert.Equal(expected, Names.Take(8).Select(n => toolbar.Items[n]!.ToolTipText));
             Assert.StartsWith("Aktywny format napisów:", toolbar.Items["toolbarActiveSubtitleFormat"]!.ToolTipText);
             Assert.Equal(new[] { "Śledzenie napisów w edytorze (Ctrl+J)", "Konwertuj format napisów (Ctrl+T)",
                 "Przesuń czas napisów (Ctrl+D)", "Zmień czas wyświetlania napisów (Ctrl+W)", "Przezroczyste napisy (M)",
-                "Pokaż/ukryj napisy (Ctrl+Shift+N)", "Zawsze na wierzchu (F6)", "Tryb pełnoekranowy (F11)",
+                "Wyświetlaj napisy (Ctrl+Shift+N)", "Zawsze na wierzchu (F6)", "Tryb pełnoekranowy (F11)",
                 "Opcje (F12)", "Zakończ (Alt+F4)" }, Names.Skip(9).Select(n => toolbar.Items[n]!.ToolTipText));
             Assert.False(toolbar.ShowItemToolTips);
             Assert.All(toolbar.Items.Cast<ToolStripItem>().Where(i => i is not ToolStripSeparator), i => Assert.False(i.AutoToolTip));
             Assert.Equal(new[] { "toolbarEditor", "toolbarSubtitleTrace", "toolbarTransparentSubtitles", "toolbarShowSubtitles",
                 "toolbarAlwaysOnTop", "toolbarFullscreen" }, toolbar.Items.OfType<ToolStripButton>().Where(b => b.CheckOnClick).Select(b => b.Name));
             var find = Assert.IsType<EditorToolbarSplitButton>(toolbar.Items["toolbarFind"]);
-            Assert.Equal(new[] { "Znajdź", "Znajdź krótko wyświetlany napis", "Znajdź długi wiersz", "Znajdź przerwę w wyświetlaniu napisów",
+            Assert.Equal(new[] { "Znajdź tekst", "Znajdź krótko wyświetlany napis", "Znajdź długi wiersz", "Znajdź przerwę w wyświetlaniu napisów",
                 "Znajdź nieposortowany napis", "Znajdź następny" }, find.DropDownItems.Cast<ToolStripItem>().Select(i => i.Text));
         });
     }

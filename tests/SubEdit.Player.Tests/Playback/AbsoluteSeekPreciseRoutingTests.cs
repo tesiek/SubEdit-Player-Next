@@ -9,7 +9,7 @@ namespace SubEdit.Player.Tests.Playback;
 
 /// <summary>
 /// Unit tests for F04 - Unification of FAST vs PRECISE semantics for absolute seek operations:
-/// - Ctrl+K ("Skocz do pozycji")
+/// - Ctrl+K ("Przejdź do czasu filmu")
 /// - Boundary Home (target 0) / End (non-M2TS vs M2TS)
 /// - Chapter seek (standard vs EOF normalized fallback)
 /// - Pending/deferred precise flag propagation (Playing -> Pause / PlaybackEnded)

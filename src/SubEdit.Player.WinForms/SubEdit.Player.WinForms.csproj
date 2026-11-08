@@ -2,6 +2,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\SubEdit.Player.Core\SubEdit.Player.Core.csproj" />
+    <ProjectReference Include="..\SubEdit.Player.UI\SubEdit.Player.UI.csproj" />
     <ProjectReference Include="..\..\third_party\FlyleafLib\FlyleafLib.csproj" />
     <ProjectReference Include="..\..\third_party\Scintilla.NET\Scintilla.NET\Scintilla.NET.csproj" />
   </ItemGroup>
@@ -32,7 +33,6 @@
     <AssemblyName>SubEdit.Player.Next</AssemblyName>
     <AssemblyTitle>SubEdit-Player Next</AssemblyTitle>
     <Product>SubEdit-Player Next</Product>
-    <Version>1.0.0</Version>
     <!-- ApplicationBuildInfo.targets supplies a revision with an explicit working-tree state. -->
     <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
     <NeutralLanguage>pl</NeutralLanguage>

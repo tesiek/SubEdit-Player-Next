@@ -153,7 +153,7 @@ public class MediaCodecDisplayTests
         Assert.Equal("WIDEO #1", video.Heading);
         Assert.DoesNotContain(video.Rows, row => row.Label is "Język" or "Tytuł");
         var report = VideoFilePropertiesFormatter.FormatText(sections);
-        Assert.Contains("Kodek: H.264 / AVC", report);
+        Assert.Contains("Format: H.264 / AVC", report);
         Assert.Contains("Profil: High@L3.1", report);
         Assert.Contains("Format pikseli: YUV 4:2:0", report);
         Assert.Contains("Przestrzeń barw: BT.709", report);

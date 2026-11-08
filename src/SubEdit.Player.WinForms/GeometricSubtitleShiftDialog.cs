@@ -2,7 +2,7 @@ using System.Globalization;
 
 namespace SubEdit.Player.WinForms;
 
-internal sealed class GeometricSubtitleShiftDialog : SubEditDialog
+internal sealed class GeometricSubtitleShiftDialog : StandardDialog
 {
     private readonly TextBox _initialDelay;
     private readonly TextBox _finalDelay;
@@ -14,63 +14,17 @@ internal sealed class GeometricSubtitleShiftDialog : SubEditDialog
         SubtitleGeometryMeasurement final,
         double framesPerSecond,
         bool changeFromInitialLine,
-        bool changeToFinalLine)
+        bool changeToFinalLine) : base(560)
     {
         Text = "Geometryczne przesunięcie napisów...";
-        ClientSize = new Size(560, 382);
-
-        var fpsPanel = new GroupBox
-        {
-            Text = string.Empty,
-            Location = new Point(300, 12),
-            Size = new Size(245, 52)
-        };
-        var measuredSubtitleFps = (final.SubtitleTimeMilliseconds - initial.SubtitleTimeMilliseconds) *
-            Math.Max(1d, framesPerSecond) /
-            (final.VideoTimeMilliseconds - initial.VideoTimeMilliseconds);
-        AddFpsRow(fpsPanel, "FPS aktualnych napisów:", measuredSubtitleFps, 8);
-        AddFpsRow(fpsPanel, "FPS napisów po zmianie:", framesPerSecond, 28);
-
-        var initialGroup = CreateMeasurementGroup(
-            "Pomiar początkowy",
-            initial,
-            72,
-            out _initialDelay,
-            out _fromInitialLine,
-            "Zmieniaj &od tej linii",
-            changeFromInitialLine);
-        var finalGroup = CreateMeasurementGroup(
-            "Pomiar końcowy",
-            final,
-            202,
-            out _finalDelay,
-            out _toFinalLine,
-            "Zmieniaj &do tej linii",
-            changeToFinalLine);
-
-        var ok = new Button
-        {
-            Text = "OK",
-            Location = new Point(198, 345),
-            Size = new Size(75, 27)
-        };
-        ok.Click += (_, _) => AcceptOptions();
-        var cancel = new Button
-        {
-            Text = "Anuluj",
-            DialogResult = DialogResult.Cancel,
-            Location = new Point(281, 345),
-            Size = new Size(75, 27)
-        };
-
-        Controls.AddRange([fpsPanel, initialGroup, finalGroup, ok, cancel]);
-        AcceptButton = ok;
-        CancelButton = cancel;
-        Shown += (_, _) =>
-        {
-            _initialDelay.Focus();
-            _initialDelay.SelectAll();
-        };
+        var fps = Page.AddSection("FPS");
+        var measuredSubtitleFps = (final.SubtitleTimeMilliseconds - initial.SubtitleTimeMilliseconds) * Math.Max(1d, framesPerSecond) / (final.VideoTimeMilliseconds - initial.VideoTimeMilliseconds);
+        fps.AddText("FPS aktualnych napisów: " + measuredSubtitleFps.ToString("0.###", CultureInfo.InvariantCulture));
+        fps.AddText("FPS napisów po zmianie: " + framesPerSecond.ToString("0.###", CultureInfo.InvariantCulture));
+        (_initialDelay, _fromInitialLine) = Measurement("Pomiar początkowy", initial, "Zmieniaj &od tej linii", changeFromInitialLine);
+        (_finalDelay, _toFinalLine) = Measurement("Pomiar końcowy", final, "Zmieniaj &do tej linii", changeToFinalLine);
+        ConfigureActions(AcceptOptions);
+        Shown += (_, _) => { _initialDelay.Focus(); _initialDelay.SelectAll(); };
     }
 
     public double InitialDelaySeconds { get; private set; }
@@ -81,101 +35,14 @@ internal sealed class GeometricSubtitleShiftDialog : SubEditDialog
 
     public bool ChangeToFinalLine => _toFinalLine.Checked;
 
-    private static GroupBox CreateMeasurementGroup(
-        string title,
-        SubtitleGeometryMeasurement measurement,
-        int top,
-        out TextBox delay,
-        out CheckBox rangeLimit,
-        string rangeLimitText,
-        bool rangeLimitChecked)
+    private (TextBox Delay, CheckBox Range) Measurement(string title, SubtitleGeometryMeasurement measurement, string rangeCaption, bool rangeChecked)
     {
-        var group = new GroupBox
-        {
-            Text = title,
-            Location = new Point(14, top),
-            Size = new Size(531, 119)
-        };
-        group.Controls.Add(new Label
-        {
-            Text = "Nr linii:",
-            TextAlign = ContentAlignment.MiddleRight,
-            Location = new Point(8, 21),
-            Size = new Size(68, 23)
-        });
-        group.Controls.Add(new Label
-        {
-            Text = (measurement.LineIndex + 1).ToString(CultureInfo.CurrentCulture),
-            TextAlign = ContentAlignment.MiddleLeft,
-            Location = new Point(83, 21),
-            Size = new Size(80, 23)
-        });
-        group.Controls.Add(new Label
-        {
-            Text = "Linia:",
-            TextAlign = ContentAlignment.MiddleRight,
-            Location = new Point(8, 44),
-            Size = new Size(68, 23)
-        });
-        var line = new Label
-        {
-            Text = measurement.LineText,
-            AutoEllipsis = true,
-            TextAlign = ContentAlignment.MiddleLeft,
-            Location = new Point(83, 44),
-            Size = new Size(432, 23)
-        };
-        group.Controls.Add(line);
-        group.Controls.Add(new Label
-        {
-            Text = "Opóźnienie:",
-            TextAlign = ContentAlignment.MiddleRight,
-            Location = new Point(8, 69),
-            Size = new Size(68, 23)
-        });
-        delay = new TextBox
-        {
-            Text = ((measurement.VideoTimeMilliseconds - measurement.SubtitleTimeMilliseconds) / 1000d)
-                .ToString("0.########", CultureInfo.CurrentCulture),
-            Location = new Point(83, 69),
-            Size = new Size(235, 23)
-        };
-        group.Controls.Add(delay);
-        group.Controls.Add(new Label
-        {
-            Text = "sekund",
-            TextAlign = ContentAlignment.MiddleLeft,
-            Location = new Point(324, 69),
-            Size = new Size(65, 23)
-        });
-        rangeLimit = new CheckBox
-        {
-            Text = rangeLimitText,
-            AutoSize = true,
-            ForeColor = Color.Blue,
-            Location = new Point(383, 94),
-            Checked = rangeLimitChecked
-        };
-        group.Controls.Add(rangeLimit);
-        return group;
-    }
-
-    private static void AddFpsRow(Control parent, string caption, double value, int top)
-    {
-        parent.Controls.Add(new Label
-        {
-            Text = caption,
-            TextAlign = ContentAlignment.MiddleLeft,
-            Location = new Point(7, top),
-            Size = new Size(155, 21)
-        });
-        parent.Controls.Add(new Label
-        {
-            Text = value.ToString("0.###", CultureInfo.InvariantCulture),
-            TextAlign = ContentAlignment.MiddleLeft,
-            Location = new Point(164, top),
-            Size = new Size(70, 21)
-        });
+        var section = Page.AddSection(title);
+        section.AddText("Nr linii: " + (measurement.LineIndex + 1).ToString(CultureInfo.CurrentCulture));
+        section.AddText("Linia: " + measurement.LineText);
+        var delay = Input(((measurement.VideoTimeMilliseconds - measurement.SubtitleTimeMilliseconds) / 1000d).ToString("0.########", CultureInfo.CurrentCulture));
+        section.AddFieldWithUnit("Opóźnienie:", delay, "sekund");
+        return (delay, section.AddCheckBox(rangeCaption, rangeChecked));
     }
 
     private void AcceptOptions()

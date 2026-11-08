@@ -13,11 +13,11 @@ public partial class Form1
     {
         var openVideoItem = CommandItem("Otwórz plik wideo", "Ctrl+O", Keys.Control | Keys.O, OpenVideo);
         var openSubtitleItem = CommandItem("Otwórz plik napisów", "Ctrl+Shift+O", Keys.Control | Keys.Shift | Keys.O, OpenSubtitleFile);
-        var newSubtitleItem = CommandItem("Utwórz nowe napisy", "Ctrl+N", Keys.Control | Keys.N, NewSubtitle);
+        var newSubtitleItem = CommandItem("Nowe napisy", "Ctrl+N", Keys.Control | Keys.N, NewSubtitle);
         var saveSubtitleItem = CommandItem("Zapisz napisy", "Ctrl+S", Keys.Control | Keys.S, SaveSubtitle);
         var saveSubtitleAsItem = CommandItem("Zapisz napisy jako", "Ctrl+Shift+S", Keys.Control | Keys.Shift | Keys.S, SaveSubtitleAs);
-        var saveSubtitleAsSrtItem = Item("Zapisz napisy jako SRT", SaveSubtitleAsSrt);
-        var findTextItem = CommandItem("Znajdź", "Ctrl+F", Keys.Control | Keys.F, ShowFindDialog);
+        var saveSubtitleAsSrtItem = Item("Eksportuj napisy do SRT", SaveSubtitleAsSrt);
+        var findTextItem = CommandItem("Znajdź tekst", "Ctrl+F", Keys.Control | Keys.F, ShowFindDialog);
         var findShortSubtitleItem = CommandItem(
             "Znajdź krótko wyświetlany napis",
             "Ctrl+Shift+D",
@@ -42,13 +42,20 @@ public partial class Form1
         var findPreviousItem = CommandItem("Znajdź poprzedni", "Shift+F3", Keys.Shift | Keys.F3, () => { FindPreviousSubtitleText(); });
         var replaceTextItem = CommandItem("Znajdź i zamień", "Ctrl+H", Keys.Control | Keys.H, ShowReplaceDialog);
         var editorItem = CommandItem("Edytor napisów", "Ctrl+E", Keys.Control | Keys.E, ToggleEditor);
+        _editorMenuItem = editorItem;
+        var alwaysOnTopItem = CommandItem("Zawsze na wierzchu", "F6", Keys.F6, ToggleAlwaysOnTop);
+        alwaysOnTopItem.Checked = TopMost;
+        _alwaysOnTopMenuItem = alwaysOnTopItem;
         var fullScreenItem = CommandItem("Tryb pełnoekranowy", "F11", Keys.F11, ToggleFullScreen);
+        _fullScreenMenuItem = fullScreenItem;
         var videoPropertiesItem = CommandItem("Właściwości pliku wideo", "F9", Keys.F9, ShowVideoProperties);
-        var goToVideoPositionItem = CommandItem("Skocz do", "Ctrl+K", Keys.Control | Keys.K, ShowGoToVideoPositionDialog);
+        videoPropertiesItem.Enabled = false;
+        _videoPropertiesMenuItem = videoPropertiesItem;
+        var goToVideoPositionItem = CommandItem("Przejdź do czasu filmu", "Ctrl+K", Keys.Control | Keys.K, ShowGoToVideoPositionDialog);
         goToVideoPositionItem.Enabled = false;
         _goToVideoPositionMenuItem = goToVideoPositionItem;
-        var insertStartItem = CommandItem("Wstaw klatkę początkową", "Insert", Keys.Insert, () => InsertVideoPosition(insertStart: true));
-        var insertEndItem = CommandItem("Wstaw klatkę końcową", "Alt+Insert", Keys.Alt | Keys.Insert, () => InsertVideoPosition(insertStart: false));
+        var insertStartItem = CommandItem("Wstaw czas początkowy napisu", "Insert", Keys.Insert, () => InsertVideoPosition(insertStart: true));
+        var insertEndItem = CommandItem("Wstaw czas końcowy napisu", "Alt+Insert", Keys.Alt | Keys.Insert, () => InsertVideoPosition(insertStart: false));
         var defaultFormatItem = CommandItem(
             GetDefaultSubtitleFormatMenuText(),
             "Ctrl+`",
@@ -132,7 +139,7 @@ public partial class Form1
         subtractHalfSecondItem.Enabled = false;
         _subtractHalfSecondMenuItem = subtractHalfSecondItem;
         var jumpToCurrentTimeSubtitleItem = CommandItem(
-            "Skocz do linii z aktualnym czasem filmu",
+            "Przejdź do napisu w bieżącym czasie filmu",
             "Ctrl+Shift+L",
             Keys.Control | Keys.Shift | Keys.L,
             JumpToSubtitleAtCurrentTime);
@@ -182,10 +189,8 @@ public partial class Form1
         transparentSubtitlesItem.ShortcutKeyDisplayString = "M";
         transparentSubtitlesItem.Checked = _transparentSubtitles;
         _transparentSubtitlesMenuItem = transparentSubtitlesItem;
-        var timeCounterItem = Item("Wyświetlaj aktualny czas", ToggleTimeCounterVisibility);
-        timeCounterItem.ShortcutKeyDisplayString = "T";
-        timeCounterItem.Checked = _settings.TimeDisplayMode != TimeDisplayMode.Hidden;
-        _timeCounterMenuItem = timeCounterItem;
+        var timeCounterItem = _timeCounterMenuItem = CreateTimeCounterMenuItem();
+        UpdateTimeCounterMenuChecks();
         var aboutItem = Item("O programie", ShowAboutDialog);
         var recentFilesMenu = CreateRecentFilesMenu();
         var subtitleEncodingMenu = CreateSubtitleEncodingMenu();
@@ -210,7 +215,7 @@ public partial class Form1
             Separator(),
             newSubtitleItem,
             openSubtitleItem,
-            Item("Dodaj plik na koniec napisów", AppendSubtitleFile),
+            Item("Dopisz napisy z pliku", AppendSubtitleFile),
             CommandItem("Zamknij plik napisów", "Ctrl+F4", Keys.Control | Keys.F4, CloseSubtitles),
             Separator(),
             saveSubtitleItem,
@@ -225,59 +230,80 @@ public partial class Form1
             CommandItem("Zakończ", "Alt+F4", Keys.Alt | Keys.F4, Close));
         fileMenu.DropDownOpening += (_, _) =>
         {
+            UpdateCloseVideoMenuState();
             UpdateSplitSubtitleAvailability();
             UpdateMergeSubtitleAvailability();
         };
         menu.Items.Add(fileMenu);
 
-        menu.Items.Add(Submenu("Edycja",
-            CommandItem("Cofnij", "Ctrl+Z", Keys.Control | Keys.Z, UndoSubtitleEdit),
-            CommandItem("Przywróć", "Ctrl+Y", Keys.Control | Keys.Y, RedoSubtitleEdit),
+        _undoMenuItem = CommandItem("Cofnij", "Ctrl+Z", Keys.Control | Keys.Z, UndoSubtitleEdit);
+        _redoMenuItem = CommandItem("Ponów", "Ctrl+Y", Keys.Control | Keys.Y, RedoSubtitleEdit);
+        var editMenu = Submenu("Edycja",
+            _undoMenuItem,
+            _redoMenuItem,
             Separator(),
             CommandItem("Wytnij", "Ctrl+X", Keys.Control | Keys.X, () => _subtitleEditor.Cut()),
             CommandItem("Kopiuj", "Ctrl+C", Keys.Control | Keys.C, () => _subtitleEditor.Copy()),
             CommandItem("Wklej", "Ctrl+V", Keys.Control | Keys.V, () => _subtitleEditor.Paste()),
             Separator(),
-            Submenu("Szukaj",
-                findShortSubtitleItem,
-                findLongLineItem,
-                findSubtitleGapItem,
-                findUnsortedSubtitleItem),
             findTextItem,
             replaceTextItem,
             findNextItem,
             findPreviousItem,
+            Submenu("Wyszukiwanie specjalne",
+                findShortSubtitleItem,
+                findLongLineItem,
+                findSubtitleGapItem,
+                findUnsortedSubtitleItem),
             Separator(),
             CommandItem("Kursywa", "Ctrl+I", Keys.Control | Keys.I, ToggleCurrentSubtitleLineItalic),
             CommandItem("Podkreślenie", "Ctrl+U", Keys.Control | Keys.U, ToggleCurrentSubtitleLineUnderline),
             CommandItem("Pogrubienie", "Ctrl+B", Keys.Control | Keys.B, ToggleCurrentSubtitleLineBold),
             Separator(),
-            CommandItem("Zamień znaki kursywy", "Ctrl+Shift+I", Keys.Control | Keys.Shift | Keys.I, ShowItalicMarkerConversionDialog)));
+            CommandItem("Konwertuj znaczniki kursywy", "Ctrl+Shift+I", Keys.Control | Keys.Shift | Keys.I, ShowItalicMarkerConversionDialog));
+        editMenu.DropDownOpening += (_, _) =>
+        {
+            var hasText = _subtitleEditor.TextLength > 0;
+            findShortSubtitleItem.Enabled = hasText;
+            findSubtitleGapItem.Enabled = hasText;
+            findUnsortedSubtitleItem.Enabled = hasText;
+            var canRepeatSearch = !string.IsNullOrEmpty(_lastFindQuery) || _repeatLongSubtitleLineSearch ||
+                _repeatShortSubtitleSearch || _repeatSubtitleGapSearch || _repeatUnsortedSubtitleSearch;
+            findNextItem.Enabled = canRepeatSearch;
+            findPreviousItem.Enabled = canRepeatSearch;
+        };
+        menu.Items.Add(editMenu);
 
         var viewPanItem = Submenu("Przesunięcie obrazu",
             CommandItem("W górę", "Ctrl+Alt+Up", Keys.Control | Keys.Alt | Keys.Up, () => AdjustMovieElevation(5)),
             CommandItem("W dół", "Ctrl+Alt+Down", Keys.Control | Keys.Alt | Keys.Down, () => AdjustMovieElevation(-5)),
             CommandItem("W lewo", "Ctrl+Alt+Left", Keys.Control | Keys.Alt | Keys.Left, () => AdjustMovieHorizontalOffset(-5)),
             CommandItem("W prawo", "Ctrl+Alt+Right", Keys.Control | Keys.Alt | Keys.Right, () => AdjustMovieHorizontalOffset(5)));
-        var viewZoomItem = Submenu("Powiększenie",
-            CommandItem("Powiększ", "Ctrl+Alt+=", Keys.Control | Keys.Alt | Keys.Oemplus, () => AdjustMovieZoom(10)),
-            CommandItem("Pomniejsz", "Ctrl+Alt+-", Keys.Control | Keys.Alt | Keys.OemMinus, () => AdjustMovieZoom(-10)));
+        var viewZoomInItem = CommandItem("Powiększenie", "Ctrl+Alt+=", Keys.Control | Keys.Alt | Keys.Oemplus, () => AdjustMovieZoom(10));
+        var viewZoomOutItem = CommandItem("Pomniejszenie", "Ctrl+Alt+-", Keys.Control | Keys.Alt | Keys.OemMinus, () => AdjustMovieZoom(-10));
         var viewResetTransformationsItem = CommandItem("Resetuj transformacje", "Ctrl+Alt+0", Keys.Control | Keys.Alt | Keys.D0, ResetMovieTransformations);
         var viewMenu = Submenu("Widok",
             editorItem,
-            viewPanItem,
-            viewZoomItem,
+            subtitleVisibilityItem,
+            transparentSubtitlesItem,
+            timeCounterItem,
             Separator(),
+            viewPanItem,
+            viewZoomInItem,
+            viewZoomOutItem,
             viewResetTransformationsItem,
             Separator(),
-            CommandItem("Minimalizuj okno", "Ctrl+\\", Keys.Control | Keys.Oem5, ToggleMinimizeWindow),
-            CommandItem("Zawsze na wierzchu", "F6", Keys.F6, ToggleAlwaysOnTop),
+            alwaysOnTopItem,
             fullScreenItem);
         viewMenu.DropDownOpening += (_, _) =>
         {
+            UpdateEditorMenuCheck();
+            UpdateTimeCounterMenuChecks();
+            alwaysOnTopItem.Checked = TopMost;
             var hasVideo = HasOpenVideo();
             viewPanItem.Enabled = hasVideo;
-            viewZoomItem.Enabled = hasVideo;
+            viewZoomInItem.Enabled = hasVideo;
+            viewZoomOutItem.Enabled = hasVideo;
             viewResetTransformationsItem.Enabled = hasVideo;
         };
         menu.Items.Add(viewMenu);
@@ -285,26 +311,26 @@ public partial class Form1
         menu.Items.Add(Submenu("Napisy",
             goToSubtitleItem,
             Separator(),
-            convertSubtitleFormatItem,
-            Separator(),
             shiftSubtitleTimeItem,
-            Submenu("Opóźnienie napisów",
+            Submenu("Synchronizacja napisów",
                 measureSubtitleDelayItem,
                 Separator(),
                 measureInitialSubtitleDelayItem,
                 measureFinalSubtitleDelayItem,
                 geometricSubtitleShiftItem),
             changeSubtitleDisplayTimeItem,
+            changeSubtitleFrameRateItem,
+            addHalfSecondItem,
+            subtractHalfSecondItem,
+            Separator(),
             rapidSubtitleMergeItem,
             splitLongSubtitleLinesItem,
             limitSubtitleLinesItem,
-            changeSubtitleFrameRateItem,
             correctSubtitlesItem,
             sortSubtitlesItem,
-            subtitleEncodingMenu,
             Separator(),
-            addHalfSecondItem,
-            subtractHalfSecondItem));
+            convertSubtitleFormatItem,
+            subtitleEncodingMenu));
 
         _loopMenuItem = new ToolStripMenuItem("Powtarzaj odtwarzanie")
         {
@@ -317,59 +343,57 @@ public partial class Form1
             CommandItem("Przyspiesz", "Alt+Up", Keys.Alt | Keys.Up, IncreasePlaybackSpeed),
             Item("Normalna prędkość", ResetPlaybackSpeed),
             CommandItem("Zwolnij", "Alt+Down", Keys.Alt | Keys.Down, DecreasePlaybackSpeed));
+        var seekMenu = Submenu("Przewijanie",
+            CommandItem("Przewiń 5 sekund w przód", "Ctrl+]", Keys.Control | Keys.OemCloseBrackets, () => QueuePreciseSeekWithAccumulatedOsd(5_000)),
+            CommandItem("Przewiń 5 sekund wstecz", "Ctrl+[", Keys.Control | Keys.OemOpenBrackets, () => QueuePreciseSeekWithAccumulatedOsd(-5_000)),
+            CommandItem("Przewiń w przód o własny krok", "Alt+Right", Keys.Alt | Keys.Right, SeekUserForward),
+            CommandItem("Przewiń wstecz o własny krok", "Alt+Left", Keys.Alt | Keys.Left, SeekUserBackward),
+            CommandItem("Przejdź na początek filmu", "Ctrl+Shift+[", Keys.Control | Keys.Shift | Keys.OemOpenBrackets, () => SeekToBoundary(toEnd: false)),
+            CommandItem("Przejdź na koniec filmu", "Ctrl+Shift+]", Keys.Control | Keys.Shift | Keys.OemCloseBrackets, () => SeekToBoundary(toEnd: true)));
+        var playFromSubtitleItem = CommandItem("Odtwarzaj film od bieżącego napisu", "Ctrl+P", Keys.Control | Keys.P, PlayFromEditorLine);
         var movieMenu = Submenu("Film",
             goToVideoPositionItem,
+            seekMenu,
+            Separator(),
+            CommandItem("Pauza / Odtwarzanie", "Ctrl+L", Keys.Control | Keys.L, TogglePlayback),
+            CommandItem("Stop", "Ctrl+M", Keys.Control | Keys.M, StopPlayback),
+            playFromSubtitleItem,
+            _loopMenuItem,
+            movieSpeedItem,
             Separator(),
             insertStartItem,
             insertEndItem,
             jumpToCurrentTimeSubtitleItem,
             subtitleTraceItem,
             Separator(),
-            CommandItem("Odtwarzaj film od bieżącego napisu", "Ctrl+P", Keys.Control | Keys.P, PlayFromEditorLine),
-            CommandItem("Pauza / Odtwarzanie", "Ctrl+L", Keys.Control | Keys.L, TogglePlayback),
-            CommandItem("Stop", "Ctrl+M", Keys.Control | Keys.M, StopPlayback),
-            _loopMenuItem,
-            movieSpeedItem,
-            CreateDirectoryVideoMenu(),
             CommandItem("Wczytaj poprzedni plik", "Alt+,", Keys.Alt | Keys.Oemcomma, () => PlayAdjacentVideo(-1)),
             CommandItem("Wczytaj następny plik", "Alt+.", Keys.Alt | Keys.OemPeriod, () => PlayAdjacentVideo(1)),
-            Submenu("Przewijanie",
-                CommandItem("Przewiń 5 sekund w przód", "Ctrl+]", Keys.Control | Keys.OemCloseBrackets, () => QueuePreciseSeekWithAccumulatedOsd(5_000)),
-                CommandItem("Przewiń 5 sekund wstecz", "Ctrl+[", Keys.Control | Keys.OemOpenBrackets, () => QueuePreciseSeekWithAccumulatedOsd(-5_000)),
-                CommandItem("Przewinięcie użytkownika - w przód:", "Alt+Right", Keys.Alt | Keys.Right, SeekUserForward),
-                CommandItem("Przewinięcie użytkownika - wstecz:", "Alt+Left", Keys.Alt | Keys.Left, SeekUserBackward),
-                CommandItem("Przejdź na początek filmu", "Ctrl+Shift+[", Keys.Control | Keys.Shift | Keys.OemOpenBrackets, () => SeekToBoundary(toEnd: false)),
-                CommandItem("Przejdź na koniec filmu", "Ctrl+Shift+]", Keys.Control | Keys.Shift | Keys.OemCloseBrackets, () => SeekToBoundary(toEnd: true))));
+            CreateDirectoryVideoMenu());
         movieMenu.DropDownOpening += (_, _) =>
         {
-            movieSpeedItem.Enabled = HasOpenVideo();
+            var hasVideo = HasOpenVideo();
+            movieSpeedItem.Enabled = hasVideo;
+            seekMenu.Enabled = hasVideo && Math.Max(_playback.DurationMilliseconds, _lastKnownMediaLengthMilliseconds) > 0;
+            playFromSubtitleItem.Enabled = hasVideo;
+            insertStartItem.Enabled = insertEndItem.Enabled = _currentVideoPath is not null && !_splitContainer.Panel2Collapsed;
         };
         menu.Items.Add(movieMenu);
 
-        menu.Items.Add(Submenu("Narzędzia",
+        menu.Items.Add(Submenu("Ustawienia",
             defaultFormatItem,
             CommandItem(
-                "Domyślna wartość współczynnika FPS",
+                "Aktywny współczynnik FPS",
                 "Ctrl+Shift+Q",
                 Keys.Control | Keys.Shift | Keys.Q,
                 ShowDefaultFrameRateDialog),
-            Separator(),
-            subtitleVisibilityItem,
-            transparentSubtitlesItem,
-            Separator(),
-            timeCounterItem,
             Separator(),
             CommandItem("Opcje", "F12", Keys.F12, ShowEditorOptionsDialog)));
 
         menu.Items.Add(Submenu("Pomoc",
             CommandItem("Tematy pomocy", "F1", Keys.F1, () => OpenHelpDocument("SubEditHelp.html")),
-            Separator(),
             Item("Skróty klawiszowe", () => OpenHelpDocument("SkrotyKlawiszowe.html")),
-            Separator(),
-            Item("FAQ - Edycja napisów", () => OpenHelpDocument("faq_edycja.html")),
-            Separator(),
-            Item("SubEdit - WWW", OpenSubEditWebsite),
-            Item("SubEdit Next - GitHub", () => OpenWebsite("https://github.com/tesiek/SubEdit-Player-Next")),
+            Item("FAQ: edycja napisów", () => OpenHelpDocument("faq_edycja.html")),
+            Item("SubEdit-Player Next — GitHub", () => OpenWebsite("https://github.com/tesiek/SubEdit-Player-Next")),
             Separator(),
             Item("Diagnostyka programu", ShowProgramDiagnostics),
             aboutItem));
@@ -385,44 +409,63 @@ public partial class Form1
     private ContextMenuStrip CreateVideoMenu()
     {
         var menu = new ContextMenuStrip();
-        menu.Items.Add("Otwórz plik wideo", null, (_, _) => OpenVideo());
-        menu.Items.Add("Otwórz plik napisów", null, (_, _) => OpenSubtitleFile());
-        menu.Items.Add(new ToolStripSeparator());
-        menu.Items.Add("Pauza / Odtwarzanie", null, (_, _) => TogglePlayback());
-        menu.Items.Add("Stop", null, (_, _) => StopPlayback());
-        menu.Items.Add(new ToolStripSeparator());
+        var speedItem = Submenu("Prędkość odtwarzania",
+            Item("Przyspiesz", IncreasePlaybackSpeed),
+            Item("Normalna prędkość", ResetPlaybackSpeed),
+            Item("Zwolnij", DecreasePlaybackSpeed));
         var panItem = Submenu("Przesunięcie obrazu",
             Item("W górę", () => AdjustMovieElevation(5)),
             Item("W dół", () => AdjustMovieElevation(-5)),
             Item("W lewo", () => AdjustMovieHorizontalOffset(-5)),
             Item("W prawo", () => AdjustMovieHorizontalOffset(5)));
-        var zoomItem = Submenu("Powiększenie",
-            Item("Powiększ", () => AdjustMovieZoom(10)),
-            Item("Pomniejsz", () => AdjustMovieZoom(-10)));
+        var zoomInItem = Item("Powiększenie", () => AdjustMovieZoom(10));
+        var zoomOutItem = Item("Pomniejszenie", () => AdjustMovieZoom(-10));
         var resetItem = Item("Resetuj transformacje", ResetMovieTransformations);
-        var speedItem = Submenu("Prędkość odtwarzania",
-            Item("Przyspiesz", IncreasePlaybackSpeed),
-            Item("Normalna prędkość", ResetPlaybackSpeed),
-            Item("Zwolnij", DecreasePlaybackSpeed));
-        menu.Items.Add(panItem);
-        menu.Items.Add(zoomItem);
-        menu.Items.Add(resetItem);
-        menu.Items.Add(speedItem);
-        menu.Items.Add(new ToolStripSeparator());
-        menu.Items.Add("Tryb pełnoekranowy", null, (_, _) => ToggleFullScreen());
-        menu.Items.Add(new ToolStripSeparator());
-        menu.Items.Add("Opcje", null, (_, _) => ShowEditorOptionsDialog());
-        menu.Items.Add(new ToolStripSeparator());
-        menu.Items.Add("Zamknij", null, (_, _) => Close());
+        var subtitleVisibilityItem = Item("Wyświetlaj napisy", ToggleSubtitleVisibility);
+        var timeCounterItem = _videoTimeCounterMenuItem = CreateTimeCounterMenuItem();
+        UpdateTimeCounterMenuChecks();
+        var fullScreenItem = Item("Tryb pełnoekranowy", ToggleFullScreen);
+        menu.Items.AddRange([
+            Item("Otwórz plik wideo", OpenVideo),
+            Item("Otwórz plik napisów", OpenSubtitleFile),
+            Separator(),
+            Item("Pauza / Odtwarzanie", TogglePlayback),
+            Item("Stop", StopPlayback),
+            speedItem,
+            Separator(),
+            panItem,
+            zoomInItem,
+            zoomOutItem,
+            resetItem,
+            Separator(),
+            subtitleVisibilityItem,
+            timeCounterItem,
+            fullScreenItem,
+            Separator(),
+            Item("Opcje", ShowEditorOptionsDialog),
+            Item("Zakończ program", Close)
+        ]);
         menu.Opening += (_, _) =>
         {
             var hasVideo = HasOpenVideo();
             panItem.Enabled = hasVideo;
-            zoomItem.Enabled = hasVideo;
+            zoomInItem.Enabled = hasVideo;
+            zoomOutItem.Enabled = hasVideo;
             resetItem.Enabled = hasVideo;
             speedItem.Enabled = hasVideo;
+            subtitleVisibilityItem.Checked = _subtitlesVisible;
+            UpdateTimeCounterMenuChecks();
+            fullScreenItem.Checked = _isFullScreen;
         };
         return menu;
+    }
+
+    private ToolStripMenuItem CreateTimeCounterMenuItem()
+    {
+        var item = Item("Wyświetlaj czas filmu", ToggleTimeCounterVisibility);
+        item.ShortcutKeyDisplayString = "T";
+        item.ToolTipText = "Przełącza czas od początku filmu, czas pozostały i ukrycie licznika.";
+        return item;
     }
 
     private static ToolStripMenuItem Submenu(string title, params ToolStripItem[] items)
@@ -434,20 +477,40 @@ public partial class Form1
 
     private ToolStripMenuItem CreateSubtitleEncodingMenu()
     {
-        var menu = Submenu("Kodowanie napisów",
-            CreateSubtitleEncodingItem("ANSI", SubtitleEncodingKind.Ansi),
-            CreateSubtitleEncodingItem("UTF-8", SubtitleEncodingKind.Utf8),
-            CreateSubtitleEncodingItem("UTF-8-BOM", SubtitleEncodingKind.Utf8Bom),
-            CreateSubtitleEncodingItem("UTF-16 BE BOM", SubtitleEncodingKind.Utf16BigEndianBom),
-            CreateSubtitleEncodingItem("UTF-16 LE BOM", SubtitleEncodingKind.Utf16LittleEndianBom),
-            Separator(),
-            Item("Konwertuj na ANSI", () => ConvertSubtitleEncoding(SubtitleEncodingKind.Ansi)),
-            Item("Konwertuj na UTF-8", () => ConvertSubtitleEncoding(SubtitleEncodingKind.Utf8)),
-            Item("Konwertuj na UTF-8-BOM", () => ConvertSubtitleEncoding(SubtitleEncodingKind.Utf8Bom)),
-            Item("Konwertuj na UTF-16 BE BOM", () => ConvertSubtitleEncoding(SubtitleEncodingKind.Utf16BigEndianBom)),
-            Item("Konwertuj na UTF-16 LE BOM", () => ConvertSubtitleEncoding(SubtitleEncodingKind.Utf16LittleEndianBom)));
-        menu.DropDownOpening += (_, _) => UpdateSubtitleEncodingChecks(menu);
+        var currentEncoding = DisabledItem(string.Empty);
+        var menu = Submenu("Kodowanie napisów", currentEncoding, Separator());
+        var encodings = new (SubtitleEncodingKind Kind, string Name)[]
+        {
+            (SubtitleEncodingKind.Ansi, "ANSI"),
+            (SubtitleEncodingKind.Utf8, "UTF-8"),
+            (SubtitleEncodingKind.Utf8Bom, "UTF-8-BOM"),
+            (SubtitleEncodingKind.Utf16BigEndianBom, "UTF-16 BE BOM"),
+            (SubtitleEncodingKind.Utf16LittleEndianBom, "UTF-16 LE BOM")
+        };
+        var conversions = encodings.Select(encoding =>
+        {
+            var item = Item($"Konwertuj na {encoding.Name}", () => ConvertSubtitleEncoding(encoding.Kind));
+            item.ToolTipText = "Ustawia kodowanie następnego zapisu napisów.";
+            menu.DropDownItems.Add(item);
+            return (encoding.Kind, encoding.Name, Item: item);
+        }).ToArray();
+        menu.DropDown.ShowItemToolTips = true;
+        menu.DropDownOpening += (_, _) => RefreshEncodingMenu();
+        RefreshEncodingMenu();
         return menu;
+
+        void RefreshEncodingMenu()
+        {
+            var currentKind = SubtitleFileReader.GetEncodingKind(_subtitleEncoding);
+            foreach (var (kind, name, item) in conversions)
+            {
+                item.Enabled = kind != currentKind;
+                if (kind == currentKind)
+                {
+                    currentEncoding.Text = $"Bieżące kodowanie: {name}";
+                }
+            }
+        }
     }
 
     private ToolStripMenuItem CreateDirectoryVideoMenu()
@@ -487,26 +550,6 @@ public partial class Form1
         _randomDirectoryVideoOrder = null;
     }
 
-    private ToolStripMenuItem CreateSubtitleEncodingItem(string title, SubtitleEncodingKind encodingKind)
-    {
-        var item = Item(title);
-        item.Enabled = false;
-        item.Tag = encodingKind;
-        return item;
-    }
-
-    private void UpdateSubtitleEncodingChecks(ToolStripMenuItem menu)
-    {
-        var currentKind = SubtitleFileReader.GetEncodingKind(_subtitleEncoding);
-        foreach (var item in menu.DropDownItems.OfType<ToolStripMenuItem>())
-        {
-            if (item.Tag is SubtitleEncodingKind encodingKind)
-            {
-                item.Checked = encodingKind == currentKind;
-            }
-        }
-    }
-
     private void ConvertSubtitleEncoding(SubtitleEncodingKind encodingKind)
     {
         if (SubtitleFileReader.GetEncodingKind(_subtitleEncoding) == encodingKind)
@@ -542,7 +585,7 @@ public partial class Form1
 
     private ToolStripMenuItem CreateRecentFilesMenu()
     {
-        var menu = Submenu("Historia otwieranych plików");
+        var menu = Submenu("Ostatnio otwierane pliki");
         menu.DropDownOpening += (_, _) => PopulateRecentFilesMenu(menu);
         PopulateRecentFilesMenu(menu);
         return menu;
@@ -584,19 +627,12 @@ public partial class Form1
         menu.DropDownItems.Add(clearItem);
     }
 
-    private static ToolStripMenuItem Item(string title) => new(title);
-
     private ToolStripMenuItem Item(string title, Action action)
     {
         var item = new ToolStripMenuItem(title);
         item.Click += (_, _) => action();
         return item;
     }
-
-    private static ToolStripMenuItem Item(string title, string shortcut) => new(title)
-    {
-        ShortcutKeyDisplayString = shortcut
-    };
 
     private ToolStripMenuItem CommandItem(string title, string shortcut, Keys shortcutKeys, Action action)
     {
@@ -672,7 +708,7 @@ public partial class Form1
             CreateToolbarButton("toolbarOpenVideo", "Otwórz plik wideo (Ctrl+O)", EditorToolbarIcon.OpenVideo),
             CreateToolbarButton("toolbarOpenSubtitles", "Otwórz plik napisów (Ctrl+Shift+O)", EditorToolbarIcon.OpenSubtitles),
             new ToolStripSeparator(),
-            CreateToolbarButton("toolbarNew", "Nowy tekst (Ctrl+N)", EditorToolbarIcon.New),
+            CreateToolbarButton("toolbarNew", "Nowe napisy (Ctrl+N)", EditorToolbarIcon.New),
             CreateToolbarButton("toolbarSave", "Zapisz tekst (Ctrl+S)", EditorToolbarIcon.Save, enabled: false),
             new ToolStripSeparator(),
             CreateToolbarButton("toolbarUndo", "Cofnij (Ctrl+Z)", EditorToolbarIcon.Undo, enabled: false),
@@ -688,7 +724,7 @@ public partial class Form1
             CreateToolbarButton("toolbarAddTime", "Przesuń czas napisów (Ctrl+D)", EditorToolbarIcon.ShiftTime, enabled: false),
             CreateToolbarButton("toolbarShowTime", "Zmień czas wyświetlania napisów (Ctrl+W)", EditorToolbarIcon.DisplayTime, enabled: false),
             CreateToolbarButton("toolbarTransparentSubtitles", "Przezroczyste napisy (M)", EditorToolbarIcon.TransparentSubtitles, checkOnClick: true, isChecked: _transparentSubtitles),
-            CreateToolbarButton("toolbarShowSubtitles", "Pokaż/ukryj napisy (Ctrl+Shift+N)", EditorToolbarIcon.ShowSubtitles, checkOnClick: true, isChecked: true),
+            CreateToolbarButton("toolbarShowSubtitles", "Wyświetlaj napisy (Ctrl+Shift+N)", EditorToolbarIcon.ShowSubtitles, checkOnClick: true, isChecked: true),
             new ToolStripSeparator(),
             CreateToolbarButton("toolbarAlwaysOnTop", "Zawsze na wierzchu (F6)", EditorToolbarIcon.AlwaysOnTop, checkOnClick: true),
             CreateToolbarButton("toolbarFullscreen", "Tryb pełnoekranowy (F11)", EditorToolbarIcon.Fullscreen, checkOnClick: true),
@@ -772,10 +808,10 @@ public partial class Form1
 
     private ToolStripSplitButton CreateFindToolbarButton()
     {
-        const string toolTip = "Znajdź (Ctrl+F)";
+        const string toolTip = "Znajdź tekst (Ctrl+F)";
         var button = new EditorToolbarSplitButton("toolbarFind", toolTip);
         button.ButtonClick += (_, _) => ShowFindDialog();
-        button.DropDownItems.Add(CreateFindDropDownItem("Znajdź", "Ctrl+F", ShowFindDialog));
+        button.DropDownItems.Add(CreateFindDropDownItem("Znajdź tekst", "Ctrl+F", ShowFindDialog));
         button.DropDownItems.Add(CreateFindDropDownItem("Znajdź krótko wyświetlany napis", "Ctrl+Shift+D", ShowFindShortSubtitleDialog));
         button.DropDownItems.Add(CreateFindDropDownItem("Znajdź długi wiersz", "Ctrl+Alt+D", ShowFindLongSubtitleLineDialog));
         button.DropDownItems.Add(CreateFindDropDownItem("Znajdź przerwę w wyświetlaniu napisów", "Ctrl+Shift+F", ShowFindSubtitleGapDialog));
@@ -800,18 +836,21 @@ public partial class Form1
         return item;
     }
 
-    private static StatusStrip CreateStatusStrip(out ToolStripStatusLabel fileStatus)
+    private DpiAwareStatusStrip CreateStatusStrip(out ToolStripStatusLabel fileStatus)
     {
-        var status = new StatusStrip { SizingGrip = false, Padding = new Padding(0) };
-        status.Items.Add(CreateStatusCell("{0}{0}", 102));
-        status.Items.Add(CreateStatusCell("[0][0]", 92));
-        status.Items.Add(CreateStatusCell("0:00:00.000", 96));
-        status.Items.Add(CreateStatusCell("0:00:00.000", 96));
+        var status = new DpiAwareStatusStrip { SizingGrip = false, Padding = new Padding(0) };
+        void AddFixed(string text, int width, bool borderRight = true) =>
+            status.AddFixed(CreateStatusCell(text, width, borderRight: borderRight), width);
+
+        status.AddMeasured(CreateStatusCell("{0}{0}", 102), _mDvdCounter.Measure);
+        status.AddMeasured(CreateStatusCell("[0][0]", 92), _mpl2Counter.Measure);
+        AddFixed("0:00:00.000", 96);
+        AddFixed("0:00:00.000", 96);
         fileStatus = CreateStatusCell(string.Empty, 0, spring: true);
         status.Items.Add(fileStatus);
         status.Items.Add(CreateStatusCell(string.Empty, 285));
-        status.Items.Add(CreateStatusCell("[0.0 GB]", 78));
-        status.Items.Add(CreateStatusCell(string.Empty, 68, borderRight: false));
+        AddFixed("[0.0 GB]", 78);
+        AddFixed(string.Empty, 68, borderRight: false);
         return status;
     }
 

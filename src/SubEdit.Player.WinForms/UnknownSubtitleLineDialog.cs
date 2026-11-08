@@ -8,67 +8,25 @@ internal enum UnknownSubtitleLineAction
     DeleteAll
 }
 
-internal sealed class UnknownSubtitleLineDialog : SubEditDialog
+internal sealed class UnknownSubtitleLineDialog : StandardDialog
 {
     private readonly Dictionary<UnknownSubtitleLineAction, RadioButton> _actionButtons;
     private readonly Bitmap _warningIcon = SystemIcons.Warning.ToBitmap();
 
-    public UnknownSubtitleLineDialog(bool allowTreatAsSubtitleText = false)
+    public UnknownSubtitleLineDialog(bool allowTreatAsSubtitleText = false) : base(540)
     {
         Text = "Błąd formatu w aktualnej linii";
-        ClientSize = new Size(540, 210);
-
-        var icon = new PictureBox
-        {
-            Image = _warningIcon,
-            Location = new Point(15, 15),
-            Size = new Size(32, 32),
-            SizeMode = PictureBoxSizeMode.AutoSize
-        };
-        var message = new Label
-        {
-            Text = "Program znalazł napis o nieznanym formacie!",
-            Location = new Point(65, 24),
-            AutoSize = true
-        };
-
+        Page.AddMessage("Program znalazł napis o nieznanym formacie!", _warningIcon);
+        var options = Page.AddSection("Dalsze działanie");
         _actionButtons = new()
         {
-            [UnknownSubtitleLineAction.Break] = AddOption(
-                "Przerwij, ustawiając kursor na nierozpoznanej linii napisu (zalecane)", 55),
-            [UnknownSubtitleLineAction.TreatAsSubtitleText] = AddOption(
-                "Kontynuuj, traktując nierozpoznane linie jako tekst napisu",
-                80,
-                enabled: allowTreatAsSubtitleText),
-            [UnknownSubtitleLineAction.IgnoreAll] = AddOption(
-                "Kontynuuj, IGNORUJĄC wszystkie nierozpoznane linie", 105),
-            [UnknownSubtitleLineAction.DeleteAll] = AddOption(
-                "Kontynuuj, USUWAJĄC wszystkie nierozpoznane linie", 130)
+            [UnknownSubtitleLineAction.Break] = options.AddRadioOption("Przerwij, ustawiając kursor na nierozpoznanej linii napisu (zalecane)", isChecked: true),
+            [UnknownSubtitleLineAction.TreatAsSubtitleText] = options.AddRadioOption("Kontynuuj, traktując nierozpoznane linie jako tekst napisu"),
+            [UnknownSubtitleLineAction.IgnoreAll] = options.AddRadioOption("Kontynuuj, IGNORUJĄC wszystkie nierozpoznane linie"),
+            [UnknownSubtitleLineAction.DeleteAll] = options.AddRadioOption("Kontynuuj, USUWAJĄC wszystkie nierozpoznane linie")
         };
-        _actionButtons[UnknownSubtitleLineAction.Break].Checked = true;
-
-        var ok = new Button
-        {
-            Text = "OK",
-            DialogResult = DialogResult.OK,
-            Location = new Point(190, 169),
-            Size = new Size(75, 25)
-        };
-        var cancel = new Button
-        {
-            Text = "Anuluj",
-            DialogResult = DialogResult.Cancel,
-            Location = new Point(271, 169),
-            Size = new Size(75, 25)
-        };
-
-        Controls.Add(icon);
-        Controls.Add(message);
-        Controls.AddRange(_actionButtons.Values.ToArray());
-        Controls.Add(ok);
-        Controls.Add(cancel);
-        AcceptButton = ok;
-        CancelButton = cancel;
+        _actionButtons[UnknownSubtitleLineAction.TreatAsSubtitleText].Enabled = allowTreatAsSubtitleText;
+        ConfigureActions();
     }
 
     public UnknownSubtitleLineAction SelectedAction =>
@@ -84,11 +42,4 @@ internal sealed class UnknownSubtitleLineDialog : SubEditDialog
         base.Dispose(disposing);
     }
 
-    private static RadioButton AddOption(string text, int top, bool enabled = true) => new()
-    {
-        Text = text,
-        Location = new Point(65, top),
-        AutoSize = true,
-        Enabled = enabled
-    };
 }

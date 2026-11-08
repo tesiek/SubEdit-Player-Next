@@ -5,9 +5,9 @@ internal static class OsdAppearanceRenderer
     public const int HorizontalPadding = 10;
     public const int VerticalPadding = 4;
 
-    public static int GetAlpha(int opacityPercent) =>
+    public static int GetAlpha(int transparencyPercent) =>
         (int)Math.Round(
-            Math.Clamp(opacityPercent, 0, 100) * 255m / 100m,
+            (100 - Math.Clamp(transparencyPercent, 0, 100)) * 255m / 100m,
             MidpointRounding.AwayFromZero);
 
     public static void DrawBackground(
@@ -15,11 +15,11 @@ internal static class OsdAppearanceRenderer
         Rectangle bounds,
         Color borderColor,
         Color backgroundColor,
-        int opacityPercent,
+        int transparencyPercent,
         int requestedBorderThickness)
     {
-        var alpha = GetAlpha(opacityPercent);
-        using var border = new SolidBrush(Color.FromArgb(alpha, borderColor));
+        var alpha = GetAlpha(transparencyPercent);
+        using var border = new SolidBrush(borderColor);
         using var background = new SolidBrush(Color.FromArgb(alpha, backgroundColor));
         DrawBackground(graphics, bounds, border, background, requestedBorderThickness);
     }
@@ -40,12 +40,17 @@ internal static class OsdAppearanceRenderer
             return;
         }
 
-        graphics.FillRectangle(border, bounds);
+        // Paint disjoint regions so translucent backgrounds never blend with the border.
+        graphics.FillRectangle(border, bounds.X, bounds.Y, bounds.Width, borderThickness);
+        graphics.FillRectangle(border, bounds.X, bounds.Bottom - borderThickness, bounds.Width, borderThickness);
+        var innerHeight = bounds.Height - (2 * borderThickness);
+        graphics.FillRectangle(border, bounds.X, bounds.Y + borderThickness, borderThickness, innerHeight);
+        graphics.FillRectangle(border, bounds.Right - borderThickness, bounds.Y + borderThickness, borderThickness, innerHeight);
         graphics.FillRectangle(
             background,
             bounds.X + borderThickness,
             bounds.Y + borderThickness,
-            Math.Max(1, bounds.Width - (2 * borderThickness)),
-            Math.Max(1, bounds.Height - (2 * borderThickness)));
+            bounds.Width - (2 * borderThickness),
+            innerHeight);
     }
 }

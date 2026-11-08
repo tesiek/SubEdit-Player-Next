@@ -9,7 +9,7 @@ internal enum SubtitleTimeShiftScope
     ToCurrentLine
 }
 
-internal sealed class SubtitleTimeShiftDialog : SubEditDialog
+internal sealed class SubtitleTimeShiftDialog : StandardDialog
 {
     private readonly double _framesPerSecond;
     private readonly CheckBox _shiftStart;
@@ -22,129 +22,28 @@ internal sealed class SubtitleTimeShiftDialog : SubEditDialog
     private readonly RadioButton _toCurrentLineScope;
     private bool _updatingValues;
 
-    public SubtitleTimeShiftDialog(double framesPerSecond, double? measuredDelaySeconds = null)
+    public SubtitleTimeShiftDialog(double framesPerSecond, double? measuredDelaySeconds = null) : base(370)
     {
-        _framesPerSecond = Math.Max(1d, framesPerSecond);
-        Text = "Przesuń czas napisów";
-        var measuredDelay = measuredDelaySeconds.GetValueOrDefault();
-        var showMeasuredDelay = measuredDelaySeconds.HasValue && measuredDelay != 0d;
-        var contentOffset = showMeasuredDelay ? 56 : 0;
-        Label? measuredDelayLabel = null;
-        ClientSize = new Size(340, 330 + contentOffset);
-
-        if (showMeasuredDelay)
+        _framesPerSecond = Math.Max(1d, framesPerSecond); Text = "Przesuń czas napisów";
+        _seconds = Input("0.0"); _frames = Input("0", 13);
+        if (measuredDelaySeconds.HasValue && measuredDelaySeconds.Value != 0d)
         {
-            var measuredDelayGroup = new GroupBox
-            {
-                Text = "Opóźnienie napisu względem dźwięku wynosi",
-                Location = new Point(15, 10),
-                Size = new Size(310, 46)
-            };
-            measuredDelayLabel = new Label
-            {
-                Text = measuredDelay.ToString("0.########", CultureInfo.CurrentCulture),
-                Cursor = Cursors.Hand,
-                TextAlign = ContentAlignment.MiddleCenter,
-                Location = new Point(15, 17),
-                Size = new Size(280, 24)
-            };
-            measuredDelayGroup.Controls.Add(measuredDelayLabel);
-            Controls.Add(measuredDelayGroup);
+            var measured = new LinkLabel { Text = measuredDelaySeconds.Value.ToString("0.########", CultureInfo.CurrentCulture), AutoSize = true };
+            Page.AddSection("Opóźnienie napisu względem dźwięku wynosi").AddAdaptiveRow().AddControl(measured);
+            measured.LinkClicked += (_, _) => _seconds.Text = measured.Text;
         }
-
-        var rangeGroup = new GroupBox
-        {
-            Text = "Zakres",
-            Location = new Point(15, 10 + contentOffset),
-            Size = new Size(310, 81)
-        };
-        _shiftStart = AddCheckBox(rangeGroup, "Zmieniaj czas/klatki st&artowe", 15, 23, isChecked: true);
-        _shiftEnd = AddCheckBox(rangeGroup, "Zmieniaj czas/klatki k&ońcowe", 15, 47, isChecked: true);
-
-        var shiftGroup = new GroupBox
-        {
-            Text = "Przesunięcie",
-            Location = new Point(15, 100 + contentOffset),
-            Size = new Size(310, 107)
-        };
-        shiftGroup.Controls.Add(new Label
-        {
-            Text = "&Sekund:",
-            TextAlign = ContentAlignment.MiddleRight,
-            Location = new Point(8, 25),
-            Size = new Size(58, 23)
-        });
-        shiftGroup.Controls.Add(new Label
-        {
-            Text = "&Klatek:",
-            TextAlign = ContentAlignment.MiddleRight,
-            Location = new Point(8, 55),
-            Size = new Size(58, 23)
-        });
-        _seconds = new TextBox
-        {
-            Text = "0.0",
-            Location = new Point(70, 25),
-            Size = new Size(125, 23),
-            MaxLength = 10
-        };
-        if (measuredDelayLabel is not null)
-        {
-            measuredDelayLabel.Click += (_, _) => _seconds.Text = measuredDelayLabel.Text;
-        }
-        _frames = new TextBox
-        {
-            Text = "0",
-            Location = new Point(70, 55),
-            Size = new Size(125, 23),
-            MaxLength = 13
-        };
-        _backwards = new CheckBox
-        {
-            Text = "&Wstecz",
-            Location = new Point(205, 81),
-            AutoSize = true
-        };
+        var range = Page.AddSection("Zakres");
+        _shiftStart = range.AddCheckBox("Zmieniaj czas/klatki st&artowe", true);
+        _shiftEnd = range.AddCheckBox("Zmieniaj czas/klatki k&ońcowe", true);
+        var shift = Page.AddSection("Przesunięcie");
+        shift.AddField("&Sekund:", _seconds); shift.AddField("&Klatek:", _frames);
+        _backwards = shift.AddCheckBox("&Wstecz");
         _seconds.TextChanged += (_, _) => UpdateFramesFromSeconds();
         _frames.TextChanged += (_, _) => UpdateSecondsFromFrames();
         _backwards.CheckedChanged += (_, _) => ApplyDirection();
-        shiftGroup.Controls.AddRange([_seconds, _frames, _backwards]);
-
-        var scopeGroup = new GroupBox
-        {
-            Text = "Obszar zmian napisów",
-            ForeColor = Color.Blue,
-            Location = new Point(15, 215 + contentOffset),
-            Size = new Size(310, 79)
-        };
-        _selectionScope = AddScopeOption(scopeGroup, "Według zaznaczenia", 16);
-        _fromCurrentLineScope = AddScopeOption(scopeGroup, "Od aktualnej linii", 36);
-        _toCurrentLineScope = AddScopeOption(scopeGroup, "Do aktualnej linii", 56);
-        _selectionScope.Checked = true;
-
-        var ok = new Button
-        {
-            Text = "OK",
-            Location = new Point(92, 302 + contentOffset),
-            Size = new Size(75, 25)
-        };
-        ok.Click += (_, _) => AcceptOptions();
-        var cancel = new Button
-        {
-            Text = "Anuluj",
-            DialogResult = DialogResult.Cancel,
-            Location = new Point(173, 302 + contentOffset),
-            Size = new Size(75, 25)
-        };
-
-        Controls.AddRange([rangeGroup, shiftGroup, scopeGroup, ok, cancel]);
-        AcceptButton = ok;
-        CancelButton = cancel;
-        Shown += (_, _) =>
-        {
-            _seconds.Focus();
-            _seconds.SelectAll();
-        };
+        (_selectionScope, _fromCurrentLineScope, _toCurrentLineScope) = AddScope();
+        ConfigureActions(AcceptOptions);
+        Shown += (_, _) => { _seconds.Focus(); _seconds.SelectAll(); };
     }
 
     public double ShiftSeconds => TryParseNumber(_seconds.Text, out var seconds) ? seconds : 0d;
@@ -159,32 +58,6 @@ internal sealed class SubtitleTimeShiftDialog : SubEditDialog
             : _toCurrentLineScope.Checked
                 ? SubtitleTimeShiftScope.ToCurrentLine
                 : SubtitleTimeShiftScope.Selection;
-
-    private static CheckBox AddCheckBox(Control parent, string text, int left, int top, bool isChecked)
-    {
-        var checkBox = new CheckBox
-        {
-            Text = text,
-            Location = new Point(left, top),
-            AutoSize = true,
-            Checked = isChecked
-        };
-        parent.Controls.Add(checkBox);
-        return checkBox;
-    }
-
-    private static RadioButton AddScopeOption(Control parent, string text, int top)
-    {
-        var radioButton = new RadioButton
-        {
-            Text = text,
-            ForeColor = SystemColors.ControlText,
-            Location = new Point(8, top),
-            AutoSize = true
-        };
-        parent.Controls.Add(radioButton);
-        return radioButton;
-    }
 
     private void UpdateFramesFromSeconds()
     {

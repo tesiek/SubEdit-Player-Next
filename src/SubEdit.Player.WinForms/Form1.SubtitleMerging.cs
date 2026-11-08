@@ -43,9 +43,14 @@ public partial class Form1
             return;
         }
 
+        MergeSubtitleFile(dialog.FileName, positionMilliseconds);
+    }
+
+    private void MergeSubtitleFile(string importedPath, long positionMilliseconds)
+    {
         if (!string.IsNullOrWhiteSpace(_currentSubtitlePath) &&
             string.Equals(
-                Path.GetFullPath(dialog.FileName),
+                Path.GetFullPath(importedPath),
                 Path.GetFullPath(_currentSubtitlePath),
                 StringComparison.OrdinalIgnoreCase))
         {
@@ -61,7 +66,7 @@ public partial class Form1
         SubtitleFileContent importedFile;
         try
         {
-            importedFile = SubtitleFileReader.Read(dialog.FileName);
+            importedFile = SubtitleFileReader.Read(importedPath);
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or DecoderFallbackException)
         {
@@ -110,7 +115,23 @@ public partial class Form1
             return;
         }
 
+        if (activeFormat == SubtitleLogicalFormat.Srt)
+        {
+            SrtCueBlocks.Parse(activeText, out var invalidActiveLine);
+            if (invalidActiveLine is int activeLine)
+            {
+                ShowSrtOperationCancelled(activeLine);
+                return;
+            }
+        }
+
         var parseResult = SubtitleMergeProcessor.ParseForMerge(importedFile.Text, importedFormat.Value);
+        if (parseResult.InvalidSrtLine is int importedLine)
+        {
+            ShowSrtOperationCancelled(importedLine, imported: true);
+            return;
+        }
+
         if (parseResult.Cues.Count == 0)
         {
             MessageBox.Show(
@@ -146,6 +167,12 @@ public partial class Form1
             positionMilliseconds,
             scale,
             framesPerSecond);
+
+        if (mergeResult.InvalidSrtLine is int invalidLine)
+        {
+            ShowSrtOperationCancelled(invalidLine, mergeResult.IsImportedSrtError);
+            return;
+        }
 
         var viewState = _subtitleEditor.CaptureViewState();
         _subtitleEditor.ApplyFullDocumentEdit(mergeResult.MergedText, viewState);

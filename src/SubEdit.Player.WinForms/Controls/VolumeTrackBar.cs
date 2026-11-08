@@ -10,7 +10,7 @@ internal sealed class VolumeTrackBar : Control
     private int _minimum, _value;
     private int _maximum = 100;
     private int _smallChange = 5, _largeChange = 5;
-    private bool _dragging, _hot;
+    private bool _dragging;
 
     public VolumeTrackBar()
     {
@@ -105,7 +105,6 @@ internal sealed class VolumeTrackBar : Control
         {
             // Existing behavior: an unchanged click still displays the volume OSD.
             Scroll?.Invoke(this, EventArgs.Empty);
-            Invalidate(); // pressed-state change, not an unchanged Value repaint
         }
     }
 
@@ -121,29 +120,12 @@ internal sealed class VolumeTrackBar : Control
         SetValueFromX(e.X);
         _dragging = false;
         Capture = false;
-        Invalidate();
     }
 
     protected override void OnMouseCaptureChanged(EventArgs e)
     {
-        if (!Capture && _dragging)
-        {
-            _dragging = false;
-            Invalidate();
-        }
+        if (!Capture && _dragging) _dragging = false;
         base.OnMouseCaptureChanged(e);
-    }
-
-    protected override void OnMouseEnter(EventArgs e)
-    {
-        if (!_hot) { _hot = true; Invalidate(); }
-        base.OnMouseEnter(e);
-    }
-
-    protected override void OnMouseLeave(EventArgs e)
-    {
-        if (_hot) { _hot = false; Invalidate(); }
-        base.OnMouseLeave(e);
     }
 
     protected override void OnEnabledChanged(EventArgs e)
@@ -151,7 +133,6 @@ internal sealed class VolumeTrackBar : Control
         if (!Enabled)
         {
             _dragging = false;
-            _hot = false;
             if (Capture) Capture = false;
         }
         base.OnEnabledChanged(e);
@@ -190,15 +171,33 @@ internal sealed class VolumeTrackBar : Control
         e.Graphics.Clear(background);
         var geometry = Geometry(ClientSize, DeviceDpi, _minimum, _maximum, _value);
         if (geometry.Thumb.IsEmpty) return;
-        using var trackFill = new SolidBrush(Enabled ? Color.FromArgb(244, 244, 244) : SystemColors.ControlLight);
-        using var trackBorder = new Pen(Enabled ? Color.FromArgb(145, 145, 145) : SystemColors.GrayText);
-        using var thumbFill = new SolidBrush(!Enabled ? SystemColors.ControlLight :
-            _dragging ? Color.FromArgb(210, 210, 210) : _hot ? Color.FromArgb(246, 246, 246) : Color.FromArgb(238, 238, 238));
-        using var thumbBorder = new Pen(Enabled ? Color.FromArgb(90, 90, 90) : SystemColors.GrayText);
-        e.Graphics.FillRectangle(trackFill, geometry.Track);
-        DrawBorder(e.Graphics, trackBorder, geometry.Track);
-        e.Graphics.FillRectangle(thumbFill, geometry.Thumb);
-        DrawBorder(e.Graphics, thumbBorder, geometry.Thumb);
+        var track = geometry.Track;
+        var trackHeight = PlaybackSliderStyle.TrackHeight(DeviceDpi);
+        track.Y = Math.Max(0, (ClientSize.Height - trackHeight) / 2);
+        track.Height = Math.Min(trackHeight + 1, ClientSize.Height - track.Y);
+
+        // Match the SeekBar's inclusive border while keeping the existing right edge
+        // used to align the volume group. This expansion affects painting only.
+        var thumb = geometry.Thumb;
+        var thumbLeft = Math.Max(0, thumb.Left - 1);
+        thumb.Width = thumb.Right - thumbLeft;
+        thumb.X = thumbLeft;
+        thumb.Height = Math.Min(thumb.Height + 1, ClientSize.Height - thumb.Y);
+
+        using var trackFill = new SolidBrush(Enabled ? PlaybackSliderStyle.TrackFill : SystemColors.ControlLight);
+        using var trackBorder = new Pen(Enabled ? PlaybackSliderStyle.TrackBorder : SystemColors.GrayText);
+        using var thumbFill = new SolidBrush(Enabled ? PlaybackSliderStyle.ThumbFill : SystemColors.ControlLight);
+        using var thumbBorder = new Pen(Enabled ? PlaybackSliderStyle.ThumbBorder : SystemColors.GrayText);
+        e.Graphics.FillRectangle(trackFill, track);
+        var filledWidth = Math.Min(thumb.Left + thumb.Width / 2 - track.Left, track.Width - 2);
+        if (Enabled && filledWidth > 0 && track.Height > 2)
+        {
+            using var progress = new SolidBrush(PlaybackSliderStyle.VolumeProgress);
+            e.Graphics.FillRectangle(progress, track.Left + 1, track.Top + 1, filledWidth, track.Height - 2);
+        }
+        DrawBorder(e.Graphics, trackBorder, track);
+        e.Graphics.FillRectangle(thumbFill, thumb);
+        DrawBorder(e.Graphics, thumbBorder, thumb);
         base.OnPaint(e);
     }
 
@@ -210,18 +209,18 @@ internal sealed class VolumeTrackBar : Control
     internal static SliderGeometry Geometry(Size size, int dpi, int minimum, int maximum, int value)
     {
         if (size.Width <= 0 || size.Height <= 0) return default;
-        int Scale(int logical) => Math.Max(1, (int)Math.Round(logical * Math.Max(1, dpi) / 96d));
-        var thumbWidth = Math.Min(size.Width, Scale(8));
-        var thumbHeight = Math.Min(size.Height, Scale(14));
+        var thumbWidth = Math.Min(size.Width, PlaybackSliderStyle.ThumbWidth(dpi));
+        var thumbHeight = Math.Min(size.Height, PlaybackSliderStyle.ThumbHeight(dpi));
         var leftHalf = thumbWidth / 2;
         var maximumCenter = size.Width - (thumbWidth - leftHalf);
         // Preserve the 5px end-center inset at 100%, scaling it with the painted thumb.
-        var start = Math.Clamp(Scale(5), leftHalf, maximumCenter);
-        var end = Math.Clamp(size.Width - Scale(5), start, maximumCenter);
+        var inset = PlaybackSliderStyle.Scale(5, dpi);
+        var start = Math.Clamp(inset, leftHalf, maximumCenter);
+        var end = Math.Clamp(size.Width - inset, start, maximumCenter);
         var range = (long)maximum - minimum;
         var fraction = range == 0 ? 0 : Math.Clamp((value - (double)minimum) / range, 0, 1);
         var center = start + (int)Math.Round(fraction * (end - start));
-        var trackHeight = Math.Min(size.Height, Scale(5));
+        var trackHeight = Math.Min(size.Height, inset);
         return new(new Rectangle(start, (size.Height - trackHeight) / 2, Math.Max(1, end - start + 1), trackHeight),
             new Rectangle(center - leftHalf, (size.Height - thumbHeight) / 2, thumbWidth, thumbHeight), start, end);
     }

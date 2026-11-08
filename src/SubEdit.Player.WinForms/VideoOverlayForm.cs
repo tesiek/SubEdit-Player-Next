@@ -21,6 +21,7 @@ internal sealed class VideoOverlayForm : Form
     private static readonly IntPtr HtTransparent = new(-1);
     private const byte AcSrcOver = 0;
     private const byte AcSrcAlpha = 1;
+    private int _successfulUploads;
     private string _osdText = string.Empty;
     private string _playbackText = string.Empty;
     private string _volumeText = string.Empty;
@@ -36,7 +37,7 @@ internal sealed class VideoOverlayForm : Form
     private int _minimumSubtitleFontSize = 8;
     private Color _subtitleTextColor = Color.White;
     private Color _subtitleBackgroundColor = Color.Black;
-    private int _subtitleBackgroundOpacityPercent;
+    private int _subtitleBackgroundTransparencyPercent = 25;
     private Color _subtitleOutlineColor = Color.Black;
     private int _subtitleOutlineThickness;
     private SubtitleAlignment _subtitleAlignment = SubtitleAlignment.BottomCenter;
@@ -50,7 +51,7 @@ internal sealed class VideoOverlayForm : Form
     private int _osdFontSize = 14;
     private Color _osdTextColor = Color.Gainsboro;
     private Color _osdBackgroundColor = Color.FromArgb(24, 30, 36);
-    private int _osdBackgroundOpacityPercent = 50;
+    private int _osdBackgroundTransparencyPercent = 50;
     private Color _osdBorderColor = Color.FromArgb(36, 42, 46);
     private int _osdBorderThickness = 1;
 
@@ -61,12 +62,33 @@ internal sealed class VideoOverlayForm : Form
         StartPosition = FormStartPosition.Manual;
     }
 
+    public void SetVolumeOsd(string text)
+    {
+        if (_playbackText == string.Empty && _volumeText == text)
+        {
+            return;
+        }
+
+        _playbackText = string.Empty;
+        _volumeText = text;
+        RenderLayered();
+    }
+
     [Browsable(false)]
     [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
     public string OsdText
     {
         get => _osdText;
-        set { _osdText = value; RenderLayered(); }
+        set
+        {
+            if (_osdText == value)
+            {
+                return;
+            }
+
+            _osdText = value;
+            RenderLayered();
+        }
     }
 
     [Browsable(false)]
@@ -141,18 +163,18 @@ internal sealed class VideoOverlayForm : Form
 
     [Browsable(false)]
     [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-    public int OsdBackgroundOpacityPercent
+    public int OsdBackgroundTransparencyPercent
     {
-        get => _osdBackgroundOpacityPercent;
+        get => _osdBackgroundTransparencyPercent;
         set
         {
             var normalized = Math.Clamp(value, 0, 100);
-            if (_osdBackgroundOpacityPercent == normalized)
+            if (_osdBackgroundTransparencyPercent == normalized)
             {
                 return;
             }
 
-            _osdBackgroundOpacityPercent = normalized;
+            _osdBackgroundTransparencyPercent = normalized;
             RenderLayered();
         }
     }
@@ -346,18 +368,18 @@ internal sealed class VideoOverlayForm : Form
 
     [Browsable(false)]
     [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-    public int SubtitleBackgroundOpacityPercent
+    public int SubtitleBackgroundTransparencyPercent
     {
-        get => _subtitleBackgroundOpacityPercent;
+        get => _subtitleBackgroundTransparencyPercent;
         set
         {
             var normalized = Math.Clamp(value, 0, 100);
-            if (_subtitleBackgroundOpacityPercent == normalized)
+            if (_subtitleBackgroundTransparencyPercent == normalized)
             {
                 return;
             }
 
-            _subtitleBackgroundOpacityPercent = normalized;
+            _subtitleBackgroundTransparencyPercent = normalized;
             RenderLayered();
         }
     }
@@ -572,10 +594,26 @@ internal sealed class VideoOverlayForm : Form
         base.WndProc(ref m);
     }
 
-    protected override void OnShown(EventArgs e)
+    [DllImport("user32.dll")]
+    private static extern uint GetDpiForWindow(IntPtr hwnd);
+
+    protected override void OnDpiChanged(DpiChangedEventArgs e)
     {
-        base.OnShown(e);
+        base.OnDpiChanged(e);
         RenderLayered();
+    }
+
+    internal void ShowForVideo(Form owner, Rectangle bounds)
+    {
+        Bounds = bounds;
+        var previousUploads = _successfulUploads;
+        Show(owner);
+        if (_successfulUploads == previousUploads)
+        {
+            RenderLayered();
+        }
+
+        BringToFrontWithoutActivation();
     }
 
     protected override void OnResize(EventArgs e)
@@ -601,6 +639,7 @@ internal sealed class VideoOverlayForm : Form
         }
 
         using var bitmap = new Bitmap(ClientSize.Width, ClientSize.Height, PixelFormat.Format32bppArgb);
+        bitmap.SetResolution(GetDpiForWindow(Handle), GetDpiForWindow(Handle));
         using (var graphics = Graphics.FromImage(bitmap))
         {
             graphics.Clear(Color.Transparent);
@@ -641,7 +680,10 @@ internal sealed class VideoOverlayForm : Form
             var source = Point.Empty;
             var location = Location;
             var blend = new BlendFunction(AcSrcOver, 0, 255, AcSrcAlpha);
-            UpdateLayeredWindow(Handle, screenDc, ref location, ref size, memoryDc, ref source, 0, ref blend, UlwAlpha);
+            if (UpdateLayeredWindow(Handle, screenDc, ref location, ref size, memoryDc, ref source, 0, ref blend, UlwAlpha))
+            {
+                _successfulUploads++;
+            }
         }
         finally
         {
@@ -670,16 +712,16 @@ internal sealed class VideoOverlayForm : Form
     private void DrawOverlay(Graphics graphics)
     {
         graphics.TextRenderingHint = TextRenderingHint.AntiAliasGridFit;
-        using var osdFont = new Font("Segoe UI", _osdFontSize, FontStyle.Regular);
+        using var osdFont = new Font("Segoe UI", _osdFontSize * graphics.DpiY / 72f, FontStyle.Regular, GraphicsUnit.Pixel);
         using var textFormat = (StringFormat)StringFormat.GenericTypographic.Clone();
         textFormat.FormatFlags |= StringFormatFlags.MeasureTrailingSpaces | StringFormatFlags.NoWrap;
-        var backgroundAlpha = OsdAppearanceRenderer.GetAlpha(_osdBackgroundOpacityPercent);
+        var backgroundAlpha = OsdAppearanceRenderer.GetAlpha(_osdBackgroundTransparencyPercent);
         using var background = new SolidBrush(Color.FromArgb(backgroundAlpha, _osdBackgroundColor));
-        using var border = new SolidBrush(Color.FromArgb(backgroundAlpha, _osdBorderColor));
+        using var border = new SolidBrush(_osdBorderColor);
         using var foreground = new SolidBrush(Color.FromArgb(255, _osdTextColor));
         if (!string.IsNullOrEmpty(_osdText))
         {
-            var layoutSize = TextRenderer.MeasureText(_osdText, osdFont);
+            var layoutSize = TextRenderer.MeasureText(graphics, _osdText, osdFont);
             var textWidth = MeasureOverlayTextWidth(graphics, _osdText, osdFont, textFormat);
             var timeBounds = new Rectangle(
                 OsdOuterMargin,
@@ -705,7 +747,7 @@ internal sealed class VideoOverlayForm : Form
         var rightTop = OsdOuterMargin;
         if (!string.IsNullOrEmpty(_playbackText))
         {
-            var playbackLayoutSize = TextRenderer.MeasureText(_playbackText, osdFont);
+            var playbackLayoutSize = TextRenderer.MeasureText(graphics, _playbackText, osdFont);
             var playbackTextWidth = MeasureOverlayTextWidth(graphics, _playbackText, osdFont, textFormat);
             var playbackBounds = new Rectangle(
                 ClientSize.Width - OsdOuterMargin - playbackTextWidth - (2 * OsdAppearanceRenderer.HorizontalPadding),
@@ -731,7 +773,7 @@ internal sealed class VideoOverlayForm : Form
 
         if (!string.IsNullOrEmpty(_volumeText))
         {
-            var volumeLayoutSize = TextRenderer.MeasureText(_volumeText, osdFont);
+            var volumeLayoutSize = TextRenderer.MeasureText(graphics, _volumeText, osdFont);
             var volumeTextWidth = MeasureOverlayTextWidth(graphics, _volumeText, osdFont, textFormat);
             var volumeBounds = new Rectangle(
                 ClientSize.Width - OsdOuterMargin - volumeTextWidth - (2 * OsdAppearanceRenderer.HorizontalPadding),
@@ -845,12 +887,12 @@ internal sealed class VideoOverlayForm : Form
             currentY += lineEffectiveHeights[lineIndex] + lineSpacing;
         }
 
-        var backgroundOpacityPercent = _transparentSubtitles ? 0 : _subtitleBackgroundOpacityPercent;
-        if (backgroundOpacityPercent > 0)
+        var backgroundTransparencyPercent = _transparentSubtitles ? 100 : _subtitleBackgroundTransparencyPercent;
+        if (backgroundTransparencyPercent < 100)
         {
             var horizontalPadding = Math.Max(4f, fontSize * 0.14f);
             var verticalPadding = Math.Max(2f, fontSize * 0.07f);
-            var alpha = (int)Math.Round(backgroundOpacityPercent * 255d / 100d, MidpointRounding.AwayFromZero);
+            var alpha = OsdAppearanceRenderer.GetAlpha(backgroundTransparencyPercent);
             using var background = new SolidBrush(Color.FromArgb(alpha, _subtitleBackgroundColor));
             using var backgroundPath = new GraphicsPath(FillMode.Winding);
             for (var lineIndex = 0; lineIndex < lines.Count; lineIndex++)

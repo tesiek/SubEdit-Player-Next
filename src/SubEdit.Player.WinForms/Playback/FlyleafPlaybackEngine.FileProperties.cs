@@ -114,8 +114,24 @@ internal sealed partial class FlyleafPlaybackEngine
                 _ => null
             }, MediaCodecDisplay.VideoLevel(stream.Codec, cp->level), dar.Item1, dar.Item2,
             fps.Num > 0 && fps.Den > 0 ? fps.Num : null,
-            fps.Num > 0 && fps.Den > 0 ? fps.Den : null);
+            fps.Num > 0 && fps.Den > 0 ? fps.Den : null)
+        {
+            AviCodecId = GetAviCodecId(stream.Demuxer.Name, ReadVideoFourCc(stream))
+        };
     }
+
+    private static unsafe string ReadVideoFourCc(VideoStream stream)
+    {
+        var st = stream.AVStream;
+        return st != null && st->codecpar != null
+            ? MediaInspector.GetFourCc(st->codecpar->codec_tag)
+            : string.Empty;
+    }
+
+    internal static string? GetAviCodecId(string? demuxerName, string fourCc)
+        => string.Equals(demuxerName, "avi", StringComparison.OrdinalIgnoreCase) && fourCc.Length > 0
+            ? fourCc
+            : null;
 
     internal static (long? Numerator, long? Denominator) GetSourceDisplayAspectRatio(
         int width, int height, AVRational streamSar, AVRational codecSar, ReadOnlySpan<byte> crop)

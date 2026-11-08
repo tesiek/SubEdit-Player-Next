@@ -20,13 +20,20 @@ internal readonly record struct SubtitleMergeParsedCue(
 internal readonly record struct SubtitleMergeParseResult(
     SubtitleLogicalFormat Format,
     IReadOnlyList<SubtitleMergeParsedCue> Cues,
-    IReadOnlyList<string> DisplayItems);
+    IReadOnlyList<string> DisplayItems)
+{
+    public int? InvalidSrtLine { get; init; }
+}
 
 internal readonly record struct SubtitleMergeResult(
     string MergedText,
-    int ImportedCueCount);
+    int ImportedCueCount)
+{
+    public int? InvalidSrtLine { get; init; }
+    public bool IsImportedSrtError { get; init; }
+}
 
-internal static partial class SubtitleMergeProcessor
+internal static class SubtitleMergeProcessor
 {
     private static readonly Regex MicroDvdPattern = new(
         @"^\{(?<start>-?\d+)}\{(?<end>-?\d*)}(?<text>.*)$",
@@ -39,9 +46,6 @@ internal static partial class SubtitleMergeProcessor
     private static readonly Regex TmPlayerPattern = new(
         @"^(?<before>\s*)(?<hours>[+-]?\d{1,}):(?<minutes>[+-]?\d{1,2}):(?<seconds>[+-]?\d{1,2})(?:,\d+)?(?<separator>[:=])(?<text>.*)$",
         RegexOptions.Compiled);
-
-    [GeneratedRegex(@"^(?<before>\s*)(?<start>[+-]?\d{1,}:\d{2}:\d{2}[,.]\d{1,3})(?<arrow>\s*-->\s*)(?<end>[+-]?\d{1,}:\d{2}:\d{2}[,.]\d{1,3})(?<after>.*)$")]
-    private static partial Regex SrtTimingPattern();
 
     public static SubtitleLogicalFormat? DetectLogicalFormat(string text)
     {
@@ -104,8 +108,12 @@ internal static partial class SubtitleMergeProcessor
 
     private static SubtitleMergeParseResult ParseSrtForMerge(string text)
     {
-        var lines = text.Replace("\r\n", "\n", StringComparison.Ordinal).Replace('\r', '\n').Split('\n');
-        var rawCues = ParseSrtCues(lines);
+        var rawCues = SrtCueBlocks.Parse(text, out var invalidLine);
+        if (invalidLine.HasValue)
+        {
+            return new SubtitleMergeParseResult(SubtitleLogicalFormat.Srt, [], []) { InvalidSrtLine = invalidLine };
+        }
+
         var cues = new List<SubtitleMergeParsedCue>(rawCues.Count);
         var displayItems = new List<string>(rawCues.Count);
 
@@ -113,7 +121,7 @@ internal static partial class SubtitleMergeProcessor
         {
             var cue = rawCues[index];
             var joinedText = string.Join(" | ", cue.TextLines.Select(l => l.Trim()));
-            var display = $"[{FormatSrtTimestamp(cue.StartMilliseconds, ',')}] {joinedText}";
+            var display = $"[{SubtitleTimingFormatter.FormatSrtTimestamp(cue.StartMilliseconds, ',')}] {joinedText}";
             cues.Add(new SubtitleMergeParsedCue(index, cue.StartMilliseconds, cue.EndMilliseconds, display));
             displayItems.Add(display);
         }
@@ -129,11 +137,17 @@ internal static partial class SubtitleMergeProcessor
         double? scale,
         string? customLineBreak = null)
     {
-        var activeLines = activeText.Replace("\r\n", "\n", StringComparison.Ordinal).Replace('\r', '\n').Split('\n');
-        var importedLines = importedText.Replace("\r\n", "\n", StringComparison.Ordinal).Replace('\r', '\n').Split('\n');
+        var activeCues = SrtCueBlocks.Parse(activeText, out var activeError);
+        if (activeError.HasValue)
+        {
+            return new SubtitleMergeResult(activeText, 0) { InvalidSrtLine = activeError };
+        }
 
-        var activeCues = ParseSrtCues(activeLines);
-        var importedCues = ParseSrtCues(importedLines);
+        var importedCues = SrtCueBlocks.Parse(importedText, out var importedError);
+        if (importedError.HasValue)
+        {
+            return new SubtitleMergeResult(activeText, 0) { InvalidSrtLine = importedError, IsImportedSrtError = true };
+        }
 
         if (importedCues.Count == 0 || selectedCueIndex < 0 || selectedCueIndex >= importedCues.Count)
         {
@@ -185,7 +199,7 @@ internal static partial class SubtitleMergeProcessor
             var cue = importedCues[index];
             var finalStart = scaledStarts[index] + delta;
             var finalEnd = scaledEnds[index] + delta;
-            var shiftedTimingLine = ReplaceSrtTiming(cue.TimingLine, finalStart, finalEnd);
+            var shiftedTimingLine = SrtCueBlocks.ReplaceTiming(cue.TimingLine, finalStart, finalEnd);
 
             var blockLines = new List<string>(cue.TextLines.Length + 2)
             {
@@ -199,83 +213,6 @@ internal static partial class SubtitleMergeProcessor
         var merged = string.Join(blockSeparator, allBlocks);
         return new SubtitleMergeResult(merged, importedCues.Count);
     }
-
-    private static List<SrtCueBlock> ParseSrtCues(IReadOnlyList<string> lines)
-    {
-        var cues = new List<SrtCueBlock>();
-        for (var index = 0; index < lines.Count;)
-        {
-            while (index < lines.Count && string.IsNullOrWhiteSpace(lines[index]))
-            {
-                index++;
-            }
-
-            if (index >= lines.Count)
-            {
-                break;
-            }
-
-            var timingIndex = index;
-            if (int.TryParse(lines[index].Trim(), NumberStyles.None, CultureInfo.InvariantCulture, out _) &&
-                index + 1 < lines.Count)
-            {
-                timingIndex++;
-            }
-
-            var timing = SrtTimingPattern().Match(lines[timingIndex]);
-            if (!timing.Success ||
-                !TryParseSrtTimestamp(timing.Groups["start"].Value, out var start) ||
-                !TryParseSrtTimestamp(timing.Groups["end"].Value, out var end))
-            {
-                while (index < lines.Count && !string.IsNullOrWhiteSpace(lines[index]))
-                {
-                    index++;
-                }
-                continue;
-            }
-
-            var textStartIndex = timingIndex + 1;
-            var textEndIndex = textStartIndex;
-            while (textEndIndex < lines.Count && !string.IsNullOrWhiteSpace(lines[textEndIndex]))
-            {
-                textEndIndex++;
-            }
-
-            var textLines = lines.Skip(textStartIndex).Take(textEndIndex - textStartIndex).ToArray();
-            cues.Add(new SrtCueBlock(start, end, lines[timingIndex], textLines));
-            index = textEndIndex;
-        }
-
-        return cues;
-    }
-
-    private static bool TryParseSrtTimestamp(string text, out long milliseconds) =>
-        SubtitleTimingFormatter.TryParseSrtTimestamp(text, out milliseconds);
-
-    private static string ReplaceSrtTiming(string timingLine, long startMilliseconds, long endMilliseconds)
-    {
-        var match = SrtTimingPattern().Match(timingLine);
-        if (!match.Success)
-        {
-            return timingLine;
-        }
-
-        var separator = match.Groups["start"].Value.Contains('.') ? '.' : ',';
-        return $"{match.Groups["before"].Value}" +
-            $"{FormatSrtTimestamp(startMilliseconds, separator)}" +
-            $"{match.Groups["arrow"].Value}" +
-            $"{FormatSrtTimestamp(endMilliseconds, separator)}" +
-            $"{match.Groups["after"].Value}";
-    }
-
-    private static string FormatSrtTimestamp(long milliseconds, char separator) =>
-        SubtitleTimingFormatter.FormatSrtTimestamp(milliseconds, separator);
-
-    private sealed record SrtCueBlock(
-        long StartMilliseconds,
-        long EndMilliseconds,
-        string TimingLine,
-        string[] TextLines);
 
     // ==========================================
     // MicroDVD

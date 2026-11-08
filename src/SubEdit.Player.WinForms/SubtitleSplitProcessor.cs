@@ -7,9 +7,12 @@ internal readonly record struct SubtitleSplitResult(
     string FirstPartText,
     string RemainderText,
     int FirstPartCueCount,
-    int RemainderCueCount);
+    int RemainderCueCount)
+{
+    public int? InvalidSrtLine { get; init; }
+}
 
-internal static partial class SubtitleSplitProcessor
+internal static class SubtitleSplitProcessor
 {
     private static readonly Regex MicroDvdPattern = new(
         @"^\{(?<start>-?\d+)}\{(?<end>-?\d*)}(?<text>.*)$",
@@ -23,9 +26,6 @@ internal static partial class SubtitleSplitProcessor
         @"^(?<before>\s*)(?<hours>[+-]?\d{1,}):(?<minutes>[+-]?\d{1,2}):(?<seconds>[+-]?\d{1,2})(?:,\d+)?(?<separator>[:=])(?<text>.*)$",
         RegexOptions.Compiled);
 
-    [GeneratedRegex(@"^(?<before>\s*)(?<start>[+-]?\d{1,}:\d{2}:\d{2}[,.]\d{1,3})(?<arrow>\s*-->\s*)(?<end>[+-]?\d{1,}:\d{2}:\d{2}[,.]\d{1,3})(?<after>.*)$")]
-    private static partial Regex SrtTimingPattern();
-
     public static bool CanSplit(string text, long durationMilliseconds, double framesPerSecond)
     {
         if (string.IsNullOrWhiteSpace(text) || durationMilliseconds <= 0)
@@ -35,9 +35,9 @@ internal static partial class SubtitleSplitProcessor
 
         if (SubtitleFormatConverter.IsSrtDocument(text))
         {
-            var lines = text.Replace("\r\n", "\n", StringComparison.Ordinal).Replace('\r', '\n').Split('\n');
-            var cues = ParseSrtCues(lines);
-            return cues.Count > 0 && cues.Any(cue => cue.StartMilliseconds >= durationMilliseconds);
+            var cues = SrtCueBlocks.Parse(text, out var invalidLine);
+            // Keep the command reachable so the user can see why the split is refused.
+            return invalidLine.HasValue || cues.Any(cue => cue.StartMilliseconds >= durationMilliseconds);
         }
 
         var safeFramesPerSecond = Math.Max(1d, framesPerSecond);
@@ -82,11 +82,14 @@ internal static partial class SubtitleSplitProcessor
         long durationMilliseconds,
         string lineBreak)
     {
-        var lines = text.Replace("\r\n", "\n", StringComparison.Ordinal).Replace('\r', '\n').Split('\n');
-        var cues = ParseSrtCues(lines);
+        var cues = SrtCueBlocks.Parse(text, out var invalidLine);
+        if (invalidLine.HasValue)
+        {
+            return new SubtitleSplitResult(text, string.Empty, 0, 0) { InvalidSrtLine = invalidLine };
+        }
 
-        var firstPartCues = new List<SrtCueBlock>();
-        var remainderCues = new List<SrtCueBlock>();
+        var firstPartCues = new List<SrtCueBlocks.Cue>();
+        var remainderCues = new List<SrtCueBlocks.Cue>();
 
         foreach (var cue in cues)
         {
@@ -119,7 +122,7 @@ internal static partial class SubtitleSplitProcessor
             var cue = remainderCues[index];
             var newStart = Math.Max(0, cue.StartMilliseconds - durationMilliseconds);
             var newEnd = Math.Max(0, cue.EndMilliseconds - durationMilliseconds);
-            var shiftedTimingLine = ReplaceSrtTiming(cue.TimingLine, newStart, newEnd);
+            var shiftedTimingLine = SrtCueBlocks.ReplaceTiming(cue.TimingLine, newStart, newEnd);
 
             var blockLines = new List<string>(cue.TextLines.Length + 2)
             {
@@ -256,83 +259,6 @@ internal static partial class SubtitleSplitProcessor
             match.Groups["minutes"].Value,
             match.Groups["seconds"].Value,
             out totalSeconds);
-
-    private static List<SrtCueBlock> ParseSrtCues(IReadOnlyList<string> lines)
-    {
-        var cues = new List<SrtCueBlock>();
-        for (var index = 0; index < lines.Count;)
-        {
-            while (index < lines.Count && string.IsNullOrWhiteSpace(lines[index]))
-            {
-                index++;
-            }
-
-            if (index >= lines.Count)
-            {
-                break;
-            }
-
-            var timingIndex = index;
-            if (int.TryParse(lines[index].Trim(), NumberStyles.None, CultureInfo.InvariantCulture, out _) &&
-                index + 1 < lines.Count)
-            {
-                timingIndex++;
-            }
-
-            var timing = SrtTimingPattern().Match(lines[timingIndex]);
-            if (!timing.Success ||
-                !TryParseSrtTimestamp(timing.Groups["start"].Value, out var start) ||
-                !TryParseSrtTimestamp(timing.Groups["end"].Value, out var end))
-            {
-                while (index < lines.Count && !string.IsNullOrWhiteSpace(lines[index]))
-                {
-                    index++;
-                }
-                continue;
-            }
-
-            var textStartIndex = timingIndex + 1;
-            var textEndIndex = textStartIndex;
-            while (textEndIndex < lines.Count && !string.IsNullOrWhiteSpace(lines[textEndIndex]))
-            {
-                textEndIndex++;
-            }
-
-            var textLines = lines.Skip(textStartIndex).Take(textEndIndex - textStartIndex).ToArray();
-            cues.Add(new SrtCueBlock(start, end, lines[timingIndex], textLines));
-            index = textEndIndex;
-        }
-
-        return cues;
-    }
-
-    private static bool TryParseSrtTimestamp(string text, out long milliseconds) =>
-        SubtitleTimingFormatter.TryParseSrtTimestamp(text, out milliseconds);
-
-    private static string ReplaceSrtTiming(string timingLine, long startMilliseconds, long endMilliseconds)
-    {
-        var match = SrtTimingPattern().Match(timingLine);
-        if (!match.Success)
-        {
-            return timingLine;
-        }
-
-        var separator = match.Groups["start"].Value.Contains('.') ? '.' : ',';
-        return $"{match.Groups["before"].Value}" +
-            $"{FormatSrtTimestamp(startMilliseconds, separator)}" +
-            $"{match.Groups["arrow"].Value}" +
-            $"{FormatSrtTimestamp(endMilliseconds, separator)}" +
-            $"{match.Groups["after"].Value}";
-    }
-
-    private static string FormatSrtTimestamp(long milliseconds, char separator) =>
-        SubtitleTimingFormatter.FormatSrtTimestamp(milliseconds, separator);
-
-    private sealed record SrtCueBlock(
-        long StartMilliseconds,
-        long EndMilliseconds,
-        string TimingLine,
-        string[] TextLines);
 
     public static string? GenerateNextNumberedPartPath(string? currentPath)
     {

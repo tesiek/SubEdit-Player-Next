@@ -8,4 +8,7 @@ public sealed record PlaybackMediaInfo(
     int DisplayHeight,
     string VideoCodecName,
     string VideoFourCc,
-    bool? IsHardwareAccelerated = null);
+    bool? IsHardwareAccelerated = null)
+{
+    public string? AviCodecId { get; init; }
+}

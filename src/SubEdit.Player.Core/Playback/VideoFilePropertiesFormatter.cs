@@ -23,12 +23,31 @@ public static class VideoFilePropertiesFormatter
         for (var i = 0; i < file.Video.Count; i++)
         {
             var video = file.Video[i];
+            var codec = video.Stream.Codec;
+            var format = video.AviCodecId is { Length: > 0 } ? codec?.Trim().ToLowerInvariant() switch
+            {
+                "msmpeg4v3" => "MPEG-4 v3",
+                "mpeg4" => "MPEG-4 Visual",
+                _ => MediaCodecDisplay.VideoName(codec)
+            } : MediaCodecDisplay.VideoName(codec);
             var rows = new List<(string Label, string Value)>
             {
-                ("Kodek", Value(MediaCodecDisplay.VideoName(video.Stream.Codec))),
-                ("Profil", Value(MediaCodecDisplay.Profile(video.Stream.Profile, video.Level)))
+                ("Format", Value(format))
             };
+            if (video.AviCodecId is { Length: > 0 } codecId)
+            {
+                rows.Add(("Codec ID", codecId));
+                var hint = codecId.ToUpperInvariant() switch
+                {
+                    "DIV3" => "DivX 3 Low",
+                    "DX50" => "DivX 5",
+                    "XVID" => "XviD",
+                    _ => null
+                };
+                if (hint is not null) rows.Add(("Codec ID/Hint", hint));
+            }
             rows.AddRange([
+                ("Profil", Value(MediaCodecDisplay.Profile(video.Stream.Profile, video.Level))),
                 ("Rozdzielczość", video.Width is > 0 && video.Height is > 0 ? $"{video.Width} × {video.Height}" : "—"),
                 ("Proporcje obrazu", AspectRatio(video)),
                 ("FPS", FrameRate(video)),

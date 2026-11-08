@@ -84,6 +84,35 @@ public class WindowTitleTests
     }
 
     [Fact]
+    public void Close_KeepsLastVideoPathAndPlayReopensIt()
+    {
+        WithForm((form, playback, directory) =>
+        {
+            var fileStatus = (ToolStripStatusLabel)typeof(Form1)
+                .GetField("_fileStatus", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(form)!;
+            Assert.True(string.IsNullOrEmpty(fileStatus.ToolTipText));
+
+            foreach (var name in new[] { "First.mkv", "Second.mp4" })
+            {
+                var path = Path.Combine(directory, name);
+                File.WriteAllBytes(path, []);
+                Assert.True(Load(form, path));
+                Invoke(form, "UpdateStatusBar", 5_823_000L, 7_246_234L);
+                Invoke(form, "CloseVideoFile");
+                Assert.False(playback.IsOpen);
+                Assert.Equal(path, fileStatus.ToolTipText);
+                Assert.Equal("{0}{0}", fileStatus.Owner!.Items[0].Text);
+                Assert.Equal("[0][0]", fileStatus.Owner.Items[1].Text);
+
+                Invoke(form, "Play");
+                Assert.True(playback.IsOpen);
+                Assert.Equal(name, form.Text);
+                Assert.Equal(path, fileStatus.ToolTipText);
+            }
+        });
+    }
+
+    [Fact]
     public void LoadingSubtitleAlone_DoesNotChangeTitleWithOrWithoutVideo()
     {
         WithForm((form, _, directory) =>
@@ -106,6 +135,38 @@ public class WindowTitleTests
             Invoke(form, "OpenStartupVideo");
             Assert.True(playback.IsOpen);
             Assert.Equal("Startup.mkv", form.Text);
+        });
+    }
+
+    [Fact]
+    public void StatusTimingCounters_FitLongMovieAndKeepWidthsDuringPlayback()
+    {
+        WithForm((form, playback, directory) =>
+        {
+            Assert.True(Load(form, Path.Combine(directory, "Long.mkv")));
+            var microDvd = GetCounter("_mDVDStatus");
+            var mpl2 = GetCounter("_mpl2Status");
+            _ = microDvd.Owner!.Handle;
+
+            const long duration = 7_246_234;
+            Invoke(form, "UpdateStatusBar", 94_000L, duration);
+            var longWidths = (microDvd.Width, mpl2.Width);
+
+            foreach (var position in new[] { 5_823_000L, duration })
+            {
+                Invoke(form, "UpdateStatusBar", position, duration);
+                Assert.Equal(longWidths, (microDvd.Width, mpl2.Width));
+                Assert.True(microDvd.Width >= microDvd.GetPreferredSize(System.Drawing.Size.Empty).Width, microDvd.Text);
+                Assert.True(mpl2.Width >= mpl2.GetPreferredSize(System.Drawing.Size.Empty).Width, mpl2.Text);
+            }
+
+            Assert.True(Load(form, Path.Combine(directory, "Short.mkv")));
+            Invoke(form, "UpdateStatusBar", 94_000L, 120_000L);
+            Assert.True(microDvd.Width < longWidths.Item1);
+            Assert.True(mpl2.Width < longWidths.Item2);
+
+            ToolStripStatusLabel GetCounter(string name) => (ToolStripStatusLabel)typeof(Form1)
+                .GetField(name, BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(form)!;
         });
     }
 

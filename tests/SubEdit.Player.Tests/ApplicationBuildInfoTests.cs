@@ -13,27 +13,56 @@ public class ApplicationBuildInfoTests
         var assembly = typeof(AboutDialog).Assembly;
         var metadata = assembly.GetCustomAttributes<AssemblyMetadataAttribute>().ToDictionary(value => value.Key, value => value.Value);
         Assert.Same(build, ApplicationBuildInfo.Current);
-        Assert.Equal("1.0.0", build.ProductVersion);
         Assert.Equal(metadata["ProductVersion"], build.ProductVersion);
         Assert.Equal(metadata["BuildDate"], build.BuildDate);
         Assert.Matches("^[0-9]{6}$", build.BuildDate);
         Assert.Equal(metadata["BuildCommit"], build.BuildCommit);
         Assert.Equal(metadata["BuildDirtyState"], build.BuildDirtyState);
         Assert.Equal(assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()!.InformationalVersion, build.InformationalVersion);
-        Assert.Equal(new Version(1, 0, 0, 0), assembly.GetName().Version);
-        Assert.Equal("1.0.0.0", assembly.GetCustomAttribute<AssemblyFileVersionAttribute>()!.Version);
+        var expectedAssemblyVersion = Version.Parse($"{build.ProductVersion}.0");
+        Assert.Equal(expectedAssemblyVersion, assembly.GetName().Version);
+        Assert.Equal(expectedAssemblyVersion.ToString(), assembly.GetCustomAttribute<AssemblyFileVersionAttribute>()!.Version);
         if (build.BuildCommit == "unknown")
         {
             Assert.Equal("UNKNOWN", build.BuildDirtyState);
-            Assert.Equal("1.0.0+unknown", build.InformationalVersion);
+            Assert.Equal($"{build.ProductVersion}+unknown", build.InformationalVersion);
         }
         else
         {
             Assert.Matches("^[0-9a-fA-F]{40}([0-9a-fA-F]{24})?$", build.BuildCommit);
             Assert.Contains(build.BuildDirtyState, new[] { "CLEAN", "DIRTY", "UNKNOWN" });
-            Assert.Equal($"1.0.0+{build.BuildCommit}.{build.BuildDirtyState.ToLowerInvariant()}", build.InformationalVersion);
+            Assert.Equal($"{build.ProductVersion}+{build.BuildCommit}.{build.BuildDirtyState.ToLowerInvariant()}", build.InformationalVersion);
         }
     }
+
+    [Fact]
+    public void ReleaseComponents_UseTheSameProductAndFileVersions()
+    {
+        var application = typeof(AboutDialog).Assembly;
+        var productVersion = ApplicationBuildInfo.Current.ProductVersion;
+        var fileVersion = Version.Parse($"{productVersion}.0");
+        var outputDirectory = Path.GetDirectoryName(application.Location)!;
+
+        foreach (var name in new[] { "SubEdit.Player.Core", "SubEdit.Player.UI", "SubEdit.Player.Next" })
+        {
+            var component = Assembly.Load(name);
+            Assert.Equal(fileVersion, component.GetName().Version);
+            var informationalVersion = component.GetCustomAttribute<AssemblyInformationalVersionAttribute>()!.InformationalVersion;
+            Assert.Equal(productVersion, informationalVersion.Split('+', 2)[0]);
+            AssertPeVersion(component.Location, fileVersion, informationalVersion);
+        }
+
+        AssertPeVersion(Path.Combine(outputDirectory, "SubEdit.Player.Next.exe"), fileVersion,
+            ApplicationBuildInfo.Current.InformationalVersion);
+
+        static void AssertPeVersion(string path, Version fileVersion, string informationalVersion)
+        {
+            var info = System.Diagnostics.FileVersionInfo.GetVersionInfo(path);
+            Assert.Equal(fileVersion.ToString(), info.FileVersion);
+            Assert.Equal(informationalVersion, info.ProductVersion);
+        }
+    }
+
 
     [Theory]
     [InlineData("CLEAN")]

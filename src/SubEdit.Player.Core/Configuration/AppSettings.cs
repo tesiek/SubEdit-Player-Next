@@ -17,7 +17,7 @@ public sealed class AppSettings
     public int MinimumSubtitleFontSize { get; set; } = 8;
     public int SubtitleTextColorArgb { get; set; } = unchecked((int)0xFFFFFFFF);
     public int SubtitleBackgroundColorArgb { get; set; } = unchecked((int)0xFF000000);
-    public int SubtitleBackgroundOpacityPercent { get; set; } = 75;
+    public int SubtitleBackgroundTransparencyPercent { get; set; } = 25;
     public int SubtitleOutlineColorArgb { get; set; } = unchecked((int)0xFF000000);
     public int SubtitleOutlineThickness { get; set; } = 2;
     public SubtitleAlignment SubtitleAlignment { get; set; } = SubtitleAlignment.BottomCenter;
@@ -84,7 +84,7 @@ public sealed class InformationOsdSettings
     public bool ShowInWindowedMode { get; set; } = true;
     public int TextColorArgb { get; set; } = unchecked((int)0xFFC0C0C0);
     public int BackgroundColorArgb { get; set; } = unchecked((int)0xFF202020);
-    public int BackgroundOpacityPercent { get; set; } = 50;
+    public int BackgroundTransparencyPercent { get; set; } = 50;
     public int BorderColorArgb { get; set; } = unchecked((int)0xFF323232);
     public int BorderThickness { get; set; } = 1;
 }

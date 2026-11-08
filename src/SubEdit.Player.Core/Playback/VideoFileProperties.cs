@@ -39,7 +39,10 @@ public sealed record VideoStreamProperties(FileStreamProperties Stream, int? Wid
     string? ColorSpace = null, string? ColorPrimaries = null, string? ColorTransfer = null,
     string? ColorRange = null, string? DynamicRange = null, string? Level = null,
     long? DisplayAspectRatioNumerator = null, long? DisplayAspectRatioDenominator = null,
-    int? FrameRateNumerator = null, int? FrameRateDenominator = null);
+    int? FrameRateNumerator = null, int? FrameRateDenominator = null)
+{
+    public string? AviCodecId { get; init; }
+}
 
 public sealed record AudioStreamProperties(FileStreamProperties Stream, AudioCodecVariant CodecVariant = AudioCodecVariant.None,
     int? Channels = null, string? ChannelLayout = null, bool IsChannelLayoutConfirmed = false,

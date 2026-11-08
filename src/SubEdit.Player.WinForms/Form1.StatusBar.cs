@@ -4,13 +4,24 @@ namespace SubEdit.Player.WinForms;
 
 public partial class Form1
 {
+    private readonly StatusCounterWidth _mDvdCounter = new('{', '}', 102);
+    private readonly StatusCounterWidth _mpl2Counter = new('[', ']', 92);
+
     private void UpdateStatusBar(long position, long length)
     {
         var frameRate = GetVideoFrameRate();
-        _mDVDStatus.Text = $"{{{ToMicroDvdFrame(position, frameRate)}}}{{{ToMicroDvdFrame(length, frameRate)}}}";
-        _mpl2Status.Text = $"[{ToMpl2Time(position)}][{ToMpl2Time(length)}]";
+        _mDVDStatus.Text = _mDvdCounter.Update(_currentVideoPath, ToMicroDvdFrame(position, frameRate), ToMicroDvdFrame(length, frameRate));
+        _mpl2Status.Text = _mpl2Counter.Update(_currentVideoPath, ToMpl2Time(position), ToMpl2Time(length));
         _positionStatus.Text = FormatStatusTime(position);
         _lengthStatus.Text = FormatStatusTime(length);
+
+        if (_mDVDStatus.Width != _mDvdCounter.Measure(_mDVDStatus) ||
+            _mpl2Status.Width != _mpl2Counter.Measure(_mpl2Status))
+        {
+            _statusStrip.ApplyWidths();
+            LayoutEditorStatusDetails();
+            RefreshFilePathStatus();
+        }
 
         if (!_mediaDetailsAvailable && _currentVideoPath is not null)
         {
@@ -25,6 +36,74 @@ public partial class Form1
 
     private static long ToMpl2Time(long milliseconds) =>
         Math.Max(0, (long)Math.Round(milliseconds / 100d));
+
+    private sealed class StatusCounterWidth(char open, char close, int idleWidth)
+    {
+        private string? _videoPath;
+        private string _position = "0";
+        private string _end = "0";
+        private int _positionDigits = 1;
+        private (string End, int PositionDigits, Font Font, int Dpi)? _measuredFor;
+        private int _width;
+
+        public string Update(string? videoPath, long position, long end)
+        {
+            _position = position.ToString();
+            var endText = end.ToString();
+            if (_videoPath != videoPath || _end != endText)
+            {
+                _videoPath = videoPath;
+                _end = endText;
+                _positionDigits = _end.Length;
+                _measuredFor = null;
+            }
+
+            // A still-unknown duration can grow past its previous digit range.
+            _positionDigits = Math.Max(_positionDigits, _position.Length);
+            return Format(_position);
+        }
+
+        public int Measure(ToolStripStatusLabel cell)
+        {
+            var dpi = cell.Owner?.DeviceDpi ?? 96;
+            var key = (_end, _positionDigits, cell.Font, dpi);
+            if (_measuredFor == key)
+            {
+                return _width;
+            }
+
+            // Use the native label measurement, including the text inset and border,
+            // without replacing the text of the visible cell.
+            using var sample = new ToolStripStatusLabel
+            {
+                Font = cell.Font,
+                BorderSides = cell.BorderSides,
+                Padding = cell.Padding
+            };
+            _width = Math.Max(MeasureText(_position), MeasureText(_end));
+            for (var digit = '0'; digit <= '9'; digit++)
+            {
+                // Measure complete pairs for fonts with unequal digit advances.
+                _width = Math.Max(_width, MeasureText(new string(digit, _positionDigits)));
+            }
+
+            if (_end == "0" && _positionDigits == 1)
+            {
+                _width = Math.Max(_width, (int)Math.Round(idleWidth * dpi / 96d));
+            }
+
+            _measuredFor = key;
+            return _width;
+
+            int MeasureText(string position)
+            {
+                sample.Text = Format(position);
+                return sample.GetPreferredSize(Size.Empty).Width;
+            }
+        }
+
+        private string Format(string position) => $"{open}{position}{close}{open}{_end}{close}";
+    }
 
     private void ResetDecoderStatus(bool detecting)
     {
@@ -119,7 +198,8 @@ public partial class Form1
 
     private void RestoreFileStatus()
     {
-        if (_currentVideoPath is null)
+        var path = _currentVideoPath ?? GetRememberedVideoPath();
+        if (path is null)
         {
             _fileStatus.ForeColor = SystemColors.ControlText;
             _fileStatus.ToolTipText = string.Empty;
@@ -127,7 +207,7 @@ public partial class Form1
             return;
         }
 
-        RefreshFilePathStatus();
+        SetFilePathStatus(path);
     }
 
     private void RefreshFilePathStatus()
@@ -142,26 +222,29 @@ public partial class Form1
 
     private void RefreshInitialLastVideoStatus()
     {
-        if (_fileStatusExpiresAt != default)
+        if (_fileStatusExpiresAt == default && _currentVideoPath is null &&
+            GetRememberedVideoPath() is { } path)
         {
-            return;
+            SetFilePathStatus(path);
         }
+    }
 
-        var lastVideoPath = _settings.Playback.LastVideoPath;
-        if (_currentVideoPath is null &&
-            !string.IsNullOrWhiteSpace(lastVideoPath) &&
-            File.Exists(lastVideoPath))
-        {
-            SetFilePathStatus(lastVideoPath);
-        }
+    private string? GetRememberedVideoPath()
+    {
+        var path = _settings.Playback.LastVideoPath;
+        return !string.IsNullOrWhiteSpace(path) && File.Exists(path) ? path : null;
     }
 
     private void SetFilePathStatus(string fullPath)
     {
         _fileStatus.ForeColor = SystemColors.ControlText;
         _fileStatus.ToolTipText = fullPath;
-        var availableWidth = Math.Max(1, _fileStatus.Width - 8);
-        _fileStatus.Text = FitPathToWidth(fullPath, _fileStatus.Font, availableWidth);
+        // The content rectangle includes padding and extends to the status label's border.
+        var availableWidth = Math.Max(0, _fileStatus.ContentRectangle.Width - _fileStatus.Padding.Horizontal - 8);
+        var displayPath = FitPathToWidth(fullPath, _fileStatus.Font, availableWidth);
+        _fileStatus.Text = TextRenderer.MeasureText(displayPath, _fileStatus.Font).Width <= availableWidth
+            ? displayPath
+            : string.Empty;
     }
 
     private string FitTemporaryFileStatus(string message)

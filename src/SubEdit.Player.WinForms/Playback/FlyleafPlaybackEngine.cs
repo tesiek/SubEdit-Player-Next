@@ -148,14 +148,7 @@ internal sealed partial class FlyleafPlaybackEngine : IPlaybackEngine, IEmbedded
             }
 
             var codecDescription = stream.Codec ?? string.Empty;
-            var fourCc = string.Empty;
-            unsafe
-            {
-                if (stream.AVStream != null && stream.AVStream->codecpar != null)
-                {
-                    fourCc = MediaInspector.GetFourCc(stream.AVStream->codecpar->codec_tag);
-                }
-            }
+            var fourCc = ReadVideoFourCc(stream);
             var codecName = MediaCodecDisplay.VideoName(codecDescription, detailed: false) ?? string.Empty;
 
             return new PlaybackMediaInfo(
@@ -166,7 +159,10 @@ internal sealed partial class FlyleafPlaybackEngine : IPlaybackEngine, IEmbedded
                 DisplayHeight: displayHeight,
                 VideoCodecName: codecName,
                 VideoFourCc: fourCc,
-                IsHardwareAccelerated: _player.Video.VideoAcceleration);
+                IsHardwareAccelerated: _player.Video.VideoAcceleration)
+            {
+                AviCodecId = GetAviCodecId(stream.Demuxer.Name, fourCc)
+            };
         }
     }
 

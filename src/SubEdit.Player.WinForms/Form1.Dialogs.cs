@@ -8,6 +8,8 @@ public partial class Form1
 {
     private ProgramDiagnosticsDialog? _diagnosticsDialog;
     private SystemDiagnosticsCache? _diagnosticsSystemCache;
+    private readonly InspectorDialog.SessionPosition _diagnosticsPosition = new();
+    private readonly InspectorDialog.SessionPosition _videoPropertiesPosition = new();
 
     private void ShowProgramDiagnostics()
     {
@@ -23,6 +25,7 @@ public partial class Form1
             request => ProgramDiagnosticsCollector.CompleteAsync(request, _diagnosticsSystemCache ??= new()));
         _diagnosticsDialog = dialog;
         dialog.FormClosed += (_, _) => _diagnosticsDialog = null;
+        dialog.PrepareForShow(this, _diagnosticsPosition);
         dialog.Show(this);
     }
 
@@ -31,8 +34,6 @@ public partial class Form1
         using var dialog = new AboutDialog();
         dialog.ShowDialog(this);
     }
-
-    private void OpenSubEditWebsite() => OpenWebsite("https://subedit.com.pl/");
 
     private void OpenWebsite(string address)
     {
@@ -92,6 +93,7 @@ public partial class Form1
         }
 
         using var dialog = new VideoPropertiesDialog(snapshot);
+        dialog.PrepareForShow(this, _videoPropertiesPosition);
         dialog.ShowDialog(this);
     }
 }

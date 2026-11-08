@@ -11,6 +11,57 @@ namespace SubEdit.Player.Tests;
 public class VideoFilePropertiesTests
 {
     [Theory]
+    [InlineData("avi", 0x33564944u, "DIV3", "DivX 3 Low")]
+    [InlineData("avi", 0x30355844u, "DX50", "DivX 5")]
+    [InlineData("avi", 0x44495658u, "XVID", "XviD")]
+    [InlineData("avi", 0x44436261u, "abCD", null)]
+    [InlineData("avi", 0u, null, null)]
+    [InlineData("avi", 0x44495680u, null, null)]
+    [InlineData("matroska,webm", 0x44495658u, null, null)]
+    [InlineData("mov,mp4,m4a,3gp,3g2,mj2", 0x31637661u, null, null)]
+    [InlineData(null, 0x44495658u, null, null)]
+    public void AviCodecIdentity_UsesDemuxerAndFourCcWithoutReplacingCodec(
+        string? demuxer, uint codecTag, string? expectedId, string? expectedHint)
+    {
+        var codecId = FlyleafPlaybackEngine.GetAviCodecId(demuxer, MediaInspector.GetFourCc(codecTag));
+        Assert.Equal(expectedId, codecId);
+
+        var video = new VideoStreamProperties(new(0, Codec: "mpeg4"), Width: 640, Height: 480)
+        {
+            AviCodecId = codecId
+        };
+        var report = VideoFilePropertiesFormatter.FormatText(new VideoFileProperties("test", video: [video]));
+        Assert.Contains(expectedId is null ? "Format: MPEG-4" : "Format: MPEG-4 Visual", report);
+        Assert.Contains("Rozdzielczość: 640 × 480", report);
+        if (expectedId is null) Assert.DoesNotContain("Codec ID:", report);
+        else Assert.Contains($"Codec ID: {expectedId}", report);
+        if (expectedHint is null) Assert.DoesNotContain("Codec ID/Hint:", report);
+        else Assert.Contains($"Codec ID/Hint: {expectedHint}", report);
+    }
+
+    [Theory]
+    [InlineData("msmpeg4v3", "DIV3", "MPEG-4 v3")]
+    [InlineData(" MPEG4 ", "ZZZZ", "MPEG-4 Visual")]
+    [InlineData("h264", "H264", "H.264 / AVC")]
+    [InlineData(" custom_codec ", "ZZZZ", "custom_codec")]
+    [InlineData("mpeg4", null, "MPEG-4")]
+    [InlineData("msmpeg4v3", null, "msmpeg4v3")]
+    [InlineData(null, "DIV3", "—")]
+    [InlineData(null, null, "—")]
+    public void VideoFormat_UsesAviNamesWithExistingFallback(string? codec, string? aviCodecId, string expected)
+    {
+        var video = new VideoStreamProperties(new(0, Codec: codec)) { AviCodecId = aviCodecId };
+        var audio = new AudioStreamProperties(new(1, Codec: "mp3"));
+        var sections = VideoFilePropertiesFormatter.GetSections(
+            new VideoFileProperties("test", video: [video], audio: [audio]));
+
+        var videoRows = sections.Single(section => section.Heading == "WIDEO #1").Rows;
+        Assert.Equal(("Format", expected), videoRows[0]);
+        Assert.DoesNotContain(videoRows, row => row.Label == "Kodek");
+        Assert.Contains(("Kodek", "MP3"), sections.Single(section => section.Heading == "AUDIO #1").Rows);
+    }
+
+    [Theory]
     [InlineData(AVCodecID.Ac3, AV_PROFILE_UNKNOWN, "ac3", "Dolby Digital (AC-3)")]
     [InlineData(AVCodecID.Eac3, AV_PROFILE_UNKNOWN, "eac3", "Dolby Digital Plus (E-AC-3)")]
     [InlineData(AVCodecID.Eac3, AV_PROFILE_EAC3_DDP_ATMOS, "eac3", "Dolby Digital Plus / Atmos (JOC)")]

@@ -60,7 +60,7 @@ public partial class Form1
     }
 
     private string GetDefaultSubtitleFormatMenuText() =>
-        $"Domyślny format napisów: {GetActiveSubtitleFormat() switch
+        $"Aktywny format napisów: {GetActiveSubtitleFormat() switch
         {
             SubtitleTimingFormat.TmPlayerLong => "00:00:00",
             SubtitleTimingFormat.TmPlayerShort => "0:00:00",

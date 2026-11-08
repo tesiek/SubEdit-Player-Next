@@ -6,6 +6,29 @@ namespace SubEdit.Player.Tests;
 
 public sealed class PortableSettingsStoreTests : IDisposable
 {
+    [Theory]
+    [InlineData(0)]
+    [InlineData(25)]
+    [InlineData(50)]
+    [InlineData(75)]
+    [InlineData(100)]
+    public void BackgroundTransparency_RoundTripsWithUnambiguousJsonNames(int transparency)
+    {
+        var store = new PortableSettingsStore(_testDirectory);
+        var settings = new AppSettings { SubtitleBackgroundTransparencyPercent = transparency };
+        settings.InformationOsd.BackgroundTransparencyPercent = transparency;
+        Assert.True(store.TrySave(settings));
+        using var json = JsonDocument.Parse(File.ReadAllText(store.ConfigurationPath));
+        Assert.Equal(transparency, json.RootElement.GetProperty("SubtitleBackgroundTransparencyPercent").GetInt32());
+        Assert.Equal(transparency, json.RootElement.GetProperty("InformationOsd").GetProperty("BackgroundTransparencyPercent").GetInt32());
+        Assert.DoesNotContain("OpacityPercent", json.RootElement.GetRawText());
+        var loaded = store.Load();
+        Assert.Equal(transparency, loaded.SubtitleBackgroundTransparencyPercent);
+        Assert.Equal(transparency, loaded.InformationOsd.BackgroundTransparencyPercent);
+        Assert.Equal(25, new AppSettings().SubtitleBackgroundTransparencyPercent);
+        Assert.Equal(50, new InformationOsdSettings().BackgroundTransparencyPercent);
+    }
+
     private readonly string _testDirectory;
 
     public PortableSettingsStoreTests()
@@ -111,7 +134,7 @@ public sealed class PortableSettingsStoreTests : IDisposable
         Assert.Equal(1100, loaded.Window.Width);
         Assert.Equal(1, loaded.Editor.AutoSaveMinutes);
         Assert.Equal(99, loaded.Editor.BackupFileCount);
-        Assert.Equal(60d, loaded.Editing.ReactionSeconds);
+        Assert.Equal(80d, loaded.Editing.ReactionSeconds);
         Assert.Equal(0d, loaded.InformationOsd.DisplayDurationSeconds);
         Assert.Equal(VideoDecodingMode.Automatic, loaded.Playback.VideoDecodingMode);
         Assert.Equal(new[] { "first.mkv", "second.mkv", "third.mkv", "fourth.mkv", "fifth.mkv" }, loaded.Playback.RecentVideoPaths);

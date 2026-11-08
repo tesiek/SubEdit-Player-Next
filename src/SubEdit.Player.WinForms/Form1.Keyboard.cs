@@ -292,6 +292,13 @@ public partial class Form1
             return true;
         }
 
+        // Keep the no-video prompt when the menu item cannot dispatch its shortcut.
+        if (keyData == Keys.F9 && _menu.Visible && _videoPropertiesMenuItem is { Enabled: false })
+        {
+            ShowVideoProperties();
+            return true;
+        }
+
         if (keyData == Keys.F12)
         {
             ShowEditorOptionsDialog();

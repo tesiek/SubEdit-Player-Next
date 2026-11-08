@@ -64,6 +64,7 @@ public partial class Form1
             dialog.WholeWord);
         dialog.FormClosed += (_, _) => _replaceDialog = null;
         _replaceDialog = dialog;
+        dialog.PrepareForShow(this);
         dialog.Show(this);
     }
 

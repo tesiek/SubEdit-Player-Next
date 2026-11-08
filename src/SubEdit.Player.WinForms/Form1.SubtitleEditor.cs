@@ -6,8 +6,12 @@ public partial class Form1
 {
     private void UpdateUndoRedoAvailability()
     {
-        ToolbarButton("toolbarUndo").Enabled = _subtitleEditor.CanUndo;
-        ToolbarButton("toolbarRedo").Enabled = _subtitleEditor.CanRedo;
+        var canUndo = _subtitleEditor.CanUndo;
+        var canRedo = _subtitleEditor.CanRedo;
+        ToolbarButton("toolbarUndo").Enabled = canUndo;
+        ToolbarButton("toolbarRedo").Enabled = canRedo;
+        _undoMenuItem?.Enabled = canUndo;
+        _redoMenuItem?.Enabled = canRedo;
     }
 
     private void UndoSubtitleEdit()

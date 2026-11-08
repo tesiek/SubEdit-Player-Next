@@ -1,6 +1,7 @@
 <Solution>
   <Folder Name="/src/">
     <Project Path="src/SubEdit.Player.Core/SubEdit.Player.Core.csproj" />
+    <Project Path="src/SubEdit.Player.UI/SubEdit.Player.UI.csproj" />
     <Project Path="src/SubEdit.Player.WinForms/SubEdit.Player.WinForms.csproj" />
   </Folder>
   <Folder Name="/tests/">

@@ -151,10 +151,4 @@ internal static partial class SubtitleTimeShiftProcessor
             match.Groups["minutes"].Value,
             match.Groups["seconds"].Value,
             out totalSeconds);
-
-    private static bool TryParseSrtTimestamp(string text, out long milliseconds) =>
-        SubtitleTimingFormatter.TryParseSrtTimestamp(text, out milliseconds);
-
-    private static string FormatSrtTimestamp(long milliseconds, char separator) =>
-        SubtitleTimingFormatter.FormatSrtTimestamp(milliseconds, separator);
 }

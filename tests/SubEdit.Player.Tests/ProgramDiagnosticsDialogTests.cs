@@ -37,10 +37,11 @@ public class ProgramDiagnosticsDialogTests
             Assert.False(dialog.Modal);
             Assert.Equal(0, captureCount); // Show returned before the posted capture callback.
             PumpUntil(() => captureCount == 1);
-            var text = Assert.Single(dialog.Controls.OfType<TextBox>());
+            var text = dialog.ReportContent.Report;
+            PumpUntil(() => text.Text.Contains("AKTUALNY FILM"));
             Assert.True(text.ReadOnly);
             Assert.True(text.Multiline);
-            Assert.Equal(ScrollBars.Vertical, text.ScrollBars);
+            Assert.Equal(RichTextBoxScrollBars.Vertical, text.ScrollBars);
             Assert.Contains("[AKTUALNY FILM]", dialog.ReportText);
             Assert.Contains("Pobieranie danych systemowych...", dialog.ReportText);
             text.Select(0, 9);
@@ -52,7 +53,7 @@ public class ProgramDiagnosticsDialogTests
             Assert.Equal(text.TextLength, text.SelectionLength);
             Assert.False(dialog.HandleTextShortcut(Keys.F9));
             var context = text.ContextMenuStrip!;
-            var selectionItem = Assert.Single(context.Items.OfType<ToolStripMenuItem>());
+            var selectionItem = Assert.Single(context.Items.OfType<ToolStripMenuItem>(), item => item.Text == "Kopiuj zaznaczenie");
             Assert.Equal("Kopiuj zaznaczenie", selectionItem.Text);
             RaiseOpening(context);
             Assert.True(selectionItem.Enabled);
@@ -128,10 +129,13 @@ public class ProgramDiagnosticsDialogTests
                 Assert.Equal(0, probe.PauseCalls);
                 var initial = first.ReportText;
                 probe.Open = false; // Later Close/Open must not change the existing snapshot.
+                first.Location += new System.Drawing.Size(12, 12);
+                var movedLocation = first.Location;
                 entry.PerformClick();
                 Assert.Same(first, Assert.Single(form.OwnedForms.OfType<ProgramDiagnosticsDialog>()));
                 Application.DoEvents();
                 Assert.Equal(initial, first.ReportText);
+                Assert.Equal(movedLocation, first.Location);
                 first.Close();
                 entry.PerformClick();
                 var second = Assert.Single(form.OwnedForms.OfType<ProgramDiagnosticsDialog>());

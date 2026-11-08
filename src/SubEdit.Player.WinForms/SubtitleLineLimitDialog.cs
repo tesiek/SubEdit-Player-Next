@@ -10,7 +10,7 @@ internal enum SubtitleLineLimitScope
     ToCurrentLine
 }
 
-internal sealed class SubtitleLineLimitDialog : SubEditDialog
+internal sealed class SubtitleLineLimitDialog : StandardDialog
 {
     private readonly TextBox _maximumLines;
     private readonly RadioButton _selectionScope;
@@ -18,68 +18,15 @@ internal sealed class SubtitleLineLimitDialog : SubEditDialog
     private readonly RadioButton _toCurrentLineScope;
     private readonly CheckBox _saveAsDefault;
 
-    public SubtitleLineLimitDialog(SubtitleLineLimitSettings defaults)
+    public SubtitleLineLimitDialog(SubtitleLineLimitSettings defaults) : base(370)
     {
         Text = "Ogranicz ilość wierszy w linii";
-        ClientSize = new Size(340, 275);
-
-        var limitGroup = new GroupBox
-        {
-            Text = "&Maksymalna ilość wierszy w linii:",
-            Location = new Point(12, 12),
-            Size = new Size(316, 76)
-        };
-        _maximumLines = new TextBox
-        {
-            Location = new Point(133, 31),
-            Size = new Size(48, 23),
-            MaxLength = 2,
-            Text = defaults.MaximumLines.ToString(CultureInfo.InvariantCulture)
-        };
-        limitGroup.Controls.Add(_maximumLines);
-        Controls.Add(limitGroup);
-
-        var scopeGroup = new GroupBox
-        {
-            Text = "Obszar zmian napisów",
-            ForeColor = Color.Blue,
-            Location = new Point(12, 100),
-            Size = new Size(316, 79)
-        };
-        _selectionScope = AddScopeOption(scopeGroup, "Według zaznaczenia", 16);
-        _fromCurrentLineScope = AddScopeOption(scopeGroup, "Od aktualnej linii", 36);
-        _toCurrentLineScope = AddScopeOption(scopeGroup, "Do aktualnej linii", 56);
-        _selectionScope.Checked = true;
-        Controls.Add(scopeGroup);
-
-        _saveAsDefault = new CheckBox
-        {
-            Text = "Zachowaj ustawienia jako domyślne",
-            Location = new Point(15, 188),
-            AutoSize = true
-        };
-        var ok = new Button
-        {
-            Text = "OK",
-            Location = new Point(91, 238),
-            Size = new Size(75, 25)
-        };
-        ok.Click += (_, _) => AcceptOptions();
-        var cancel = new Button
-        {
-            Text = "Anuluj",
-            DialogResult = DialogResult.Cancel,
-            Location = new Point(172, 238),
-            Size = new Size(75, 25)
-        };
-        Controls.AddRange([_saveAsDefault, ok, cancel]);
-        AcceptButton = ok;
-        CancelButton = cancel;
-        Shown += (_, _) =>
-        {
-            _maximumLines.Focus();
-            _maximumLines.SelectAll();
-        };
+        _maximumLines = Input(defaults.MaximumLines.ToString(CultureInfo.InvariantCulture), 2);
+        Page.AddSection("Limit wierszy").AddField("&Maksymalna ilość wierszy w linii:", _maximumLines,
+            widthProfile: SubEdit.Player.UI.DesignSystem.FieldWidthProfile.Compact, widthSample: "99");
+        (_selectionScope, _fromCurrentLineScope, _toCurrentLineScope) = AddScope();
+        _saveAsDefault = AddSaveDefault(); ConfigureActions(AcceptOptions);
+        Shown += (_, _) => { _maximumLines.Focus(); _maximumLines.SelectAll(); };
     }
 
     public int MaximumLines =>
@@ -95,19 +42,6 @@ internal sealed class SubtitleLineLimitDialog : SubEditDialog
                 : SubtitleLineLimitScope.Selection;
 
     public bool SaveAsDefault => _saveAsDefault.Checked;
-
-    private static RadioButton AddScopeOption(Control parent, string text, int top)
-    {
-        var option = new RadioButton
-        {
-            Text = text,
-            ForeColor = SystemColors.ControlText,
-            Location = new Point(8, top),
-            AutoSize = true
-        };
-        parent.Controls.Add(option);
-        return option;
-    }
 
     private void AcceptOptions()
     {

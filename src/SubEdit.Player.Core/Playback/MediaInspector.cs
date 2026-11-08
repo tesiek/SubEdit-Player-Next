@@ -1,5 +1,3 @@
-using System.Text;
-
 namespace SubEdit.Player.Core.Playback;
 
 public static class MediaInspector
@@ -20,37 +18,6 @@ public static class MediaInspector
         {
             return string.Empty;
         }
-    }
-
-    public static string GetCodecName(
-        string? videoPath,
-        string? originalFourCc,
-        string? codecDescription)
-    {
-        var isAvi = string.Equals(Path.GetExtension(videoPath), ".avi", StringComparison.OrdinalIgnoreCase);
-        if (isAvi)
-        {
-            var aviFourCc = !string.IsNullOrWhiteSpace(originalFourCc)
-                ? originalFourCc
-                : TryReadAviVideoFourCc(videoPath);
-
-            if (!string.IsNullOrWhiteSpace(aviFourCc))
-            {
-                return aviFourCc.ToUpperInvariant();
-            }
-        }
-
-        var matroskaCodecId = TryReadMatroskaVideoCodecId(videoPath);
-        if (!string.IsNullOrWhiteSpace(matroskaCodecId))
-        {
-            return NormalizeVideoCodecName(NormalizeMatroskaCodecId(matroskaCodecId));
-        }
-
-        var rawCodecName = string.IsNullOrWhiteSpace(codecDescription)
-            ? (originalFourCc ?? string.Empty)
-            : codecDescription.Split([' ', '-', '('], StringSplitOptions.RemoveEmptyEntries)[0];
-
-        return NormalizeVideoCodecName(rawCodecName);
     }
 
     public static string NormalizeVideoCodecName(string? codecName)
@@ -92,101 +59,6 @@ public static class MediaInspector
     }
 
     public static string GetFourCc(uint fourCc) => DecodeFourCc(fourCc);
-
-    private static string NormalizeMatroskaCodecId(string codecId)
-    {
-        if (codecId.StartsWith("V_MPEGH", StringComparison.OrdinalIgnoreCase))
-        {
-            return "H.265";
-        }
-
-        if (codecId.StartsWith("V_MPEG4/ISO/AVC", StringComparison.OrdinalIgnoreCase))
-        {
-            return "H.264";
-        }
-
-        if (codecId.StartsWith("V_MPEG2", StringComparison.OrdinalIgnoreCase))
-        {
-            return "MPEG2";
-        }
-
-        return codecId.Length > 2 ? codecId[2..] : codecId;
-    }
-
-    private static string? TryReadMatroskaVideoCodecId(string? videoPath)
-    {
-        if (string.IsNullOrWhiteSpace(videoPath) ||
-            Path.GetExtension(videoPath) is not (".mkv" or ".webm"))
-        {
-            return null;
-        }
-
-        try
-        {
-            using var stream = File.OpenRead(videoPath);
-            var buffer = new byte[Math.Min(stream.Length, 2 * 1024 * 1024)];
-            var bytesRead = stream.Read(buffer, 0, buffer.Length);
-            for (var index = 0; index < bytesRead - 2; index++)
-            {
-                if (buffer[index] != (byte)'V' || buffer[index + 1] != (byte)'_')
-                {
-                    continue;
-                }
-
-                var end = index;
-                while (end < bytesRead && end - index < 80 && buffer[end] is >= 0x20 and <= 0x7e)
-                {
-                    end++;
-                }
-
-                var codecId = Encoding.ASCII.GetString(buffer, index, end - index);
-                if (codecId.StartsWith("V_", StringComparison.Ordinal))
-                {
-                    return codecId;
-                }
-            }
-        }
-        catch (IOException)
-        {
-        }
-        catch (UnauthorizedAccessException)
-        {
-        }
-
-        return null;
-    }
-
-    private static string? TryReadAviVideoFourCc(string? videoPath)
-    {
-        if (string.IsNullOrWhiteSpace(videoPath) ||
-            !string.Equals(Path.GetExtension(videoPath), ".avi", StringComparison.OrdinalIgnoreCase))
-        {
-            return null;
-        }
-
-        try
-        {
-            using var stream = File.OpenRead(videoPath);
-            var buffer = new byte[64 * 1024];
-            var bytesRead = stream.Read(buffer, 0, buffer.Length);
-            for (var index = 0; index <= bytesRead - 16; index++)
-            {
-                if (Encoding.ASCII.GetString(buffer, index, 4) == "strh" &&
-                    Encoding.ASCII.GetString(buffer, index + 8, 4) == "vids")
-                {
-                    return Encoding.ASCII.GetString(buffer, index + 12, 4).Trim();
-                }
-            }
-        }
-        catch (IOException)
-        {
-        }
-        catch (UnauthorizedAccessException)
-        {
-        }
-
-        return null;
-    }
 
     private static string DecodeFourCc(uint fourCc)
     {

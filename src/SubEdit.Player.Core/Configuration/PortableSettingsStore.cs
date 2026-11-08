@@ -112,26 +112,28 @@ public sealed class PortableSettingsStore
         {
             normalized.Playback.VideoDecodingMode = VideoDecodingMode.Automatic;
         }
+        normalized.Playback.UserSeekBackwardSeconds = Math.Clamp(normalized.Playback.UserSeekBackwardSeconds, 1, 999);
+        normalized.Playback.UserSeekForwardSeconds = Math.Clamp(normalized.Playback.UserSeekForwardSeconds, 1, 999);
         normalized.Volume = Math.Clamp(normalized.Volume, 0, 100);
         normalized.LastAudibleVolume = Math.Clamp(normalized.LastAudibleVolume, 1, 100);
         normalized.SubtitleFontName = string.IsNullOrWhiteSpace(normalized.SubtitleFontName) ? "Arial" : normalized.SubtitleFontName;
         normalized.SubtitleFontSize = Math.Clamp(normalized.SubtitleFontSize, 8, 72);
         normalized.MinimumSubtitleFontSize = Math.Clamp(normalized.MinimumSubtitleFontSize, 2, 50);
-        normalized.SubtitleBackgroundOpacityPercent = Math.Clamp(normalized.SubtitleBackgroundOpacityPercent, 0, 100);
+        normalized.SubtitleBackgroundTransparencyPercent = Math.Clamp(normalized.SubtitleBackgroundTransparencyPercent, 0, 100);
         normalized.SubtitleOutlineThickness = Math.Clamp(normalized.SubtitleOutlineThickness, 0, 100);
         normalized.SubtitleMarginLeft = Math.Clamp(normalized.SubtitleMarginLeft, -10000, 10000);
         normalized.SubtitleMarginRight = Math.Clamp(normalized.SubtitleMarginRight, -10000, 10000);
         normalized.SubtitleMarginTop = Math.Clamp(normalized.SubtitleMarginTop, -10000, 10000);
         normalized.SubtitleMarginBottom = Math.Clamp(normalized.SubtitleMarginBottom, -10000, 10000);
         normalized.InformationOsd.FontSize = Math.Clamp(normalized.InformationOsd.FontSize, 10, 30);
-        normalized.InformationOsd.BackgroundOpacityPercent = Math.Clamp(
-            normalized.InformationOsd.BackgroundOpacityPercent,
+        normalized.InformationOsd.BackgroundTransparencyPercent = Math.Clamp(
+            normalized.InformationOsd.BackgroundTransparencyPercent,
             0,
             100);
         normalized.InformationOsd.BorderThickness = Math.Clamp(normalized.InformationOsd.BorderThickness, 0, 100);
         normalized.InformationOsd.DisplayDurationSeconds = ClampNonNegative(
             normalized.InformationOsd.DisplayDurationSeconds,
-            9999d,
+            99d,
             1.5d);
         if (!Enum.IsDefined(normalized.InformationOsd.Position))
         {
@@ -149,9 +151,9 @@ public sealed class PortableSettingsStore
         normalized.Editor.BackupFileCount = Math.Clamp(normalized.Editor.BackupFileCount, 1, 99);
         normalized.Editor.FontName = string.IsNullOrWhiteSpace(normalized.Editor.FontName) ? "Courier New" : normalized.Editor.FontName;
         normalized.Editor.FontSize = Math.Clamp(normalized.Editor.FontSize, 6, 22);
-        normalized.Editing.ReactionSeconds = ClampNonNegative(normalized.Editing.ReactionSeconds, 60d, 0.25d);
-        normalized.Editing.DefaultFiftyCharacterDisplaySeconds = ClampNonNegative(normalized.Editing.DefaultFiftyCharacterDisplaySeconds, 9999d, 3d);
-        normalized.Editing.AdditionalDefaultDisplaySeconds = ClampNonNegative(normalized.Editing.AdditionalDefaultDisplaySeconds, 9999d, 2d);
+        normalized.Editing.ReactionSeconds = ClampNonNegative(normalized.Editing.ReactionSeconds, 99d, 0.25d);
+        normalized.Editing.DefaultFiftyCharacterDisplaySeconds = ClampNonNegative(normalized.Editing.DefaultFiftyCharacterDisplaySeconds, 99d, 3d);
+        normalized.Editing.AdditionalDefaultDisplaySeconds = ClampNonNegative(normalized.Editing.AdditionalDefaultDisplaySeconds, 99d, 2d);
         normalized.SubtitlePlayback.MinimumGapFrames = Math.Clamp(normalized.SubtitlePlayback.MinimumGapFrames, 1, 20);
         return normalized;
     }

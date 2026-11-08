@@ -19,7 +19,6 @@ public class AboutDialogTests
                 var layout = Assert.Single(dialog.Controls.OfType<TableLayoutPanel>());
                 var label = Assert.Single(layout.Controls.OfType<Label>(), value => value.Text.StartsWith("Version "));
                 Assert.Equal($"Version {ApplicationBuildInfo.Current.ProductVersion}\r\nbuild date: {ApplicationBuildInfo.Current.BuildDate}", label.Text);
-                Assert.StartsWith("Version 1.0.0\r\n", label.Text);
                 Assert.DoesNotContain(ApplicationBuildInfo.Current.BuildCommit, label.Text);
             }
             catch (Exception exception) { failure = exception; }

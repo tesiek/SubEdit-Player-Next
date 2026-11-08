@@ -15,7 +15,4 @@ public partial class Form1
     {
         _rememberedSubtitleTimeScaleTransform = null;
     }
-
-    internal SubtitleTimeScaleTransform? RememberedSubtitleTimeScaleTransform =>
-        _rememberedSubtitleTimeScaleTransform;
 }

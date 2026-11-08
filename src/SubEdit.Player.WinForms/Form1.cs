@@ -23,7 +23,7 @@ public partial class Form1 : Form
     private readonly CleanSplitContainer _splitContainer;
     private readonly Panel _videoPanel;
     private readonly Panel _editorPanel;
-    private readonly StatusStrip _statusStrip;
+    private readonly DpiAwareStatusStrip _statusStrip;
     private readonly ToolStripStatusLabel _fileStatus;
     private readonly ToolStripStatusLabel _mDVDStatus;
     private readonly ToolStripStatusLabel _mpl2Status;
@@ -112,6 +112,7 @@ public partial class Form1 : Form
     private int _applicationActivationGeneration;
     private bool _resumePlaybackAfterModalDialog;
     private int _modalDialogDepth;
+    private bool _shutdownCleanupStarted;
     private bool _isLoadingSubtitle;
     private bool _isSubtitleDirty;
     private bool _subtitleTextDirty;
@@ -136,11 +137,13 @@ public partial class Form1 : Form
     private bool _subtitleTraceEnabled;
     private readonly UnsortedSubtitleWarningTracker _unsortedSubtitleWarningTracker = new();
     private readonly SubtitlePlaybackTracker _subtitlePlaybackTracker = new();
+    private ((long SessionId, int TrackId, string Text, SubtitleRenderOptions Options) Key, SubtitleCue Cue)? _embeddedOverlayCue;
     private int _tracedSubtitleLineIndex = -1;
     private DirectoryVideoSortOrder _directoryVideoSortOrder = DirectoryVideoSortOrder.Name;
     private string? _randomDirectoryPath;
     private List<string>? _randomDirectoryVideoOrder;
     private ToolStripMenuItem? _closeVideoMenuItem;
+    private ToolStripMenuItem? _videoPropertiesMenuItem;
     private ToolStripMenuItem? _goToVideoPositionMenuItem;
     private ToolStripMenuItem? _measureSubtitleDelayMenuItem;
     private ToolStripMenuItem? _measureInitialSubtitleDelayMenuItem;
@@ -166,6 +169,12 @@ public partial class Form1 : Form
     private ToolStripMenuItem? _subtitleVisibilityMenuItem;
     private ToolStripMenuItem? _transparentSubtitlesMenuItem;
     private ToolStripMenuItem? _timeCounterMenuItem;
+    private ToolStripMenuItem? _videoTimeCounterMenuItem;
+    private ToolStripMenuItem? _editorMenuItem;
+    private ToolStripMenuItem? _alwaysOnTopMenuItem;
+    private ToolStripMenuItem? _fullScreenMenuItem;
+    private ToolStripMenuItem? _undoMenuItem;
+    private ToolStripMenuItem? _redoMenuItem;
     private ToolStripButton? _activeSubtitleFormatButton;
     private FormBorderStyle _restoreBorderStyle;
     private FormWindowState _restoreWindowState;
@@ -233,6 +242,11 @@ public partial class Form1 : Form
             LayoutEditorStatusDetails();
             RefreshFilePathStatus();
         };
+        _statusStrip.HandleCreated += (_, _) =>
+        {
+            LayoutBottomStatusStrip();
+            RefreshFilePathStatus();
+        };
         _splitContainer = CreateSplitContainer(
             out _videoPanel,
             out _editorPanel,
@@ -242,6 +256,8 @@ public partial class Form1 : Form
             out var subtitleEditor,
             out var editorHeader,
             out var subtitleInfoBar);
+        _splitContainer.Panel2.VisibleChanged += (_, _) => UpdateEditorMenuCheck();
+        UpdateEditorMenuCheck();
         _fullScreenControlsPanel = CreateFullScreenControlsPanel(
             out _fullScreenStatusStrip,
             out _fullScreenPlaybackStatus,
@@ -426,9 +442,7 @@ public partial class Form1 : Form
             {
                 ShowTemporaryFileStatus("Obsługa kółka myszy jest niedostępna");
             }
-            _videoOverlay.Show(this);
             UpdateTimeCounterOsd(_playback.PositionMilliseconds, _playback.DurationMilliseconds, force: true);
-            SyncVideoOverlay();
             BeginInvoke(OpenStartupVideo);
             BeginInvoke(RefreshInitialLastVideoStatus);
             BeginInvoke(UpdateSubtitleHeader);
@@ -442,7 +456,15 @@ public partial class Form1 : Form
         Resize += (_, _) =>
         {
             UpdatePlaybackForWindowState();
-            SyncVideoOverlay();
+            if (WindowState == FormWindowState.Minimized)
+            {
+                _videoOverlay.Hide();
+            }
+            else
+            {
+                UpdateOverlayVisibility();
+                SyncVideoOverlay();
+            }
             if (_currentVideoPath is null)
             {
                 RefreshInitialLastVideoStatus();
@@ -554,6 +576,12 @@ public partial class Form1 : Form
         }
     }
 
+    protected override void OnLoad(EventArgs e)
+    {
+        base.OnLoad(e);
+        UpdateVolumeHostWidth();
+    }
+
     private void UpdateResponsiveLayout()
     {
         if (IsDisposed)
@@ -561,17 +589,8 @@ public partial class Form1 : Form
             return;
         }
 
-        _statusStrip.AutoSize = false;
-        _statusStrip.Height = Math.Max(
-            ScaleLogicalPixels(22),
-            TextRenderer.MeasureText("Hg", _statusStrip.Font, Size.Empty, TextFormatFlags.NoPadding).Height + ScaleLogicalPixels(6));
-        _mDVDStatus.Width = ScaleLogicalPixels(102);
-        _mpl2Status.Width = ScaleLogicalPixels(92);
-        _positionStatus.Width = ScaleLogicalPixels(96);
-        _lengthStatus.Width = ScaleLogicalPixels(96);
-        _sizeStatus.Width = ScaleLogicalPixels(78);
-        _fpsStatus.Width = ScaleLogicalPixels(68);
-        LayoutEditorStatusDetails();
+        if (IsHandleCreated) UpdateVolumeHostWidth();
+        LayoutBottomStatusStrip();
 
         _editorHeader.Height = Math.Max(
             ScaleLogicalPixels(20),
@@ -579,12 +598,23 @@ public partial class Form1 : Form
         AlignEditorHeader(_editorHeader, _subtitleEditor);
         _subtitleInfoBar.UpdateDpiLayout();
         RefreshFilePathStatus();
+        RefreshInitialLastVideoStatus();
         UpdateSubtitleHeader();
         LayoutFullScreenControls();
     }
 
     private int ScaleLogicalPixels(int value) =>
         Math.Max(1, (int)Math.Round(value * DeviceDpi / 96d));
+
+    private void LayoutBottomStatusStrip()
+    {
+        _statusStrip.AutoSize = false;
+        _statusStrip.Height = Math.Max(
+            ScaleLogicalPixels(22),
+            TextRenderer.MeasureText("Hg", _statusStrip.Font, Size.Empty, TextFormatFlags.NoPadding).Height + ScaleLogicalPixels(6));
+        _statusStrip.ApplyWidths();
+        LayoutEditorStatusDetails();
+    }
 
     private static string FormatFrameRate(double value) =>
         value.ToString("0.###", CultureInfo.InvariantCulture);
@@ -1821,7 +1851,7 @@ public partial class Form1 : Form
         UpdateFrameRateStatus();
         _subtitleEditor.SetFramesPerSecond(GetVideoFrameRate());
         RefreshSubtitleDocument();
-        _videoCodecStatusText = mediaInfo.VideoCodecName;
+        _videoCodecStatusText = mediaInfo.AviCodecId ?? mediaInfo.VideoCodecName;
 
         if (mediaInfo.IsHardwareAccelerated.HasValue)
         {
@@ -1904,15 +1934,15 @@ public partial class Form1 : Form
 
     private void UpdateOverlayVisibility()
     {
-        var shouldShow = !string.IsNullOrEmpty(_videoOverlay.OsdText) ||
-            !string.IsNullOrEmpty(_videoOverlay.VolumeText) ||
-            !string.IsNullOrEmpty(_videoOverlay.PlaybackText) ||
-            _videoOverlay.SubtitlePreviewCue is not null ||
-            _videoOverlay.SubtitleCue is not null;
+        var shouldShow = WindowState != FormWindowState.Minimized &&
+            (!string.IsNullOrEmpty(_videoOverlay.OsdText) ||
+             !string.IsNullOrEmpty(_videoOverlay.VolumeText) ||
+             !string.IsNullOrEmpty(_videoOverlay.PlaybackText) ||
+             _videoOverlay.SubtitlePreviewCue is not null ||
+             _videoOverlay.SubtitleCue is not null);
         if (shouldShow && !_videoOverlay.Visible)
         {
-            _videoOverlay.Show(this);
-            SyncVideoOverlay();
+            _videoOverlay.ShowForVideo(this, _videoPanel.RectangleToScreen(_videoPanel.ClientRectangle));
         }
         else if (!shouldShow && _videoOverlay.Visible)
         {
@@ -1946,7 +1976,7 @@ public partial class Form1 : Form
                 cue = _subtitlePlaybackTracker.GetCueAt(_subtitleDocument, position);
                 WarnAboutUnsortedSubtitles(position);
             }
-            else if (_playback.ActiveEmbeddedSubtitleTrackId is not null &&
+            else if (_playback.ActiveEmbeddedSubtitleTrackId is int trackId &&
                      _playback is IEmbeddedTextSubtitleSource embeddedSubtitleSource)
             {
                 var text = embeddedSubtitleSource.CurrentEmbeddedSubtitleText;
@@ -1957,10 +1987,25 @@ public partial class Form1 : Form
                         _settings.SubtitlePlayback.ItalicLinesStartingWithSlash,
                         _settings.SubtitlePlayback.ItalicLinesStartingWithAsterisk,
                         _settings.SubtitlePlayback.ItalicLinesStartingWithHash);
-                    var parsed = SubtitleMarkup.ParseCue(text, default, renderOptions);
-                    cue = new SubtitleCue(position, position, parsed.Lines, parsed.Position);
+                    var key = (_playback.SessionId, trackId, text, renderOptions);
+                    if (_embeddedOverlayCue is { } cached && cached.Key == key)
+                    {
+                        cue = cached.Cue;
+                    }
+                    else
+                    {
+                        var parsed = SubtitleMarkup.ParseCue(text, default, renderOptions);
+                        // Flyleaf supplies the active text. This cue is only used for drawing.
+                        cue = new SubtitleCue(0, 0, parsed.Lines, parsed.Position);
+                        _embeddedOverlayCue = (key, cue);
+                    }
                 }
             }
+        }
+
+        if (cue is null || _externalSubtitleOverlayEnabled)
+        {
+            _embeddedOverlayCue = null;
         }
 
         _videoOverlay.SubtitleCue = cue;
@@ -2070,6 +2115,14 @@ public partial class Form1 : Form
         return length == 0 ? ellipsis : text[..length] + ellipsis;
     }
 
+    private void UpdateEditorMenuCheck()
+    {
+        if (_editorMenuItem is not null)
+        {
+            _editorMenuItem.Checked = !_splitContainer.Panel2Collapsed;
+        }
+    }
+
     private void ToggleEditor()
     {
         if (_isFullScreen)
@@ -2153,6 +2206,11 @@ public partial class Form1 : Form
     {
         TopMost = !TopMost;
         ToolbarButton("toolbarAlwaysOnTop").Checked = TopMost;
+        if (_alwaysOnTopMenuItem is not null)
+        {
+            _alwaysOnTopMenuItem.Checked = TopMost;
+        }
+
         ShowPlaybackOsd(TopMost ? "Okno zawsze na wierzchu" : "Okno nie zawsze na wierzchu");
     }
 
@@ -2198,13 +2256,28 @@ public partial class Form1 : Form
 
     private void OnFormClosing(object? sender, FormClosingEventArgs e)
     {
-        if (!ConfirmSubtitleChanges())
+        if (!e.Cancel && !ConfirmSubtitleChanges())
         {
             e.Cancel = true;
+        }
+    }
+
+    protected override void OnFormClosed(FormClosedEventArgs e)
+    {
+        // FormClosing also runs for WM_QUERYENDSESSION and can still be cancelled.
+        SaveWindowSettings();
+        ReleaseWindowResources();
+        base.OnFormClosed(e);
+    }
+
+    private void ReleaseWindowResources()
+    {
+        if (_shutdownCleanupStarted)
+        {
             return;
         }
 
-        SaveWindowSettings();
+        _shutdownCleanupStarted = true;
         _seekSlider.CancelInteraction();
         _playbackTimer.Stop();
         _seekRepeatTimer.Stop();
@@ -2217,6 +2290,10 @@ public partial class Form1 : Form
         Application.LeaveThreadModal -= OnApplicationLeaveThreadModal;
         Application.RemoveMessageFilter(_videoInputFilter);
         _fullScreenWheelHook.Dispose();
+        // Keep the editor and video panel off screen while Flyleaf detaches
+        // its swap chain and the video host is removed during final shutdown.
+        _videoOverlay.Hide();
+        Hide();
         _videoOverlay.Close();
         _videoHost.Dispose();
         if (_playback is IEmbeddedTextSubtitleSource embeddedSubtitleSource)

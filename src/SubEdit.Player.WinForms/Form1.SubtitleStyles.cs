@@ -32,7 +32,7 @@ public partial class Form1
         MessageBox.Show(
             this,
             $"Zmieniono znaki kursywy w {result.ChangedLineCount} {lineWord}.",
-            "Zamień znaki kursywy",
+            "Konwertuj znaczniki kursywy",
             MessageBoxButtons.OK,
             MessageBoxIcon.Information);
     }

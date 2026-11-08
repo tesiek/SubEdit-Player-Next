@@ -10,7 +10,7 @@ internal enum RapidSubtitleMergeScope
     ToCurrentLine
 }
 
-internal sealed class RapidSubtitleMergeDialog : SubEditDialog
+internal sealed class RapidSubtitleMergeDialog : StandardDialog
 {
     private readonly TextBox _fiftyCharactersSeconds;
     private readonly TextBox _firstToLastEndSeconds;
@@ -25,123 +25,32 @@ internal sealed class RapidSubtitleMergeDialog : SubEditDialog
     private readonly RadioButton _toCurrentLineScope;
     private readonly CheckBox _saveAsDefault;
 
-    public RapidSubtitleMergeDialog(RapidSubtitleMergeSettings defaults)
+    public RapidSubtitleMergeDialog(RapidSubtitleMergeSettings defaults) : base(530)
     {
         Text = "Połącz szybko znikające napisy";
-        ClientSize = new Size(530, 422);
-
-        var timingGroup = new GroupBox
-        {
-            Location = new Point(12, 12),
-            Size = new Size(506, 168)
-        };
-        _fiftyCharactersSeconds = AddTimeRow(
-            timingGroup,
-            "Złącz napis jeżeli czas wyświetlenia 50 znaków, tego napisu jest\r\nmniejszy niż",
-            24,
-            FormatNumber(defaults.MaximumFiftyCharacterDisplaySeconds));
-        _firstToLastEndSeconds = AddTimeRow(
-            timingGroup,
-            "a czas między wyświetleniem pierwszego napisu a schowaniem\r\nostatniego jest mniejszy niż",
-            66,
-            FormatNumber(defaults.MaximumFirstToLastEndSeconds),
-            "sekund");
-        _firstToLastStartSeconds = AddTimeRow(
-            timingGroup,
-            "lub czas między wyświetleniami pierwszego i ostatniego napisu jest\r\nmniejszy niż",
-            108,
-            FormatNumber(defaults.MaximumFirstToLastStartSeconds),
-            "sekund");
-
-        var lineGroup = new GroupBox
-        {
-            Text = "Sposób tworzenia wierszy nowego napisu",
-            Location = new Point(12, 192),
-            Size = new Size(506, 72)
-        };
-        _addAsConsecutiveLines = new RadioButton
-        {
-            Text = "Dodaj jako kolejne wiersze",
-            Location = new Point(12, 20),
-            AutoSize = true,
-            Checked = defaults.AddAsConsecutiveLines
-        };
-        _limitLineCount = new RadioButton
-        {
-            Text = "Złącz tak, żeby nie było więcej niż",
-            Location = new Point(12, 43),
-            AutoSize = true,
-            Checked = !defaults.AddAsConsecutiveLines
-        };
-        _maximumLines = new TextBox
-        {
-            Location = new Point(264, 40),
-            Size = new Size(34, 23),
-            MaxLength = 1,
-            Text = defaults.MaximumLines.ToString(CultureInfo.InvariantCulture)
-        };
-        lineGroup.Controls.AddRange([
-            _addAsConsecutiveLines,
-            _limitLineCount,
-            _maximumLines,
-            new Label { Text = "wierszy", Location = new Point(304, 42), AutoSize = true }
-        ]);
+        var timing = Page.AddSection("Czas wyświetlania");
+        _fiftyCharactersSeconds = Input(FormatNumber(defaults.MaximumFiftyCharacterDisplaySeconds), 3);
+        _firstToLastEndSeconds = Input(FormatNumber(defaults.MaximumFirstToLastEndSeconds), 3);
+        _firstToLastStartSeconds = Input(FormatNumber(defaults.MaximumFirstToLastStartSeconds), 3);
+        timing.AddFieldWithUnit("Złącz napis jeżeli czas wyświetlenia 50 znaków, tego napisu jest mniejszy niż", _fiftyCharactersSeconds, "sekund");
+        timing.AddFieldWithUnit("a czas między wyświetleniem pierwszego napisu a schowaniem ostatniego jest mniejszy niż", _firstToLastEndSeconds, "sekund");
+        timing.AddFieldWithUnit("lub czas między wyświetleniami pierwszego i ostatniego napisu jest mniejszy niż", _firstToLastStartSeconds, "sekund");
+        var lines = Page.AddSection("Sposób tworzenia wierszy nowego napisu");
+        _addAsConsecutiveLines = lines.AddRadioOption("Dodaj jako kolejne wiersze", isChecked: defaults.AddAsConsecutiveLines);
+        _limitLineCount = lines.AddRadioOption("Złącz tak, żeby nie było więcej niż", isChecked: !defaults.AddAsConsecutiveLines);
+        var limit = lines.AddDependentSettings(_limitLineCount, "Limit wierszy");
+        _maximumLines = Input(defaults.MaximumLines.ToString(CultureInfo.InvariantCulture), 1);
+        limit.AddFieldWithUnit("Maksymalnie:", _maximumLines, "wierszy");
+        _maximumCharacters = Input(defaults.MaximumCharacters.ToString(CultureInfo.InvariantCulture), 3);
+        var characters = Page.AddSection("Długość napisu").AddAdaptiveRow();
+        _limitCharacters = characters.AddCheckBox("Nie łącz jeżeli długość napisu przekroczy", defaults.LimitCharacters);
+        characters.AddControl(new SubEdit.Player.UI.DesignSystem.FieldValueLayout(_maximumCharacters, "znaków.", keepTogether: true));
         _addAsConsecutiveLines.CheckedChanged += (_, _) => UpdateAvailability();
         _limitLineCount.CheckedChanged += (_, _) => UpdateAvailability();
-
-        _limitCharacters = new CheckBox
-        {
-            Text = "Nie łącz jeżeli długość napisu przekroczy",
-            Location = new Point(17, 278),
-            AutoSize = true,
-            Checked = defaults.LimitCharacters
-        };
-        _maximumCharacters = new TextBox
-        {
-            Location = new Point(279, 275),
-            Size = new Size(48, 23),
-            MaxLength = 3,
-            Text = defaults.MaximumCharacters.ToString(CultureInfo.InvariantCulture)
-        };
         _limitCharacters.CheckedChanged += (_, _) => UpdateAvailability();
-        var charactersLabel = new Label { Text = "znaków.", Location = new Point(334, 278), AutoSize = true };
-
-        var scopeGroup = new GroupBox
-        {
-            Text = "Obszar zmian napisów",
-            ForeColor = Color.Blue,
-            Location = new Point(12, 307),
-            Size = new Size(506, 42)
-        };
-        _selectionScope = AddScopeOption(scopeGroup, "Według zaznaczenia", 10);
-        _fromCurrentLineScope = AddScopeOption(scopeGroup, "Od aktualnej linii", 175);
-        _toCurrentLineScope = AddScopeOption(scopeGroup, "Do aktualnej linii", 335);
-        _selectionScope.Checked = true;
-
-        _saveAsDefault = new CheckBox
-        {
-            Text = "Zachowaj ustawienia jako domyślne",
-            Location = new Point(17, 359),
-            AutoSize = true
-        };
-        var ok = new Button { Text = "OK", Location = new Point(184, 388), Size = new Size(75, 25) };
-        ok.Click += (_, _) => AcceptOptions();
-        var cancel = new Button
-        {
-            Text = "Anuluj",
-            Location = new Point(267, 388),
-            Size = new Size(75, 25),
-            DialogResult = DialogResult.Cancel
-        };
-        Controls.AddRange([timingGroup, lineGroup, _limitCharacters, _maximumCharacters, charactersLabel, scopeGroup, _saveAsDefault, ok, cancel]);
-        AcceptButton = ok;
-        CancelButton = cancel;
-        UpdateAvailability();
-        Shown += (_, _) =>
-        {
-            _fiftyCharactersSeconds.Focus();
-            _fiftyCharactersSeconds.SelectAll();
-        };
+        (_selectionScope, _fromCurrentLineScope, _toCurrentLineScope) = AddScope();
+        _saveAsDefault = AddSaveDefault(); ConfigureActions(AcceptOptions); UpdateAvailability();
+        Shown += (_, _) => { _fiftyCharactersSeconds.Focus(); _fiftyCharactersSeconds.SelectAll(); };
     }
 
     public bool SaveAsDefault => _saveAsDefault.Checked;
@@ -159,24 +68,6 @@ internal sealed class RapidSubtitleMergeDialog : SubEditDialog
         MaximumLines = int.Parse(_maximumLines.Text, CultureInfo.InvariantCulture),
         LimitCharacters = _limitCharacters.Checked,
         MaximumCharacters = int.Parse(_maximumCharacters.Text, CultureInfo.InvariantCulture)
-    };
-
-    private TextBox AddTimeRow(Control parent, string label, int top, string value, string suffix = "sekund")
-    {
-        parent.Controls.Add(new Label { Text = label, Location = new Point(18, top), Size = new Size(350, 34) });
-        var textBox = new TextBox { Text = value, Location = new Point(372, top + 3), Size = new Size(48, 23), MaxLength = 3 };
-        parent.Controls.Add(textBox);
-        parent.Controls.Add(new Label { Text = suffix, Location = new Point(426, top + 6), AutoSize = true });
-        return textBox;
-    }
-
-    private static RadioButton AddScopeOption(Control parent, string text, int left) => new()
-    {
-        Text = text,
-        ForeColor = SystemColors.ControlText,
-        Location = new Point(left, 17),
-        AutoSize = true,
-        Parent = parent
     };
 
     private void UpdateAvailability()

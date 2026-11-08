@@ -27,7 +27,7 @@ Scintilla.NET / Scintilla5.NET 7.0.0 (locally modified wrapper)
   License: MIT. Original copyright and permission text reproduced below.
   Upstream: https://github.com/desjarlais/Scintilla.NET
 
-Scintilla x64 5.6.7 and Lexilla x64 5.5.4
+Scintilla x64 5.6.9 and Lexilla x64 5.5.5
   Copyright 1998-2021 by Neil Hodgson.
   License: License for Lexilla, Scintilla, and SciTE; complete text below.
   Upstream: https://www.scintilla.org/

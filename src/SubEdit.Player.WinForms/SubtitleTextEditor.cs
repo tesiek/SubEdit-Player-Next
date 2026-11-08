@@ -189,8 +189,10 @@ public sealed class SubtitleTextEditor : Scintilla
     {
         ArgumentNullException.ThrowIfNull(settings);
 
+        var fontSize = Math.Clamp(settings.FontSize, 6, 22);
+        var fontSizeChanged = _editorFontSize != fontSize;
         _editorFontName = settings.FontName;
-        _editorFontSize = Math.Clamp(settings.FontSize, 6, 22);
+        _editorFontSize = fontSize;
         _highlightInvalidFormat = settings.HighlightInvalidFormat;
         _highlightUnsortedLines = settings.HighlightUnsortedLines;
         _highlightShortLines = settings.HighlightShortLines;
@@ -208,6 +210,11 @@ public sealed class SubtitleTextEditor : Scintilla
         Styles[Style.LineNumber].Underline = false;
         ConfigureMarkupStyles();
         ConfigureSemanticStyles();
+        if (fontSizeChanged)
+        {
+            Zoom = 0;
+        }
+
         UpdateLineNumberMargin();
         HighlightMarkup();
     }

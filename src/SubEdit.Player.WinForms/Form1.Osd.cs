@@ -12,9 +12,8 @@ public partial class Form1
             return;
         }
 
-        _videoOverlay.PlaybackText = string.Empty;
         _playbackOsdExpiresAt = default;
-        _videoOverlay.VolumeText = $"Głośność: {_volumeSlider.Value}%";
+        _videoOverlay.SetVolumeOsd($"Głośność: {_volumeSlider.Value}%");
         _volumeOsdExpiresAt = GetInformationOsdExpiration();
         UpdateOverlayVisibility();
     }
@@ -111,13 +110,17 @@ public partial class Form1
     private void ToggleTimeCounterVisibility()
     {
         _settings.TimeDisplayMode = GetNextTimeDisplayMode(_settings.TimeDisplayMode);
-        if (_timeCounterMenuItem is not null)
-        {
-            _timeCounterMenuItem.Checked = _settings.TimeDisplayMode != TimeDisplayMode.Hidden;
-        }
+        UpdateTimeCounterMenuChecks();
 
         UpdateTimeCounterOsd(_playback.PositionMilliseconds, _playback.DurationMilliseconds, force: true);
         SaveSettingsOrShowWarning();
+    }
+
+    private void UpdateTimeCounterMenuChecks()
+    {
+        var visible = _settings.TimeDisplayMode != TimeDisplayMode.Hidden;
+        _timeCounterMenuItem?.Checked = visible;
+        _videoTimeCounterMenuItem?.Checked = visible;
     }
 
     internal static TimeDisplayMode GetNextTimeDisplayMode(TimeDisplayMode mode) => mode switch

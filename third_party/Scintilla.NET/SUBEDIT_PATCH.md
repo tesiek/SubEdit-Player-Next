@@ -6,6 +6,21 @@
 - **Commit:** `6ce2f2db095a9e5f9b0c3d4601f8df4af51c117c` (tag `v7.0.0`)
 - **License:** MIT (Jacob Slusser, VPKSoft, desjarlais, Ahmet Sait)
 
+## Native Windows x64 Libraries
+
+The x64 Scintilla 5.6.9 and Lexilla 5.5.5 DLLs are the unmodified, signed
+binaries from [SciTE 5.6.9 for Windows x64](https://www.scintilla.org/wscite569.zip).
+
+- Scintilla source: [scintilla569.zip](https://www.scintilla.org/scintilla569.zip),
+  tag `rel-5-6-9`, revision `69bed9304d290ba16399e493ab6fe4b1a3fb4b5f`.
+- Lexilla source: [rel-5-5-5](https://github.com/ScintillaOrg/lexilla/tree/rel-5-5-5),
+  revision `e67537693bfb1ae4e6f643dcab725a38ffeac3e3`. Also included in
+  [scite569.zip](https://www.scintilla.org/scite569.zip).
+
+Scintilla's `pixels` type is an integer on this release. The existing
+message IDs and Windows ABI remain compatible with the wrapper's generated
+API. The local UTF-8 patch and Authenticode checks continue to apply.
+
 ## Reason for Local Patch
 In upstream `Scintilla5.NET 7.0.0`, `LineCollection.cs` tracks line lengths using character counts deduced from `SCNotification` payload or incremental deltas.
 During operations involving multi-byte UTF-8 characters under certain modifications (notably rectangular / column paste, undo, and redo of column edits), the native Scintilla core raises `SCN_MODIFIED` notifications in byte-by-byte or fragmented chunks (e.g. trailing continuation bytes first, or partial multibyte fragments).

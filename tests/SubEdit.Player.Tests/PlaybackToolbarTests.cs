@@ -294,6 +294,48 @@ public class PlaybackToolbarTests
             for (var x = 0; x < bitmap.Width; x++) yield return bitmap.GetPixel(x, y);
     }
 
+    [Fact]
+    public void VolumeHostWidthIsIndependentOfPreviousLayout() => WithForm((form, _) =>
+    {
+        var toolbar = Field<ToolStrip>(form, "_transportToolbar");
+        var slider = Field<VolumeTrackBar>(form, "_volumeSlider");
+        var host = toolbar.Items.OfType<ToolStripControlHost>().Single(item => item.Control == slider);
+        var expected = (int)Math.Round(90 * form.DeviceDpi / 96d);
+
+        foreach (var previous in new[] { expected - 20, expected + 20 })
+        {
+            host.Width = previous;
+            Invoke(form, "UpdateResponsiveLayout");
+            toolbar.PerformLayout();
+
+            Assert.Equal(expected, host.Width);
+            Assert.Equal(expected, slider.ClientSize.Width);
+        }
+    });
+
+    [Fact]
+    public void SeekThumbDpiMetric_RemainsVolumeGroupAlignmentTarget() => WithForm((form, _) =>
+    {
+        form.ClientSize = new Size(1400, 900);
+        var seek = Field<ChapterSeekBar>(form, "_seekSlider");
+        var volume = Field<VolumeTrackBar>(form, "_volumeSlider");
+        var toolbar = Field<ToolStrip>(form, "_transportToolbar");
+        foreach (var dpi in new[] { 96, 120, 96 })
+        {
+            // Metric contract in the real Form1 hierarchy, not a native monitor transition.
+            typeof(Control).GetProperty("DeviceDpiInternal", BindingFlags.Instance | BindingFlags.NonPublic)!.SetValue(seek, dpi);
+            typeof(Control).GetProperty("DeviceDpiInternal", BindingFlags.Instance | BindingFlags.NonPublic)!.SetValue(volume, dpi);
+            toolbar.PerformLayout();
+            var geometry = VolumeTrackBar.Geometry(volume.ClientSize, dpi, volume.Minimum, volume.Maximum, volume.Maximum);
+            var volumeRight = toolbar.Left + volume.Left + geometry.Thumb.Right - 1;
+            var target = seek.Left + seek.MaximumThumbRightPixel - Form1.VolumeGroupOpticalInset(dpi);
+            Assert.InRange(Math.Abs(volumeRight - target), 0, 1);
+            var padding = toolbar.Padding;
+            toolbar.PerformLayout();
+            Assert.Equal(padding, toolbar.Padding);
+        }
+    });
+
     private static T Field<T>(Form1 form, string name) =>
         (T)typeof(Form1).GetField(name, BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(form)!;
 

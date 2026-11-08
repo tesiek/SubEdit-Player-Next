@@ -3,16 +3,19 @@ using System.Text;
 
 namespace SubEdit.Player.Core.Diagnostics;
 
+public sealed record ProgramDiagnosticsSection(string Heading, IReadOnlyList<(string Label, string Value)> Rows);
+
 public static class ProgramDiagnosticsFormatter
 {
     private const string Unavailable = "niedostępne";
 
-    public static string Format(ProgramDiagnosticsSnapshot snapshot, bool loadingSystem = false)
+    public static IReadOnlyList<ProgramDiagnosticsSection> GetSections(ProgramDiagnosticsSnapshot snapshot, bool loadingSystem = false)
     {
         ArgumentNullException.ThrowIfNull(snapshot);
-        var text = new StringBuilder();
+        var sections = new List<ProgramDiagnosticsSection>();
+        var rows = new List<(string Label, string Value)>();
         var program = snapshot.Program;
-        text.AppendLine("[PROGRAM]");
+        Section("PROGRAM");
         Field("Nazwa", Value(program.Name));
         Field("Wersja", VersionValue(program.ProductVersion));
         Field("Build Date", Value(program.BuildDate));
@@ -26,9 +29,9 @@ public static class ProgramDiagnosticsFormatter
         Field("Architektura", Value(program.ProcessArchitecture));
         Field(".NET Runtime", Value(program.Runtime));
 
-        text.AppendLine().AppendLine("[BIBLIOTEKI]");
+        Section("BIBLIOTEKI");
         if (snapshot.Libraries.Count == 0)
-            text.AppendLine(Unavailable);
+            Field("", Unavailable);
         foreach (var library in snapshot.Libraries)
         {
             var details = Clean(library.Details);
@@ -36,9 +39,9 @@ public static class ProgramDiagnosticsFormatter
                 + (details.Length == 0 ? "" : $" [{details}]"));
         }
 
-        text.AppendLine().AppendLine("[SYSTEM I SPRZĘT]");
+        Section("SYSTEM I SPRZĘT");
         if (loadingSystem)
-            text.AppendLine("Pobieranie danych systemowych...");
+            Field("", "Pobieranie danych systemowych...");
         var system = snapshot.System;
         Field("Windows", Value(system?.Windows));
         Field("Wersja", Value(system?.Version));
@@ -62,10 +65,10 @@ public static class ProgramDiagnosticsFormatter
             }
         }
 
-        text.AppendLine().AppendLine("[AKTUALNY FILM]");
+        Section("AKTUALNY FILM");
         var media = snapshot.Media;
         if (!media.IsOpen)
-            text.AppendLine("Brak otwartego pliku.");
+            Field("", "Brak otwartego pliku.");
         else
         {
             Field("Nazwa", FileName(media.FileName));
@@ -86,14 +89,34 @@ public static class ProgramDiagnosticsFormatter
             });
         }
 
-        text.AppendLine().AppendLine("[RAPORT]");
+        Section("RAPORT");
         Field("Utworzono", snapshot.CreatedAt.ToString("yyyy-MM-dd HH:mm:ss zzz", CultureInfo.InvariantCulture));
         Field("Strefa czasowa", Value(snapshot.TimeZoneId));
-        return text.ToString();
+        return sections.AsReadOnly();
 
-        void Field(string label, string value) => text.Append(label).Append(": ").AppendLine(value);
+        void Section(string heading)
+        {
+            rows = [];
+            sections.Add(new(heading, rows.AsReadOnly()));
+        }
+        void Field(string label, string value) => rows.Add((label, value));
     }
 
+    public static string Format(ProgramDiagnosticsSnapshot snapshot, bool loadingSystem = false)
+    {
+        var text = new StringBuilder();
+        foreach (var section in GetSections(snapshot, loadingSystem))
+        {
+            if (text.Length != 0) text.AppendLine();
+            text.Append('[').Append(section.Heading).AppendLine("]");
+            foreach (var (label, value) in section.Rows)
+            {
+                if (label.Length != 0) text.Append(label).Append(": ");
+                text.AppendLine(value);
+            }
+        }
+        return text.ToString();
+    }
     private static string Clean(string? value) => (value ?? "")
         .Replace('\r', ' ').Replace('\n', ' ')
         .Replace('\u0085', ' ').Replace('\u2028', ' ').Replace('\u2029', ' ').Trim();

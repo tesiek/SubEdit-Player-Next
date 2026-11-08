@@ -1,6 +1,6 @@
 namespace SubEdit.Player.WinForms;
 
-internal sealed class MergeSubtitleSelectLineDialog : SubEditDialog
+internal sealed class MergeSubtitleSelectLineDialog : StandardDialog
 {
     private readonly ListBox _cueListBox;
     private readonly CheckBox? _ignoreCheckBox;
@@ -9,113 +9,27 @@ internal sealed class MergeSubtitleSelectLineDialog : SubEditDialog
 
     public MergeSubtitleSelectLineDialog(
         IReadOnlyList<string> displayItems,
-        bool hasRememberedScale)
+        bool hasRememberedScale) : base(600)
     {
         Text = "Łączenie napisów - wybór aktualnego dialogu filmu";
-        ClientSize = new Size(600, hasRememberedScale ? 460 : 360);
-
-        _okButton = new Button
-        {
-            Text = "OK",
-            DialogResult = DialogResult.OK,
-            Size = new Size(80, 26),
-            Enabled = false
-        };
-
-        _cancelButton = new Button
-        {
-            Text = "Anuluj",
-            DialogResult = DialogResult.Cancel,
-            Size = new Size(80, 26)
-        };
-
-        var promptLabel = new Label
-        {
-            Text = "Wybierz linię napisu odpowiadającą aktualnemu dialogowi w filmie:",
-            Location = new Point(15, 12),
-            Size = new Size(570, 20),
-            TextAlign = ContentAlignment.MiddleLeft
-        };
-        Controls.Add(promptLabel);
-
-        _cueListBox = new ListBox
-        {
-            Location = new Point(15, 36),
-            Size = new Size(570, 240),
-            IntegralHeight = false,
-            HorizontalScrollbar = true
-        };
-
-        foreach (var item in displayItems)
-        {
-            _cueListBox.Items.Add(item);
-        }
-
-        _cueListBox.DoubleClick += (_, _) =>
-        {
-            if (_cueListBox.SelectedIndex >= 0)
-            {
-                DialogResult = DialogResult.OK;
-                Close();
-            }
-        };
-
-        _cueListBox.SelectedIndexChanged += (_, _) =>
-        {
-            _okButton.Enabled = _cueListBox.SelectedIndex >= 0;
-        };
-
-        if (_cueListBox.Items.Count > 0)
-        {
-            _cueListBox.SelectedIndex = 0;
-        }
-
-        Controls.Add(_cueListBox);
-
-        var nextControlTop = _cueListBox.Bottom + 12;
-
+        ConfigureActions();
+        _okButton = Shell.Actions.Button(SubEdit.Player.UI.DesignSystem.DialogActionRole.Ok);
+        _cancelButton = Shell.Actions.Button(SubEdit.Player.UI.DesignSystem.DialogActionRole.Cancel);
+        _okButton.Enabled = false;
+        var section = Page.AddSection("Wybór linii");
+        section.AddText("Wybierz linię napisu odpowiadającą aktualnemu dialogowi w filmie:");
+        _cueListBox = new ListBox { IntegralHeight = false, HorizontalScrollbar = true, Height = 240 };
+        _cueListBox.Items.AddRange(displayItems.Cast<object>().ToArray());
+        section.AddField("Linia:", _cueListBox, 550, SubEdit.Player.UI.DesignSystem.FieldWidthProfile.Fill);
+        _cueListBox.DoubleClick += (_, _) => { if (_cueListBox.SelectedIndex >= 0) { DialogResult = DialogResult.OK; Close(); } };
+        _cueListBox.SelectedIndexChanged += (_, _) => _okButton.Enabled = _cueListBox.SelectedIndex >= 0;
+        if (_cueListBox.Items.Count > 0) _cueListBox.SelectedIndex = 0;
         if (hasRememberedScale)
         {
-            var fpsGroup = new GroupBox
-            {
-                Text = "Korekta FPS",
-                Location = new Point(15, nextControlTop),
-                Size = new Size(570, 85)
-            };
-
-            var infoLabel = new Label
-            {
-                Text = "Dokonałeś zmiany współczynnika FPS w aktualnie edytowanych napisach.\r\n" +
-                       "Zmiana ta zostanie również wprowadzona automatycznie do napisów,\r\n" +
-                       "które teraz dodajesz!",
-                Location = new Point(12, 20),
-                Size = new Size(460, 52),
-                TextAlign = ContentAlignment.MiddleLeft
-            };
-            fpsGroup.Controls.Add(infoLabel);
-
-            _ignoreCheckBox = new CheckBox
-            {
-                Text = "&Ignoruj",
-                Checked = false,
-                Location = new Point(480, 32),
-                Size = new Size(80, 24),
-                UseVisualStyleBackColor = true
-            };
-            fpsGroup.Controls.Add(_ignoreCheckBox);
-
-            Controls.Add(fpsGroup);
-            nextControlTop = fpsGroup.Bottom + 15;
+            var fps = Page.AddSection("Korekta FPS");
+            fps.AddText("Dokonałeś zmiany współczynnika FPS w aktualnie edytowanych napisach.\r\nZmiana ta zostanie również wprowadzona automatycznie do napisów,\r\nktóre teraz dodajesz!");
+            _ignoreCheckBox = fps.AddCheckBox("&Ignoruj");
         }
-
-        _okButton.Location = new Point(215, nextControlTop);
-        _cancelButton.Location = new Point(305, nextControlTop);
-
-        Controls.Add(_okButton);
-        Controls.Add(_cancelButton);
-
-        AcceptButton = _okButton;
-        CancelButton = _cancelButton;
     }
 
     public int SelectedCueIndex => _cueListBox.SelectedIndex;

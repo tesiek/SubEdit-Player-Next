@@ -9,10 +9,10 @@ internal enum SeekBarInteractionState
 
 internal sealed class ChapterSeekBar : Control
 {
-    private const int TrackHeight = 7;
+    private int TrackHeight => PlaybackSliderStyle.TrackHeight(DeviceDpi);
     private const int HorizontalInset = 9;
-    private const int ThumbWidth = 8;
-    private const int ThumbHeight = 14;
+    private int ThumbWidth => PlaybackSliderStyle.ThumbWidth(DeviceDpi);
+    private int ThumbHeight => PlaybackSliderStyle.ThumbHeight(DeviceDpi);
     private const int DragSeekIntervalMilliseconds = 200;
     private int _minimum;
     private int _maximum = 100;
@@ -314,6 +314,15 @@ internal sealed class ChapterSeekBar : Control
     // changing painting, values or interaction, so the adjacent group can align to it.
     internal int MaximumThumbRightPixel => Math.Min(ClientSize.Width - 1, GetPositionX(_maximum) + ThumbWidth / 2);
 
+    private int ScaleMetric(int baseline) =>
+        PlaybackSliderStyle.Scale(baseline, DeviceDpi);
+
+    protected override void OnDpiChangedAfterParent(EventArgs e)
+    {
+        base.OnDpiChangedAfterParent(e);
+        Invalidate();
+    }
+
     protected override void OnPaint(PaintEventArgs e)
     {
         base.OnPaint(e);
@@ -321,8 +330,8 @@ internal sealed class ChapterSeekBar : Control
         var graphics = e.Graphics;
         graphics.Clear(BackColor);
         var track = GetTrackRectangle();
-        using var trackFill = new SolidBrush(Color.FromArgb(244, 244, 244));
-        using var trackBorder = new Pen(Color.FromArgb(145, 145, 145));
+        using var trackFill = new SolidBrush(PlaybackSliderStyle.TrackFill);
+        using var trackBorder = new Pen(PlaybackSliderStyle.TrackBorder);
         graphics.FillRectangle(trackFill, track);
         graphics.DrawRectangle(trackBorder, track);
 
@@ -331,7 +340,7 @@ internal sealed class ChapterSeekBar : Control
         var filledWidth = Math.Clamp(thumbX - track.Left, 0, track.Width);
         if (filledWidth > 0)
         {
-            using var progress = new SolidBrush(Color.FromArgb(170, 190, 205));
+            using var progress = new SolidBrush(PlaybackSliderStyle.SeekProgress);
             graphics.FillRectangle(progress, track.Left + 1, track.Top + 1, filledWidth, track.Height - 1);
         }
 
@@ -356,7 +365,7 @@ internal sealed class ChapterSeekBar : Control
 
             var markerX = track.Left + (int)Math.Round(
                 marker / (double)_durationMilliseconds * track.Width);
-            graphics.DrawLine(markerPen, markerX, track.Top - 3, markerX, track.Bottom + 3);
+            graphics.DrawLine(markerPen, markerX, track.Top - ScaleMetric(3), markerX, track.Bottom + ScaleMetric(3));
         }
     }
 
@@ -368,8 +377,8 @@ internal sealed class ChapterSeekBar : Control
             ThumbWidth,
             ThumbHeight);
         thumb = Rectangle.Intersect(thumb, ClientRectangle);
-        using var thumbFill = new SolidBrush(Color.FromArgb(238, 238, 238));
-        using var thumbBorder = new Pen(Color.FromArgb(90, 90, 90));
+        using var thumbFill = new SolidBrush(PlaybackSliderStyle.ThumbFill);
+        using var thumbBorder = new Pen(PlaybackSliderStyle.ThumbBorder);
         graphics.FillRectangle(thumbFill, thumb);
         graphics.DrawRectangle(thumbBorder, thumb);
     }

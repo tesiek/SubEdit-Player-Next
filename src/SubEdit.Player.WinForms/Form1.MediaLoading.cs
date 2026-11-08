@@ -141,7 +141,7 @@ public partial class Form1
         using var dialog = new OpenFileDialog
         {
             Filter = "Pliki napisów|*.srt;*.sub;*.txt;*.mpl|Wszystkie pliki|*.*",
-            Title = "Dodaj plik na koniec napisów"
+            Title = "Dopisz napisy z pliku"
         };
 
         var initialPath = _currentSubtitlePath ?? _currentVideoPath;
@@ -351,10 +351,9 @@ public partial class Form1
         _externalSubtitleOverlayEnabled = false;
         UpdateSubtitleOverlay(0);
         ResetSeekSliderToStart();
+        UpdateStatusBar(0, 0);
         _fileStatusExpiresAt = default;
-        _fileStatus.ForeColor = SystemColors.ControlText;
-        _fileStatus.ToolTipText = string.Empty;
-        _fileStatus.Text = string.Empty;
+        RestoreFileStatus();
         UpdateTransportButtons();
         UpdateCloseVideoMenuState();
         UpdateSubtitleConversionAvailability();
@@ -372,6 +371,7 @@ public partial class Form1
     {
         var hasVideo = _playback.IsMediaOpen && _currentVideoPath is not null;
         _closeVideoMenuItem?.Enabled = hasVideo;
+        _videoPropertiesMenuItem?.Enabled = hasVideo;
         _goToVideoPositionMenuItem?.Enabled = hasVideo;
         _measureSubtitleDelayMenuItem?.Enabled = hasVideo && _subtitleDocument.Cues.Count > 0;
     }

@@ -1,5 +1,17 @@
 #requires -Version 5.1
-<# Creates a reviewed portable package from a verified Release output. #>
+<#
+.SYNOPSIS
+Creates a reviewed portable package from a verified Release output.
+.DESCRIPTION
+For final packaging, pass the reviewed public checkout as PublicSourceRoot and
+its independently selected full commit ID as ExpectedPublicCommit. The commit
+can be local and unpublished. Build Release from that clean checkout. In the
+approved runtime manifest, record BuildProvenance with Commit and State="CLEAN"
+based on the build audit (same Git HEAD and clean status before and after the
+build, no build metadata overrides). Review these facts with the Files hashes.
+Use the .NET 10 SDK to read assembly metadata when checking provenance.
+Candidate and ValidateOnly also work without provenance, including from staging.
+#>
 [CmdletBinding()]
 param(
     [Parameter(Mandatory=$true)][string]$ReleaseOutput,
@@ -9,7 +21,9 @@ param(
     [switch]$ValidateOnly,
     [switch]$Candidate,
     [ValidatePattern('^[A-Za-z0-9][A-Za-z0-9.-]{0,31}$')][string]$CandidateLabel,
-    [switch]$ApproveReleaseWithUnverifiedFFmpegSource
+    [switch]$ApproveReleaseWithUnverifiedFFmpegSource,
+    [string]$PublicSourceRoot,
+    [string]$ExpectedPublicCommit
 )
 $ErrorActionPreference='Stop'
 Set-StrictMode -Version Latest
@@ -23,6 +37,56 @@ function Get-PackageZipName([string]$ProductVersion, [bool]$IsCandidate, [string
     }
     return 'SubEdit-Player-Next-' + $version + '.zip'
 }
+function Get-PublicRevisionProblem {
+    if (-not $PublicSourceRoot -or $ExpectedPublicCommit -notmatch '\A(?:[0-9a-f]{40}|[0-9a-f]{64})\z') {
+        return 'Provide PublicSourceRoot and the full ExpectedPublicCommit of the reviewed public checkout.'
+    }
+    $attestation = $review.PSObject.Properties['BuildProvenance']
+    if (-not $attestation -or $attestation.Value -isnot [pscustomobject]) {
+        return 'The approved runtime manifest must attest a clean build of ExpectedPublicCommit.'
+    }
+    $commit = $attestation.Value.PSObject.Properties['Commit']
+    $state = $attestation.Value.PSObject.Properties['State']
+    if (-not $commit -or $commit.Value -isnot [string] -or $commit.Value -ne $ExpectedPublicCommit -or
+        -not $state -or $state.Value -isnot [string] -or $state.Value -cne 'CLEAN') {
+        return 'The approved runtime manifest must attest a clean build of ExpectedPublicCommit.'
+    }
+
+    $checkout = (Resolve-Path -LiteralPath $PublicSourceRoot).ProviderPath
+    $gitArgs = @('--no-optional-locks', '-C', $checkout)
+    $root = & git @gitArgs rev-parse --show-toplevel 2>$null
+    if ($LASTEXITCODE -ne 0 -or [IO.Path]::GetFullPath($root) -ne [IO.Path]::GetFullPath($checkout)) {
+        return 'PublicSourceRoot must be the root of the reviewed Git checkout.'
+    }
+    $head = & git @gitArgs rev-parse --verify 'HEAD^{commit}' 2>$null
+    if ($LASTEXITCODE -ne 0 -or $head -ne $ExpectedPublicCommit) {
+        return 'The public checkout HEAD differs from ExpectedPublicCommit.'
+    }
+    $buildInfo = $head + ':src/SubEdit.Player.WinForms/ApplicationBuildInfo.targets'
+    & git @gitArgs cat-file -e $buildInfo 2>$null
+    if ($LASTEXITCODE -ne 0) { return 'PublicSourceRoot must use the public source layout.' }
+    $status = & git @gitArgs status --porcelain=v1 --untracked-files=all --ignore-submodules=none 2>$null
+    if ($LASTEXITCODE -ne 0 -or $status) {
+        return 'The public checkout is dirty or its status could not be verified.'
+    }
+
+    $reader = Join-Path $sourceRoot 'Read-PortableBuildMetadata.cs'
+    try { $metadataJson = & dotnet run --file $reader -- $applicationDll 2>$null }
+    catch { $metadataJson = $null }
+    if ($LASTEXITCODE -ne 0 -or -not $metadataJson) {
+        return 'Could not read unambiguous assembly build metadata with the .NET 10 SDK.'
+    }
+    $metadata = $metadataJson | ConvertFrom-Json
+    if ($metadata.SHA256 -ne $approvedHashes['SubEdit.Player.Next.dll'] -or
+        $metadata.BuildCommit -ne $ExpectedPublicCommit -or $metadata.BuildDirtyState -cne 'CLEAN' -or
+        $metadata.ProductVersion -notmatch '\A(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)\z' -or
+        $metadata.InformationalVersion -ne "$($metadata.ProductVersion)+$ExpectedPublicCommit.clean" -or
+        $metadata.PeProductVersion -cne $metadata.InformationalVersion -or
+        $productVersion -cne $metadata.InformationalVersion) {
+        return 'Assembly metadata does not match the approved DLL, clean revision and product version.'
+    }
+}
+
 $sourceRoot=$PSScriptRoot
 $runtime=[IO.Path]::GetFullPath($ReleaseOutput).TrimEnd('\')
 $output=[IO.Path]::GetFullPath($OutputDirectory).TrimEnd('\')
@@ -41,22 +105,16 @@ $notices=[IO.File]::ReadAllText($noticePath)
 $sourceVerified=$notices -match '(?m)^FFMPEG SOURCE GATE: PASS\r?$'
 $distributionReady=$notices -match '(?m)^PUBLIC DISTRIBUTION READY: true\r?$'
 $review=Get-Content -LiteralPath $VerifiedOutputManifest -Raw | ConvertFrom-Json
-if($review.Status -ne 'PASS'){throw 'Release output has not passed its audit.'}
-foreach($item in $review.Files){
-    $file=[IO.Path]::GetFullPath((Join-Path $runtime $item.Path))
-    if(-not $file.StartsWith($runtime+'\',[StringComparison]::OrdinalIgnoreCase)){throw 'Unsafe runtime manifest path.'}
-    if((Get-FileHash -LiteralPath $file -Algorithm SHA256).Hash -ne $item.SHA256){throw "Runtime output changed after review: $($item.Path)"}
-}
-$productVersion=(Get-Item -LiteralPath (Join-Path $runtime 'SubEdit.Player.Next.dll')).VersionInfo.ProductVersion
+if($review.Status -isnot [string] -or $review.Status -ne 'PASS'){throw 'Release output has not passed its audit.'}
+if($review.Files -isnot [array] -or $review.Files.Count -eq 0){throw 'The runtime review must contain a nonempty Files array.'}
+$applicationDll=Join-Path $runtime 'SubEdit.Player.Next.dll'
+$productVersion=(Get-Item -LiteralPath $applicationDll).VersionInfo.ProductVersion
 $zipName=Get-PackageZipName $productVersion $Candidate.IsPresent $CandidateLabel
 $ffmpegComplianceReady=$sourceVerified -and $distributionReady
 $ownerReleaseApproved=$ApproveReleaseWithUnverifiedFFmpegSource.IsPresent
-$publicRevisionReady=$productVersion -notmatch 'unknown|dirty'
-$finalPackageAllowed=$publicRevisionReady -and ($ffmpegComplianceReady -or $ownerReleaseApproved)
 if($ownerReleaseApproved){
     Write-Warning ('EXPLICIT OWNER RELEASE APPROVAL: packaging is authorized while FFmpeg source/distribution verification may remain incomplete. This does not confirm GPL compliance. FFmpegComplianceReady={0}.' -f $ffmpegComplianceReady)
 }
-if(-not $Candidate -and -not $ValidateOnly -and -not $finalPackageAllowed){throw 'Final package blocked: a clean public revision and verified FFmpeg source/distribution or explicit owner release approval are required.'}
 if(Test-Path -LiteralPath $output){throw 'Use a new empty package directory; existing artifacts will not be overwritten.'}
 $roots=[Collections.Generic.HashSet[string]]::new([StringComparer]::OrdinalIgnoreCase)
 foreach($name in @('SubEdit.Player.Next.exe','SubEdit.Player.Next.dll','SubEdit.Player.Next.deps.json','SubEdit.Player.Next.runtimeconfig.json')){[void]$roots.Add($name)}
@@ -68,8 +126,11 @@ foreach($target in $deps.targets.PSObject.Properties){foreach($library in $targe
 $help=@('SubEditHelp.html','SkrotyKlawiszowe.html','faq_edycja.html')
 $native=@('avcodec-63.dll','avfilter-12.dll','avformat-63.dll','avutil-61.dll','swresample-7.dll','swscale-10.dll')
 $selected=[Collections.Generic.List[string]]::new()
+$runtimeFiles=[Collections.Generic.Dictionary[string,string]]::new([StringComparer]::OrdinalIgnoreCase)
 foreach($file in Get-ChildItem -LiteralPath $runtime -Recurse -File -Force){
     $relative=$file.FullName.Substring($runtime.Length+1).Replace('\','/')
+    if($runtimeFiles.ContainsKey($relative)){throw "Ambiguous runtime path: $relative"}
+    $runtimeFiles.Add($relative,$file.FullName)
     $allow=($relative -notmatch '/' -and $roots.Contains($relative)) -or
       ($relative -match '^FFmpeg/([^/]+)$' -and $native -contains $Matches[1]) -or
       ($relative -in @('runtimes/win-x64/native/Scintilla.dll','runtimes/win-x64/native/Lexilla.dll')) -or
@@ -81,6 +142,39 @@ foreach($file in Get-ChildItem -LiteralPath $runtime -Recurse -File -Force){
 foreach($required in @($roots)+@($native|ForEach-Object {'FFmpeg/'+$_})+@($help|ForEach-Object {'doc/'+$_})+@('runtimes/win-x64/native/Scintilla.dll','runtimes/win-x64/native/Lexilla.dll')){
     if(-not $selected.Contains($required)){throw "Missing required runtime entry: $required"}
 }
+# The input review can also cover files excluded from the ZIP. Verify any such entries,
+# but require coverage only for selected runtime files, before adding packaging metadata.
+$approvedHashes=[Collections.Generic.Dictionary[string,string]]::new([StringComparer]::OrdinalIgnoreCase)
+foreach($item in $review.Files){
+    if($item.Path -isnot [string] -or $item.SHA256 -isnot [string] -or $item.SHA256 -notmatch '\A[0-9a-fA-F]{64}\z'){
+        throw 'Each runtime review entry must have a path and a valid SHA-256.'
+    }
+    # Match enumerated relative paths so aliases (such as dot segments or rooted paths) cannot approve a file.
+    $relative=$item.Path.Replace('\','/')
+    if(-not $runtimeFiles.ContainsKey($relative)){throw "Invalid or missing runtime manifest path: $($item.Path)"}
+    if($approvedHashes.ContainsKey($relative)){throw "Duplicate runtime manifest path: $($item.Path)"}
+    $approvedHashes.Add($relative,$item.SHA256)
+}
+foreach($relative in $selected){
+    if(-not $approvedHashes.ContainsKey($relative)){throw "Runtime file is missing from the approved manifest: $relative"}
+}
+foreach($relative in $approvedHashes.Keys){
+    if((Get-FileHash -LiteralPath $runtimeFiles[$relative] -Algorithm SHA256).Hash -ne $approvedHashes[$relative]){
+        throw "Runtime output changed after review: $relative"
+    }
+}
+
+try { $revisionProblem = Get-PublicRevisionProblem }
+catch { $revisionProblem = "Could not verify public build provenance: $($_.Exception.Message)" }
+$publicRevisionReady = -not $revisionProblem
+$finalPackageAllowed = $publicRevisionReady -and ($ffmpegComplianceReady -or $ownerReleaseApproved)
+if (-not $Candidate -and -not $ValidateOnly) {
+    if (-not $publicRevisionReady) { throw "Final package blocked: $revisionProblem" }
+    if (-not $finalPackageAllowed) {
+        throw 'Final package blocked: verified FFmpeg source/distribution or explicit owner release approval is required.'
+    }
+}
+
 # Refuse private developer paths before creating a redistributable payload.
 foreach($relative in $selected){
     $bytes=[IO.File]::ReadAllBytes((Join-Path $runtime $relative))
@@ -93,7 +187,9 @@ $zip=Join-Path $output $zipName
 if($ValidateOnly){
     $previewEntries=@(foreach($relative in $selected){
         $file=Join-Path $runtime $relative
-        [pscustomobject]@{Path=$relative;Bytes=(Get-Item -LiteralPath $file).Length;SHA256=(Get-FileHash -LiteralPath $file -Algorithm SHA256).Hash}
+        $hash=(Get-FileHash -LiteralPath $file -Algorithm SHA256).Hash
+        if($hash -ne $approvedHashes[$relative]){throw "Runtime output changed after review: $relative"}
+        [pscustomobject]@{Path=$relative;Bytes=(Get-Item -LiteralPath $file).Length;SHA256=$hash}
     })
     foreach($name in @('LICENSE','THIRD-PARTY-NOTICES.txt')){
         $file=Join-Path $sourceRoot $name
@@ -110,7 +206,7 @@ if($ValidateOnly){
     foreach($entry in $previewEntries){$byPreviewPath[$entry.Path]=$entry}
     $previewPaths=[string[]]@($previewEntries | ForEach-Object {$_.Path})
     [Array]::Sort($previewPaths,[StringComparer]::Ordinal)
-    [pscustomobject]@{Status='VALIDATED / NO FILES WRITTEN';Zip=$zip;ZipName=$zipName;Files=$previewEntries.Count;ProductVersion=$productVersion;FinalPackageAllowed=$finalPackageAllowed;FFmpegComplianceReady=$ffmpegComplianceReady;FFmpegSourceVerification=if($sourceVerified){'VERIFIED'}else{'UNVERIFIED'};OwnerReleaseApproval=if($ownerReleaseApproved){'EXPLICIT'}else{'NOT PROVIDED'};Manifest=@($previewPaths | ForEach-Object {$byPreviewPath[$_]})}
+    [pscustomobject]@{Status='VALIDATED / NO FILES WRITTEN';Zip=$zip;ZipName=$zipName;Files=$previewEntries.Count;ProductVersion=$productVersion;FinalPackageAllowed=$finalPackageAllowed;PublicRevisionReady=$publicRevisionReady;PublicRevisionProblem=$revisionProblem;FFmpegComplianceReady=$ffmpegComplianceReady;FFmpegSourceVerification=if($sourceVerified){'VERIFIED'}else{'UNVERIFIED'};OwnerReleaseApproval=if($ownerReleaseApproved){'EXPLICIT'}else{'NOT PROVIDED'};Manifest=@($previewPaths | ForEach-Object {$byPreviewPath[$_]})}
     return
 }
 New-Item -ItemType Directory -Path $output -Force | Out-Null
@@ -126,6 +222,11 @@ if($Candidate){[IO.File]::WriteAllText((Join-Path $package 'CANDIDATE-NOT-FOR-DI
 $entries=@(Get-ChildItem -LiteralPath $package -Recurse -File | ForEach-Object{[pscustomobject]@{Path=$_.FullName.Substring($package.Length+1).Replace('\','/');Bytes=$_.Length;SHA256=(Get-FileHash -LiteralPath $_.FullName).Hash}})
 $byPath=@{}
 foreach($entry in $entries){$byPath[$entry.Path]=$entry}
+foreach($relative in $selected){
+    if(-not $byPath.ContainsKey($relative) -or $byPath[$relative].SHA256 -ne $approvedHashes[$relative]){
+        throw "Staged runtime file differs from the approved manifest: $relative"
+    }
+}
 $sortedPaths=[string[]]@($entries | ForEach-Object {$_.Path})
 [Array]::Sort($sortedPaths,[StringComparer]::Ordinal)
 $manifest=@($sortedPaths | ForEach-Object {$byPath[$_]})

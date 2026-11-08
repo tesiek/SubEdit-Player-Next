@@ -10,7 +10,9 @@ partial class Form1
     {
         if (disposing)
         {
+            ReleaseWindowResources();
             components?.Dispose();
+            components = null;
         }
 
         base.Dispose(disposing);

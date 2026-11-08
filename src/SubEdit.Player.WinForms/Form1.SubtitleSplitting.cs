@@ -16,6 +16,12 @@ public partial class Form1
         var text = _subtitleEditor.Text;
 
         var splitResult = SubtitleSplitProcessor.Split(text, durationMilliseconds, framesPerSecond);
+        if (splitResult.InvalidSrtLine is int invalidLine)
+        {
+            ShowSrtOperationCancelled(invalidLine);
+            return;
+        }
+
         if (splitResult.RemainderCueCount == 0)
         {
             return;
@@ -86,6 +92,17 @@ public partial class Form1
         UpdateSubtitleConversionAvailability();
         _subtitleEditor.Focus();
         ShowTemporaryFileStatus($"Podzielono napisy: zapisano {splitResult.FirstPartCueCount} do pierwszej części, pozostało {splitResult.RemainderCueCount}");
+    }
+
+    private void ShowSrtOperationCancelled(int line, bool imported = false)
+    {
+        var source = imported ? "dołączanym pliku" : "edytowanych napisach";
+        MessageBox.Show(
+            this,
+            $"Nie można odczytać czasu bloku SRT w {source} (linia {line}).\n\nOperacja została anulowana, aby zapobiec utracie tekstu.",
+            "Nieprawidłowy blok SRT",
+            MessageBoxButtons.OK,
+            MessageBoxIcon.Warning);
     }
 
     private bool CanSplitSubtitles()
