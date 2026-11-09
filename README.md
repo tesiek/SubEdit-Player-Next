@@ -46,6 +46,8 @@ Ustawienia są zapisywane w pliku `SubEdit.Player.Next.json` w katalogu programu
 
 Jeśli pojawi się ostrzeżenie Microsoft Defender SmartScreen, wybierz **Więcej informacji (More info)**, a następnie **Uruchom mimo to (Run anyway)**.
 
+![SubEdit-Player Next](docs/images/smartscreen.png)
+
 ## Pomoc
 
 Menu **Pomoc** udostępnia tematy pomocy, pełną listę skrótów klawiszowych i FAQ dotyczące edycji napisów.
